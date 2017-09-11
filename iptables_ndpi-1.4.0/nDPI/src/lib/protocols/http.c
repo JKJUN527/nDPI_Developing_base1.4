@@ -637,33 +637,52 @@ Referer: http://player.pplive.cn/ikan/3.4.2.27/player4player2.swf
 		
 		#endif
 		/*jkjun end*/
-		/*ltk start*/
-		#ifdef NDPI_PROTOCOL_JINWANWEI
-			char static const *jinwanwei_strs[] = {
-			    "GET /client_login.php?user_name=",
-			    "GET /checkGroupType.php?userName=",
-			    "GET /client_getTimes.php?userName=",
-			    "GET /client_getIP.php? HTTP/1.1",
-			    "POST /client_saveDomainList.php HTTP/1.1",
-			    "GET /gnapi/GetServiceProvider.php?ProductName=",
 
-			    NULL,
-			};
-			char const **jinwanwei_ptr;
-			for (jinwanwei_ptr = jinwanwei_strs; *jinwanwei_ptr != NULL; jinwanwei_ptr++) {
-			    char *str = *jinwanwei_ptr;
-			    int len = strlen(str);
-			    if (packet->line[a].len >= len && strncmp(packet->line[a].ptr, str, len) == 0) {
-				ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_JINWANWEI);
-				NDPI_LOG(NDPI_PROTOCOL_JINWANWEI, ndpi_struct, NDPI_LOG_DEBUG, "JinWanWei: Found via %s\n", str);
-				return;
-			    }
-			}
-		#endif
-		/*ltk start*/
-	  }
+        /*ltk start*/
+#ifdef NDPI_PROTOCOL_JINWANWEI
+        char static const *jinwanwei_strs[] = {
+            "GET /client_login.php?user_name=",
+            "GET /checkGroupType.php?userName=",
+            "GET /client_getTimes.php?userName=",
+            "GET /client_getIP.php? HTTP/1.1",
+            "POST /client_saveDomainList.php HTTP/1.1",
+            "GET /gnapi/GetServiceProvider.php?ProductName=",
+
+            NULL,
+        };
+        char const **jinwanwei_ptr;
+        for (jinwanwei_ptr = jinwanwei_strs; *jinwanwei_ptr != NULL; jinwanwei_ptr++) {
+            char const *str = *jinwanwei_ptr;
+            int len = strlen(str);
+            if (packet->line[a].len >= len && strncmp(packet->line[a].ptr, str, len) == 0) {
+                ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_JINWANWEI);
+                NDPI_LOG(NDPI_PROTOCOL_JINWANWEI, ndpi_struct, NDPI_LOG_DEBUG, "JinWanWei: Found via %s\n", str);
+                return;
+            }
+        }
+#endif /* NDPI_PROTOCOL_JINWANWEI */
+#ifdef NDPI_PROTOCOL_QQ_TX
+        NDPI_LOG(NDPI_PROTOCOL_QQ_TX, ndpi_struct, NDPI_LOG_DEBUG, "Into QQ transfer file.\n");
+        static char const *qqtx_strs[] = {
+            "GET /ftn_handler",
+            "POST /ftn_handler",
+
+            NULL,
+        };
+        const **qqtx_ptr;
+        for (qqtx_ptr = qqtx_strs; *qqtx_ptr != NULL; qqtx_ptr++) {
+            char const *str = *qqtx_ptr;
+            int len = strlen(str);
+            if (packet->line[a].len >= len && strncmp(packet->line[a].ptr, str, len) == 0) {
+                ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_QQ_TX);
+                NDPI_LOG(NDPI_PROTOCOL_QQ_TX, ndpi_struct, NDPI_LOG_DEBUG, "QQ_TX: Found via %s\n", str);
+                return;
+            }
+        }
+#endif /* NDPI_PROTOCOL_QQ_TX */
+        /*ltk start*/
+      }
 #endif
-
 
 }
 
