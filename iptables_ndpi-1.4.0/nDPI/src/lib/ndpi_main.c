@@ -830,13 +830,15 @@ ndpi_protocol_match host_match[] = {
 
   /*JK END*/
   /*ltk start*/
-  { "phsle02.oray.net",         "HuaShengKe" , NDPI_PROTOCOL_HUASHENGKE },
   { "huoban.gnway.com",         "JinWanWei",   NDPI_PROTOCOL_JINWANWEI },
   { "agent.gnway.com",          "JinWanWei",   NDPI_PROTOCOL_JINWANWEI },
   { "ddns.gnway.com",           "JinWanWei",   NDPI_PROTOCOL_JINWANWEI },
   { "tietong-ddns.gnvip.net",   "JinWanWei",   NDPI_PROTOCOL_JINWANWEI },
   { "ddnscn.gnvip.net",         "JinWanWei",   NDPI_PROTOCOL_JINWANWEI },
   { "ddnscom.gnvip.net",        "JinWanWei",   NDPI_PROTOCOL_JINWANWEI },
+
+  { "phsle02.oray.net",         "HuaShengKe" , NDPI_PROTOCOL_HUASHENGKE },
+  { ".oray.net",                "HuaShengKe" , NDPI_PROTOCOL_HUASHENGKE },
   /*ltk end*/
   { NULL, 0 }
 };
