@@ -583,7 +583,8 @@ typedef struct ndpi_flow_struct {
 	u_int32_t eudemons_stage:2;
 #endif
 #ifdef NDPI_PROTOCOL_HUASHENGKE
-    u_int8_t huashengke_stage;
+    u_int8_t huashengke_stage;  /* for version 2 */
+    u_int8_t huashengke3_stage; /* for version 3 */
 #endif
 #ifdef NDPI_PROTOCOL_WECHAT_TX
     u_int32_t wechat_tx_authkeyhash;

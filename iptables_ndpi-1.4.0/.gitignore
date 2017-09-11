@@ -6,6 +6,7 @@
 *~
 *.lo
 *.la
+*.lai
 *.a
 *.pyc
 *.out
