@@ -1255,6 +1255,9 @@ static void ndpi_init_protocol_defaults(struct ndpi_detection_module_struct *ndp
    ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_QQ_TX, "QQ_TX",
         		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0),  /* TCP */
         		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
+   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_WECHAT_TX, "WeChat_TX",
+        		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0),  /* TCP */
+        		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
   /*ltk end*/
 				
 /**20161207 start stock*/
@@ -1267,7 +1270,7 @@ static void ndpi_init_protocol_defaults(struct ndpi_detection_module_struct *ndp
     if(ndpi_mod->proto_defaults[i].protoName == NULL) {
 		#ifdef DEBUG
        	 //printf("[NDPI] %s(missing protoId=%d) INTERNAL ERROR: not all protocols id have been initialized\n", __FUNCTION__, i);
-      	#endif 
+      	#endif
     }
   }
 }
@@ -1662,6 +1665,11 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
          NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_QQ_TX);
      }
 #endif /* NDPI_PROTOCOL_QQ_TX */
+#ifdef NDPI_PROTOCOL_WECHAT_TX
+     if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_WECHAT_TX) != 0) {
+         NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_WECHAT_TX);
+     }
+#endif /* NDPI_PROTOCOL_WECHAT_TX */
   /* HTTP DETECTION MUST BE BEFORE DDL BUT AFTER ALL OTHER PROTOCOLS WHICH USE HTTP ALSO */
   if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_HTTP) != 0) {
 
@@ -5224,4 +5232,24 @@ int StringFind(const char *pSrc, const char *pDst)
     }  
     return -1;  
 }
+/**
+* memfind, find pattern from memory, same as strstr().
+* @return: NULL not found
+*         !NULL the position of pat starting.
+* Author: leetking <li_Tking@163.com>
+*/
+extern void *memfind(const void *_mem, size_t memlen, const void *_pat, size_t patlen)
+{
+    u_int8_t *mem = (u_int8_t*)_mem;
+    u_int8_t *pat = (u_int8_t*)_pat;
+    size_t i;
+    for (i = 0; i+patlen-1 < memlen; i++) {
+        size_t j;
+        for (j = 0; j < patlen; j++)
+            if (mem[i+j] != pat[j])
+                break;
+        if (j == patlen) return (void*)(mem+i);
+    }
 
+    return NULL;
+}
