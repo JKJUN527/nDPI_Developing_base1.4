@@ -1,1 +1,0 @@
-cmd_/root/Desktop/iptables_ndpi-1.4.0/kernel/xt_ndpi.ko.unsigned := ld -r -m elf_x86_64 -T /usr/src/kernels/2.6.32-431.el6.x86_64/scripts/module-common.lds --build-id -o /root/Desktop/iptables_ndpi-1.4.0/kernel/xt_ndpi.ko.unsigned /root/Desktop/iptables_ndpi-1.4.0/kernel/xt_ndpi.o /root/Desktop/iptables_ndpi-1.4.0/kernel/xt_ndpi.mod.o 

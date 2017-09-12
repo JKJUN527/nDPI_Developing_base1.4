@@ -328,25 +328,60 @@ int sslDetectProtocolFromCertificate(struct ndpi_detection_module_struct *ndpi_s
   return(0);
 }
 
-static void ssl_mark_and_payload_search_for_other_protocols(struct
-							    ndpi_detection_module_struct
-							    *ndpi_struct, struct ndpi_flow_struct *flow)
+/**
+ * Find and Mark subprotocol base on ssl, but it is so hard,
+ * We only detect it through some tiny clues.
+ * NOTE PUT YOUR CODES TO THERE!
+ * @return: 0, don't find subprotocol
+ *          1, detected subprotocol and invoked `ndpi_int_add_connection` to add NDPI_PROTOCOL_XXX
+ */
+static int find_mark_subprotocol(struct ndpi_detection_module_struct *ndpi,
+        struct ndpi_flow_struct *flow)
 {
-	struct ndpi_packet_struct *packet = &flow->packet;
-	
-  if(packet->detected_protocol_stack[0] == NDPI_PROTOCOL_UNKNOWN) {
+    struct ndpi_packet_struct *pkt = &flow->packet;
+#ifdef NDPI_PROTOCOL_HUASHENGKE
+    NDPI_LOG(NDPI_PROTOCOL_HUASHENGKE, ndpi, NDPI_LOG_DEBUG,
+            "call find_mark_subprotocol() to find HuaShengKe protocol.\n");
+#ifdef DEBUG
+    if (pkt->payload_packet_len >= 260) {
+        NDPI_LOG(NDPI_PROTOCOL_HUASHENGKE, ndpi, NDPI_LOG_DEBUG,
+                "call find_mark_subprotocol() %s\n", pkt->payload+260);
+    }
+#endif /* DEBUG */
+    if (pkt->payload_packet_len >= 260+10 && !strncmp(pkt->payload+260, "*.oray.net", 10)) {
+        ndpi_int_add_connection(ndpi, flow, NDPI_PROTOCOL_HUASHENGKE, NDPI_REAL_PROTOCOL);
+        NDPI_LOG(NDPI_PROTOCOL_HUASHENGKE, ndpi, NDPI_LOG_DEBUG,
+                "found HuaShengKe via find_mark_subprotocol() in ssl.\n");
+        return 1;
+    }
+#endif /* NDPI_PROTOCOL_HUASHENGKE */
+    return 0;
+}
+
+static void ssl_mark_and_payload_search_for_other_protocols(struct ndpi_detection_module_struct *ndpi_struct,
+        struct ndpi_flow_struct *flow)
+{
+    struct ndpi_packet_struct *packet = &flow->packet;
     NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "found ssl connection.\n");
+
+    /* if has detected, return */
+    if(packet->detected_protocol_stack[0] != NDPI_PROTOCOL_UNKNOWN)
+        return;
+
+    /* find and mark subprotol base on ssl */
+    if (find_mark_subprotocol(ndpi_struct, flow))
+        return;
+
     int rc = sslDetectProtocolFromCertificate(ndpi_struct, flow);
-    if(rc>0){//返回值大于零，即表示已经在match中匹配到相应协议，直接返回
-	return ;
+    if (rc > 0) {       //返回值大于零，即表示已经在match中匹配到相应协议，直接返回
+        return;
     }
     if(!packet->ssl_certificate_detected
-       && (!(flow->l4.tcp.ssl_seen_client_cert && flow->l4.tcp.ssl_seen_server_cert))) {
-      /* SSL without certificate (Skype, Ultrasurf?) */
-      ndpi_int_ssl_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_SSL_NO_CERT);
+            && (!(flow->l4.tcp.ssl_seen_client_cert && flow->l4.tcp.ssl_seen_server_cert))) {
+        /* SSL without certificate (Skype, Ultrasurf?) */
+        ndpi_int_ssl_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_SSL_NO_CERT);
     } else
-      ndpi_int_ssl_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_SSL);
-  }
+        ndpi_int_ssl_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_SSL);
 }
 
 
@@ -461,98 +496,98 @@ static u_int8_t ndpi_search_sslv3_direction1(struct ndpi_detection_module_struct
 
 void ndpi_search_ssl_tcp(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {
-  struct ndpi_packet_struct *packet = &flow->packet;
+    struct ndpi_packet_struct *packet = &flow->packet;
 
-  //      struct ndpi_id_struct         *src=flow->src;
-  //      struct ndpi_id_struct         *dst=flow->dst;
+    //      struct ndpi_id_struct         *src=flow->src;
+    //      struct ndpi_id_struct         *dst=flow->dst;
 
-  u_int8_t ret;
+    u_int8_t ret;
 
-  if (packet->detected_protocol_stack[0] == NDPI_PROTOCOL_SSL) {
-    if (flow->l4.tcp.ssl_stage == 3 && packet->payload_packet_len > 20 && flow->packet_counter < 5) {
-      /* this should only happen, when we detected SSL with a packet that had parts of the certificate in subsequent packets
-       * so go on checking for certificate patterns for a couple more packets
-       */
-      NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG,
-	       "ssl flow but check another packet for patterns\n");
-      ssl_mark_and_payload_search_for_other_protocols(ndpi_struct, flow);
-      if (packet->detected_protocol_stack[0] == NDPI_PROTOCOL_SSL) {
-	/* still ssl so check another packet */
-	return;
-      } else {
-	/* protocol has changed so we are done */
-	return;
-      }
+    if (packet->detected_protocol_stack[0] == NDPI_PROTOCOL_SSL) {
+        if (flow->l4.tcp.ssl_stage == 3 && packet->payload_packet_len > 20 && flow->packet_counter < 5) {
+            /* this should only happen, when we detected SSL with a packet that had parts of the certificate in subsequent packets
+             * so go on checking for certificate patterns for a couple more packets
+             */
+            NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG,
+                    "ssl flow but check another packet for patterns\n");
+            ssl_mark_and_payload_search_for_other_protocols(ndpi_struct, flow);
+            if (packet->detected_protocol_stack[0] == NDPI_PROTOCOL_SSL) {
+                /* still ssl so check another packet */
+                return;
+            } else {
+                /* protocol has changed so we are done */
+                return;
+            }
+        }
+        return;
     }
+
+    NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "search ssl\n");
+
+    if (packet->payload_packet_len > 40 && flow->l4.tcp.ssl_stage == 0) {
+        NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "first ssl packet\n");
+        // SSLv2 Record
+        if (packet->payload[2] == 0x01 && packet->payload[3] == 0x03
+                && (packet->payload[4] == 0x00 || packet->payload[4] == 0x01 || packet->payload[4] == 0x02)
+                && (packet->payload_packet_len - packet->payload[1] == 2)) {
+            NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "sslv2 len match\n");
+            flow->l4.tcp.ssl_stage = 1 + packet->packet_direction;
+            ssl_mark_and_payload_search_for_other_protocols(ndpi_struct, flow);
+            return;
+        }
+
+        if (packet->payload[0] == 0x16 && packet->payload[1] == 0x03
+                && (packet->payload[2] == 0x00 || packet->payload[2] == 0x01 || packet->payload[2] == 0x02)
+                && (packet->payload_packet_len - ntohs(get_u_int16_t(packet->payload, 3)) == 5)) {
+            // SSLv3 Record
+            NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "sslv3 len match\n");
+            flow->l4.tcp.ssl_stage = 1 + packet->packet_direction;
+            ssl_mark_and_payload_search_for_other_protocols(ndpi_struct, flow);
+            return;
+        }
+    }
+
+    if (packet->payload_packet_len > 40 &&
+            flow->l4.tcp.ssl_stage == 1 + packet->packet_direction
+            && flow->packet_direction_counter[packet->packet_direction] < 5) {
+        return;
+    }
+
+    if (packet->payload_packet_len > 40 && flow->l4.tcp.ssl_stage == 2 - packet->packet_direction) {
+        NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "second ssl packet\n");
+        // SSLv2 Record
+        if (packet->payload[2] == 0x01 && packet->payload[3] == 0x03
+                && (packet->payload[4] == 0x00 || packet->payload[4] == 0x01 || packet->payload[4] == 0x02)
+                && (packet->payload_packet_len - 2) >= packet->payload[1]) {
+            NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "sslv2 server len match\n");
+            ssl_mark_and_payload_search_for_other_protocols(ndpi_struct, flow);
+            return;
+        }
+
+        ret = ndpi_search_sslv3_direction1(ndpi_struct, flow);
+        if (ret == 1) {
+            NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "sslv3 server len match\n");
+            ssl_mark_and_payload_search_for_other_protocols(ndpi_struct, flow);
+            return;
+        } else if (ret == 2) {
+            NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG,
+                    "sslv3 server len match with split packet -> check some more packets for SSL patterns\n");
+            ssl_mark_and_payload_search_for_other_protocols(ndpi_struct, flow);
+            if (packet->detected_protocol_stack[0] == NDPI_PROTOCOL_SSL) {
+                flow->l4.tcp.ssl_stage = 3;
+            }
+            return;
+        }
+
+        if (packet->payload_packet_len > 40 && flow->packet_direction_counter[packet->packet_direction] < 5) {
+            NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "need next packet\n");
+            return;
+        }
+    }
+
+    NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "exclude ssl\n");
+    NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_SSL);
     return;
-  }
-
-  NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "search ssl\n");
-
-  if (packet->payload_packet_len > 40 && flow->l4.tcp.ssl_stage == 0) {
-    NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "first ssl packet\n");
-    // SSLv2 Record
-    if (packet->payload[2] == 0x01 && packet->payload[3] == 0x03
-	&& (packet->payload[4] == 0x00 || packet->payload[4] == 0x01 || packet->payload[4] == 0x02)
-	&& (packet->payload_packet_len - packet->payload[1] == 2)) {
-      NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "sslv2 len match\n");
-      flow->l4.tcp.ssl_stage = 1 + packet->packet_direction;
-       ssl_mark_and_payload_search_for_other_protocols(ndpi_struct, flow);
-      return;
-    }
-
-    if (packet->payload[0] == 0x16 && packet->payload[1] == 0x03
-	&& (packet->payload[2] == 0x00 || packet->payload[2] == 0x01 || packet->payload[2] == 0x02)
-	&& (packet->payload_packet_len - ntohs(get_u_int16_t(packet->payload, 3)) == 5)) {
-      // SSLv3 Record
-      NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "sslv3 len match\n");
-      flow->l4.tcp.ssl_stage = 1 + packet->packet_direction;
-       ssl_mark_and_payload_search_for_other_protocols(ndpi_struct, flow);
-      return;
-    }
-  }
-
-  if (packet->payload_packet_len > 40 &&
-      flow->l4.tcp.ssl_stage == 1 + packet->packet_direction
-      && flow->packet_direction_counter[packet->packet_direction] < 5) {
-    return;
-  }
-
-  if (packet->payload_packet_len > 40 && flow->l4.tcp.ssl_stage == 2 - packet->packet_direction) {
-    NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "second ssl packet\n");
-    // SSLv2 Record
-    if (packet->payload[2] == 0x01 && packet->payload[3] == 0x03
-	&& (packet->payload[4] == 0x00 || packet->payload[4] == 0x01 || packet->payload[4] == 0x02)
-	&& (packet->payload_packet_len - 2) >= packet->payload[1]) {
-      NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "sslv2 server len match\n");
-      ssl_mark_and_payload_search_for_other_protocols(ndpi_struct, flow);
-      return;
-    }
-
-    ret = ndpi_search_sslv3_direction1(ndpi_struct, flow);
-    if (ret == 1) {
-      NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "sslv3 server len match\n");
-      ssl_mark_and_payload_search_for_other_protocols(ndpi_struct, flow);
-      return;
-    } else if (ret == 2) {
-      NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG,
-	       "sslv3 server len match with split packet -> check some more packets for SSL patterns\n");
-      ssl_mark_and_payload_search_for_other_protocols(ndpi_struct, flow);
-      if (packet->detected_protocol_stack[0] == NDPI_PROTOCOL_SSL) {
-	flow->l4.tcp.ssl_stage = 3;
-      }
-      return;
-    }
-
-    if (packet->payload_packet_len > 40 && flow->packet_direction_counter[packet->packet_direction] < 5) {
-      NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "need next packet\n");
-      return;
-    }
-  }
-
-  NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "exclude ssl\n");
-  NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_SSL);
-  return;
 }
 #endif
 

@@ -557,7 +557,7 @@ typedef struct ndpi_flow_struct {
 #ifdef NDPI_PROTOCOL_QIANLONG
   u_int32_t qianlong_stage:3; //0-7
 #endif
-#ifdef NDPI_PROTOCOL_PINGANZHENGQUAN 
+#ifdef NDPI_PROTOCOL_PINGANZHENGQUAN
   u_int32_t pinganzhengquan_stage:3; //0-7
 #endif
 #ifdef NDPI_PROTOCOL_ZHINANZHEN
@@ -573,7 +573,7 @@ typedef struct ndpi_flow_struct {
   u_int32_t dnf_stage:2;
 #endif
 #ifdef NDPI_PROTOCOL_GAME_WORLD_OF_WARSHIP
-  u_int32_t worldofwarship_stage:2; 
+  u_int32_t worldofwarship_stage:2;
   u_int32_t worldofwarship_count:2;
 #endif
 #ifdef NDPI_PROTOCOL_GAME_JX3
@@ -583,7 +583,11 @@ typedef struct ndpi_flow_struct {
 	u_int32_t eudemons_stage:2;
 #endif
 #ifdef NDPI_PROTOCOL_HUASHENGKE
-u_int8_t huashengke_stage;
+    u_int8_t huashengke_stage;  /* for version 2 */
+    u_int8_t huashengke3_stage; /* for version 3 */
+#endif
+#ifdef NDPI_PROTOCOL_WECHAT_TX
+    u_int32_t wechat_tx_authkeyhash;
 #endif
 
   /* internal structures to save functions calls */
