@@ -1,0 +1,125 @@
+K 25
+svn:wc:ra_dav:version-url
+V 34
+/svn/ntop/!svn/ver/6712/trunk/nDPI
+END
+config.guess
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/ntop/!svn/ver/6587/trunk/nDPI/config.guess
+END
+ltmain.sh
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/ntop/!svn/ver/6587/trunk/nDPI/ltmain.sh
+END
+README
+K 25
+svn:wc:ra_dav:version-url
+V 41
+/svn/ntop/!svn/ver/6022/trunk/nDPI/README
+END
+config.sub
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/ntop/!svn/ver/6587/trunk/nDPI/config.sub
+END
+config.h.in
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/ntop/!svn/ver/6658/trunk/nDPI/config.h.in
+END
+configure.ac
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/ntop/!svn/ver/6408/trunk/nDPI/configure.ac
+END
+INSTALL
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/ntop/!svn/ver/6587/trunk/nDPI/INSTALL
+END
+COPYING
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/ntop/!svn/ver/5152/trunk/nDPI/COPYING
+END
+missing
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/ntop/!svn/ver/6587/trunk/nDPI/missing
+END
+Makefile.am
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/ntop/!svn/ver/5849/trunk/nDPI/Makefile.am
+END
+NEWS
+K 25
+svn:wc:ra_dav:version-url
+V 39
+/svn/ntop/!svn/ver/5152/trunk/nDPI/NEWS
+END
+README.ntop
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/ntop/!svn/ver/6079/trunk/nDPI/README.ntop
+END
+aclocal.m4
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/ntop/!svn/ver/6618/trunk/nDPI/aclocal.m4
+END
+install-sh
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/ntop/!svn/ver/6587/trunk/nDPI/install-sh
+END
+configure
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/ntop/!svn/ver/6618/trunk/nDPI/configure
+END
+Makefile.in
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/ntop/!svn/ver/6618/trunk/nDPI/Makefile.in
+END
+AUTHORS
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/ntop/!svn/ver/5152/trunk/nDPI/AUTHORS
+END
+depcomp
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/ntop/!svn/ver/6587/trunk/nDPI/depcomp
+END
+ChangeLog
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/ntop/!svn/ver/5152/trunk/nDPI/ChangeLog
+END
+libndpi.pc.in
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/ntop/!svn/ver/5849/trunk/nDPI/libndpi.pc.in
+END

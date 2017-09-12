@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/ntop/!svn/ver/6185/trunk/nDPI/example/Win32/pcapExample
+END
+pcapExample.vcxproj
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/ntop/!svn/ver/6185/trunk/nDPI/example/Win32/pcapExample/pcapExample.vcxproj
+END
+pcapExample.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/ntop/!svn/ver/6185/trunk/nDPI/example/Win32/pcapExample/pcapExample.cpp
+END
+pcapExample.vcxproj.filters
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/ntop/!svn/ver/6185/trunk/nDPI/example/Win32/pcapExample/pcapExample.vcxproj.filters
+END
+pcapExample.vcxproj.user
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/ntop/!svn/ver/6185/trunk/nDPI/example/Win32/pcapExample/pcapExample.vcxproj.user
+END

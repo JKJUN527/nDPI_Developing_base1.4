@@ -1,0 +1,12 @@
+In order to compile this library do
+
+./configure
+make
+
+###############
+
+If you happen to change .am files (e.g. Makefile.am) remember to do
+# autoreconf -ivf
+
+prior to do any compilation
+

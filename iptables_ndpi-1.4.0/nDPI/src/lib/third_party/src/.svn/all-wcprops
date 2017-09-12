@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/ntop/!svn/ver/6474/trunk/nDPI/src/lib/third_party/src
+END
+node.c
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/ntop/!svn/ver/6474/trunk/nDPI/src/lib/third_party/src/node.c
+END
+ahocorasick.c
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/ntop/!svn/ver/6106/trunk/nDPI/src/lib/third_party/src/ahocorasick.c
+END
+sort.c
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/ntop/!svn/ver/6044/trunk/nDPI/src/lib/third_party/src/sort.c
+END

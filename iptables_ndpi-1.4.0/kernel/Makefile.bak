@@ -1,0 +1,190 @@
+#
+# (C) 2013 - Luca Deri <deri@ntop.org>
+#
+
+ifneq (, $(shell which svnversion))
+SVNDEF := -DSVN_REV="\"$(shell svnversion -n .)\""
+endif
+
+ifeq (,$(BUILD_KERNEL))
+BUILD_KERNEL=$(shell uname -r)
+endif
+PREFIX=$(prefix)
+PWD=$(shell pwd)
+HERE=$(PWD)
+NDPI_HOME=../nDPI
+#NDPI_HOME=/home/deri/iptables_ndpi/nDPI
+
+INSTDIR :=$(PREFIX)/lib/modules/$(BUILD_KERNEL)/kernel/net/netfilter/
+NDPI_LIB=$(NDPI_HOME)/src/lib
+NDPI_LIB_PROTOCOLS=$(NDPI_LIB)/protocols
+NDPI_INCLUDE=$(NDPI_HOME)/src/include
+
+EXTRA_CFLAGS += -I$(PWD) -I$(PWD)/$(NDPI_INCLUDE) -I$(PWD)/$(NDPI_LIB)/third_party/include $(SVNDEF) #-DNDPI_ENABLE_DEBUG_MESSAGES
+
+NDPI_LIB_OBJS= \
+	$(NDPI_LIB)/third_party/src/ahocorasick.o \
+	$(NDPI_LIB)/third_party/src/node.o \
+	$(NDPI_LIB)/third_party/src/sort.o \
+	$(NDPI_LIB)/ndpi_main.o \
+	$(NDPI_LIB_PROTOCOLS)/afp.o \
+	$(NDPI_LIB_PROTOCOLS)/aimini.o \
+	$(NDPI_LIB_PROTOCOLS)/applejuice.o \
+	$(NDPI_LIB_PROTOCOLS)/armagetron.o \
+	$(NDPI_LIB_PROTOCOLS)/battlefield.o \
+	$(NDPI_LIB_PROTOCOLS)/bgp.o \
+	$(NDPI_LIB_PROTOCOLS)/bittorrent.o \
+	$(NDPI_LIB_PROTOCOLS)/crossfire.o \
+	$(NDPI_LIB_PROTOCOLS)/dhcp.o \
+	$(NDPI_LIB_PROTOCOLS)/dhcpv6.o \
+	$(NDPI_LIB_PROTOCOLS)/directconnect.o \
+	$(NDPI_LIB_PROTOCOLS)/directdownloadlink.o \
+	$(NDPI_LIB_PROTOCOLS)/dns.o \
+	$(NDPI_LIB_PROTOCOLS)/dofus.o \
+	$(NDPI_LIB_PROTOCOLS)/edonkey.o \
+	$(NDPI_LIB_PROTOCOLS)/fasttrack.o \
+	$(NDPI_LIB_PROTOCOLS)/fiesta.o \
+	$(NDPI_LIB_PROTOCOLS)/filetopia.o \
+	$(NDPI_LIB_PROTOCOLS)/flash.o \
+	$(NDPI_LIB_PROTOCOLS)/florensia.o \
+	$(NDPI_LIB_PROTOCOLS)/ftp.o \
+	$(NDPI_LIB_PROTOCOLS)/gnutella.o \
+	$(NDPI_LIB_PROTOCOLS)/guildwars.o \
+	$(NDPI_LIB_PROTOCOLS)/halflife2_and_mods.o \
+	$(NDPI_LIB_PROTOCOLS)/http_activesync.o \
+	$(NDPI_LIB_PROTOCOLS)/http.o \
+	$(NDPI_LIB_PROTOCOLS)/iax.o \
+	$(NDPI_LIB_PROTOCOLS)/icecast.o \
+	$(NDPI_LIB_PROTOCOLS)/imesh.o \
+	$(NDPI_LIB_PROTOCOLS)/ipp.o \
+	$(NDPI_LIB_PROTOCOLS)/irc.o \
+	$(NDPI_LIB_PROTOCOLS)/jabber.o \
+	$(NDPI_LIB_PROTOCOLS)/kerberos.o \
+	$(NDPI_LIB_PROTOCOLS)/kontiki.o \
+	$(NDPI_LIB_PROTOCOLS)/ldap.o \
+	$(NDPI_LIB_PROTOCOLS)/mail_imap.o \
+	$(NDPI_LIB_PROTOCOLS)/mail_pop.o \
+	$(NDPI_LIB_PROTOCOLS)/mail_smtp.o \
+	$(NDPI_LIB_PROTOCOLS)/vmware.o \
+	$(NDPI_LIB_PROTOCOLS)/maplestory.o \
+	$(NDPI_LIB_PROTOCOLS)/mdns.o \
+	$(NDPI_LIB_PROTOCOLS)/meebo.o \
+	$(NDPI_LIB_PROTOCOLS)/mgcp.o \
+	$(NDPI_LIB_PROTOCOLS)/mms.o \
+	$(NDPI_LIB_PROTOCOLS)/msn.o \
+	$(NDPI_LIB_PROTOCOLS)/mssql.o \
+	$(NDPI_LIB_PROTOCOLS)/mysql.o \
+	$(NDPI_LIB_PROTOCOLS)/netbios.o \
+	$(NDPI_LIB_PROTOCOLS)/nfs.o \
+	$(NDPI_LIB_PROTOCOLS)/non_tcp_udp.o \
+	$(NDPI_LIB_PROTOCOLS)/tcp_udp.o \
+	$(NDPI_LIB_PROTOCOLS)/ntp.o \
+	$(NDPI_LIB_PROTOCOLS)/openft.o \
+	$(NDPI_LIB_PROTOCOLS)/oscar.o \
+	$(NDPI_LIB_PROTOCOLS)/pcanywhere.o \
+	$(NDPI_LIB_PROTOCOLS)/popo.o \
+	$(NDPI_LIB_PROTOCOLS)/postgres.o \
+	$(NDPI_LIB_PROTOCOLS)/pplive.o \
+	$(NDPI_LIB_PROTOCOLS)/ppstream.o \
+	$(NDPI_LIB_PROTOCOLS)/pptp.o \
+	$(NDPI_LIB_PROTOCOLS)/qq.o \
+	$(NDPI_LIB_PROTOCOLS)/quake.o \
+	$(NDPI_LIB_PROTOCOLS)/rdp.o \
+	$(NDPI_LIB_PROTOCOLS)/rtp.o \
+	$(NDPI_LIB_PROTOCOLS)/rtsp.o \
+	$(NDPI_LIB_PROTOCOLS)/sflow.o \
+	$(NDPI_LIB_PROTOCOLS)/shoutcast.o \
+	$(NDPI_LIB_PROTOCOLS)/sip.o \
+	$(NDPI_LIB_PROTOCOLS)/smb.o \
+	$(NDPI_LIB_PROTOCOLS)/snmp.o \
+	$(NDPI_LIB_PROTOCOLS)/socrates.o \
+	$(NDPI_LIB_PROTOCOLS)/sopcast.o \
+	$(NDPI_LIB_PROTOCOLS)/soulseek.o \
+	$(NDPI_LIB_PROTOCOLS)/spotify.o \
+	$(NDPI_LIB_PROTOCOLS)/ssdp.o \
+	$(NDPI_LIB_PROTOCOLS)/ssh.o \
+	$(NDPI_LIB_PROTOCOLS)/ssl.o \
+	$(NDPI_LIB_PROTOCOLS)/l2tp.o \
+	$(NDPI_LIB_PROTOCOLS)/rip.o \
+	$(NDPI_LIB_PROTOCOLS)/teredo.o \
+	$(NDPI_LIB_PROTOCOLS)/stealthnet.o \
+	$(NDPI_LIB_PROTOCOLS)/steam.o \
+	$(NDPI_LIB_PROTOCOLS)/stun.o \
+	$(NDPI_LIB_PROTOCOLS)/syslog.o \
+	$(NDPI_LIB_PROTOCOLS)/tds.o \
+	$(NDPI_LIB_PROTOCOLS)/telnet.o \
+	$(NDPI_LIB_PROTOCOLS)/tftp.o \
+	$(NDPI_LIB_PROTOCOLS)/thunder.o \
+	$(NDPI_LIB_PROTOCOLS)/tvants.o \
+	$(NDPI_LIB_PROTOCOLS)/tvuplayer.o \
+	$(NDPI_LIB_PROTOCOLS)/usenet.o \
+	$(NDPI_LIB_PROTOCOLS)/veohtv.o \
+	$(NDPI_LIB_PROTOCOLS)/vnc.o \
+	$(NDPI_LIB_PROTOCOLS)/warcraft3.o \
+	$(NDPI_LIB_PROTOCOLS)/winmx.o \
+	$(NDPI_LIB_PROTOCOLS)/world_of_kung_fu.o \
+	$(NDPI_LIB_PROTOCOLS)/world_of_warcraft.o \
+	$(NDPI_LIB_PROTOCOLS)/xbox.o \
+	$(NDPI_LIB_PROTOCOLS)/xdmcp.o \
+	$(NDPI_LIB_PROTOCOLS)/yahoo.o \
+	$(NDPI_LIB_PROTOCOLS)/zattoo.o \
+	$(NDPI_LIB_PROTOCOLS)/dropbox.o \
+	$(NDPI_LIB_PROTOCOLS)/skype.o \
+	$(NDPI_LIB_PROTOCOLS)/citrix.o \
+	$(NDPI_LIB_PROTOCOLS)/dcerpc.o \
+	$(NDPI_LIB_PROTOCOLS)/netflow.o \
+	$(NDPI_LIB_PROTOCOLS)/sflow.o \
+	$(NDPI_LIB_PROTOCOLS)/radius.o \
+	$(NDPI_LIB_PROTOCOLS)/teamviewer.o \
+	$(NDPI_LIB_PROTOCOLS)/lotus_notes.o \
+	$(NDPI_LIB_PROTOCOLS)/gtp.o \
+	$(NDPI_LIB_PROTOCOLS)/h323.o \
+	$(NDPI_LIB_PROTOCOLS)/noe.o \
+	$(NDPI_LIB_PROTOCOLS)/ciscovpn.o \
+	$(NDPI_LIB_PROTOCOLS)/teamspeak.o \
+	$(NDPI_LIB_PROTOCOLS)/viber.o \
+	$(NDPI_LIB_PROTOCOLS)/openvpn.o \
+	$(NDPI_LIB_PROTOCOLS)/corba.o \
+	$(NDPI_LIB_PROTOCOLS)/oracle.o \
+	$(NDPI_LIB_PROTOCOLS)/rsync.o \
+	$(NDPI_LIB_PROTOCOLS)/rtcp.o \
+	$(NDPI_LIB_PROTOCOLS)/skinny.o \
+	$(NDPI_LIB_PROTOCOLS)/tor.o \
+	$(NDPI_LIB_PROTOCOLS)/whoisdas.o \
+	$(NDPI_LIB_PROTOCOLS)/aliwangwang.o \
+	$(NDPI_LIB_PROTOCOLS)/baiduhi.o \
+	$(NDPI_LIB_PROTOCOLS)/wechat.o \
+	$(NDPI_LIB_PROTOCOLS)/kugou.o \
+	$(NDPI_LIB_PROTOCOLS)/qqmusic.o \
+	$(NDPI_LIB_PROTOCOLS)/funshion.o
+
+
+SRC=lru.c lru.h ndpi.c ndpi.h main.c
+OBJS=main.o ndpi.o lru.o
+
+obj-m := xt_ndpi.o 
+xt_ndpi-y := $(OBJS) $(NDPI_LIB_OBJS)
+#ccflags-y += -I$(NDPI_HOME)/src/lib -I$(NDPI_HOME)/src/protocols
+
+all: Makefile $(SRC)
+	@if test "$(USER)" = "root"; then \
+		echo "********** WARNING WARNING WARNING **********"; \
+		echo "*"; \
+		echo "* Compiling as root might lead you to compile errors"; \
+		echo "* Please compile as unpriviliged user"; \
+		echo "*"; \
+		echo "*********************************************"; \
+	fi
+	make -C /lib/modules/$(BUILD_KERNEL)/build SUBDIRS=$(HERE) EXTRA_CFLAGS='$(EXTRA_CFLAGS)' modules
+
+ln:
+	ln -s $(NDPI_LIB)/*\.o .
+
+install:
+	cp xt_ndpi.ko $(INSTDIR)
+	depmod
+
+clean:
+	make -C /lib/modules/$(BUILD_KERNEL)/build SUBDIRS=$(HERE) clean
+	\rm -f *~ Module.symvers  Module.markers  modules.order *# *.o
+

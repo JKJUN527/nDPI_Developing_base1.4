@@ -1,0 +1,30 @@
+Prerequisites
+-------------
+
+[Ubuntu]
+apt-get install iptables-dev
+
+
+[CentOS]
+yum install iptables-devel
+
+
+
+
+
+Installation
+------------
+make install
+
+
+
+Usage
+-----
+iptables -m ndpi --help
+
+
+Install/Remove Rules
+--------------------
+iptables -A OUTPUT -m ndpi -j ACCEPT
+
+iptables -D OUTPUT 1
