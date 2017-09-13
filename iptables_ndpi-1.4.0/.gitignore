@@ -23,7 +23,7 @@ nDPI/config.h
 nDPI/config.h.in
 nDPI/config.log
 nDPI/config.status
-nDPI/configure
+#nDPI/configure
 nDPI/libtool
 #nDPI/src/include/Makefile
 nDPI/src/include/Makefile.in

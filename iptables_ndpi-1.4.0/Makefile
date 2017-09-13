@@ -68,11 +68,10 @@ test:
 	#iptables -A FORWARD -m ndpi --protos PPSTREAM -j REJECT
 	#iptables -A FORWARD -m ndpi --protos ku6 -j REJECT
 	#iptables -A FORWARD -m ndpi --protos jx3 -j REJECT
-	iptables -A FORWARD -m ndpi --protos baidupan -j REJECT
-	iptables -A FORWARD -m ndpi --protos jx3 -j REJECT
-	#iptables -A FORWARD -m ndpi --protos eudemons -j REJECT
-	#iptables -A FORWARD -m ndpi --protos tianxia3 -j REJECT
 	#iptables -A FORWARD -m ndpi --protos wendao -j REJECT
+	iptables -F FORWARD
+	> /var/log/messages
+	iptables -A FORWARD -m ndpi --protos HuaShengKe -j REJECT
 	watch -n 0.5 'iptables -S -v'
 	#iptables -A JK -p udp --sport 12345 -j REJECT
 m:
