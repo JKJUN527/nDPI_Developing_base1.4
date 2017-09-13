@@ -121,6 +121,7 @@ libndpi_la_SOURCES = \
 			protocols/jx3.c \
 			protocols/eudemons.c \
 			protocols/huashengke.c \
+			protocols/qqmusic.c \
 			protocols/qiannyh.c
 			
 #protocols/skype.c \

@@ -840,7 +840,9 @@ ndpi_protocol_match host_match[] = {
   { "ddnscom.gnvip.net",        "JinWanWei",   NDPI_PROTOCOL_JINWANWEI },
 
   { "phsle02.oray.net",         "HuaShengKe" , NDPI_PROTOCOL_HUASHENGKE },
-  { ".oray.net",                "HuaShengKe" , NDPI_PROTOCOL_HUASHENGKE },
+  { "oray.net",                 "HuaShengKe" , NDPI_PROTOCOL_HUASHENGKE },
+  { "qqmusic.qq.com",           "QQMusic",     NDPI_PROTOCOL_QQMUSIC },
+  { "music.qq.com",             "QQMusic",     NDPI_PROTOCOL_QQMUSIC },
   /*ltk end*/
   { NULL, 0 }
 };
@@ -1256,13 +1258,15 @@ static void ndpi_init_protocol_defaults(struct ndpi_detection_module_struct *ndp
    ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_JINWANWEI, "JinWanWei",
         		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0),  /* TCP */
         		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
-   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_QQ_TX, "QQ_TX",
+   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_QQ_TX, "QQTX",
         		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0),  /* TCP */
         		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
-   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_WECHAT_TX, "WeChat_TX",
+   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_WECHAT_TX, "WeChatTX",
         		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0),  /* TCP */
         		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
-        		 
+   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_QQMUSIC, "QQMusic",
+        		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0),  /* TCP */
+        		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
    ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_GAME_QIANNYH, "QianNYH",
         		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0),  /* TCP */
         		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
@@ -1679,6 +1683,11 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
          NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_WECHAT_TX);
      }
 #endif /* NDPI_PROTOCOL_WECHAT_TX */
+#ifdef NDPI_PROTOCOL_QQMUSIC
+     if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_QQMUSIC) != 0) {
+         NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_QQMUSIC);
+     }
+#endif /* NDPI_PROTOCOL_QQMUSIC */
   /* HTTP DETECTION MUST BE BEFORE DDL BUT AFTER ALL OTHER PROTOCOLS WHICH USE HTTP ALSO */
   if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_HTTP) != 0) {
 

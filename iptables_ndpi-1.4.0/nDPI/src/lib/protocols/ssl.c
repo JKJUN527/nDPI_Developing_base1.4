@@ -355,6 +355,8 @@ static int find_mark_subprotocol(struct ndpi_detection_module_struct *ndpi,
         return 1;
     }
 #endif /* NDPI_PROTOCOL_HUASHENGKE */
+
+    /* PUT YOUR COEES TO THERE! */
     return 0;
 }
 
@@ -366,10 +368,6 @@ static void ssl_mark_and_payload_search_for_other_protocols(struct ndpi_detectio
 
     /* if has detected, return */
     if(packet->detected_protocol_stack[0] != NDPI_PROTOCOL_UNKNOWN)
-        return;
-
-    /* find and mark subprotol base on ssl */
-    if (find_mark_subprotocol(ndpi_struct, flow))
         return;
 
     int rc = sslDetectProtocolFromCertificate(ndpi_struct, flow);
@@ -422,9 +420,9 @@ static u_int8_t ndpi_search_sslv3_direction1(struct ndpi_detection_module_struct
 	       cert_start);
 
       if (cert_start < packet->payload_packet_len && packet->payload[cert_start] == 0x0b) {
-	NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG,
-		 "found 0x0b at suspected start of certificate block\n");
-	return 2;
+          NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG,
+                  "found 0x0b at suspected start of certificate block\n");
+          return 2;
       }
     }
 
@@ -485,8 +483,6 @@ static u_int8_t ndpi_search_sslv3_direction1(struct ndpi_detection_module_struct
 	}
 
       }
-
-
     }
 
   }
@@ -497,11 +493,15 @@ static u_int8_t ndpi_search_sslv3_direction1(struct ndpi_detection_module_struct
 void ndpi_search_ssl_tcp(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {
     struct ndpi_packet_struct *packet = &flow->packet;
-
-    //      struct ndpi_id_struct         *src=flow->src;
-    //      struct ndpi_id_struct         *dst=flow->dst;
-
     u_int8_t ret;
+
+    /* First, find and mark subprotol base on ssl, the three protocols are compatible with other protocols. */
+    if ((packet->detected_protocol_stack[0] == NDPI_PROTOCOL_UNKNOWN
+                || packet->detected_protocol_stack[0] == NDPI_PROTOCOL_SSL
+                || packet->detected_protocol_stack[0] == NDPI_PROTOCOL_SSL_NO_CERT)
+            && find_mark_subprotocol(ndpi_struct, flow)) {
+        return;
+    }
 
     if (packet->detected_protocol_stack[0] == NDPI_PROTOCOL_SSL) {
         if (flow->l4.tcp.ssl_stage == 3 && packet->payload_packet_len > 20 && flow->packet_counter < 5) {
@@ -589,5 +589,5 @@ void ndpi_search_ssl_tcp(struct ndpi_detection_module_struct *ndpi_struct, struc
     NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_SSL);
     return;
 }
-#endif
+#endif /* NDPI_PROTOCOL_SSL */
 
