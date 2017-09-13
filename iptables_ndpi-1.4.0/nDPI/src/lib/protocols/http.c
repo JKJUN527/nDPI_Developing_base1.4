@@ -21,11 +21,25 @@
  * along with nDPI.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
-
 #include "ndpi_protocols.h"
 
 #ifdef NDPI_PROTOCOL_HTTP
+
+#ifdef __KERNEL__
+# define printf printk
+#endif
+
+#define LOCAL_DEBUG
+
+#undef _D
+#ifdef LOCAL_DEBUG
+# define _D(fmt, ...)    do { \
+    char *f = strrchr(__FILE__, '/'); \
+    printf("%s: %d: ", f+1, __LINE__); printf(fmt, ## __VA_ARGS__); \
+} while (0)
+#else
+# define _D(fmt, ...)    ((void)0)
+#endif
 
 static void ndpi_int_http_add_connection(struct ndpi_detection_module_struct *ndpi_struct,
 					 struct ndpi_flow_struct *flow, u_int32_t protocol)
@@ -347,7 +361,7 @@ static void fetion_parse_packet_useragentline	(struct ndpi_detection_module_stru
 static u_int32_t wechat_authkey_hash(u_int8_t *authkey)
 {
     u_int32_t ret = 0;
-    u_int8_t *p = &ret;
+    u_int8_t *p = (u_int8_t*)&ret;
     int i;
     /* authkey 长度为 68 字节，按照 4 字节一块异或求 hash */
     for (i = 0; i < 17; i++) {
@@ -369,11 +383,11 @@ static void check_wechat_tx_payload(struct ndpi_detection_module_struct *ndpi, s
         NULL,
     };
     struct ndpi_packet_struct *packet = &flow->packet;
-    char *payload = packet->payload;
+    char *payload = (char*)packet->payload;
     char const **method;
     int find = 0;
     for (method = methods; *method != NULL && !find; method++) {
-        char *str = *method;
+        char const *str = *method;
         int len = strlen(str);
         if (packet->payload_packet_len >= len && strncmp(payload, str, len) == 0)
             find = 1;
@@ -494,274 +508,305 @@ static void parseHttpSubprotocol(struct ndpi_detection_module_struct *ndpi_struc
 }
 
 
-static void check_custom_headers(struct ndpi_detection_module_struct
-						   *ndpi_struct, struct ndpi_flow_struct *flow){
-#if  defined(NDPI_PROTOCOL_PPLIVE) || defined(NDPI_PROTOCOL_YIXIN) || defined(NDPI_PROTOCOL_QQLIVE) || defined(NDPI_PROTOCOL_SOHU) || defined(NDPI_PROTOCOL_PPSTREAM)
+static void check_custom_headers(struct ndpi_detection_module_struct *ndpi_struct,
+        struct ndpi_flow_struct *flow)
+{
+    int qqmusic_statis = 0;     /* compute that how many features belong to qqmusc */
+    struct ndpi_packet_struct *packet = &flow->packet;
+    u_int8_t a ;
+    for (a = 0; a < packet->parsed_lines; a++) {
+        /*------wanglei---YIXIN-----*/
+#ifdef NDPI_PROTOCOL_YIXIN
+        if (( packet->line[a].len>10 && memcmp(packet->line[a].ptr,"YX-PN: yxmc",11) == 0) ){
+            NDPI_LOG(NDPI_PROTOCOL_YIXIN, ndpi_struct, NDPI_LOG_DEBUG, "YIXIN: YX-PN found.\n");
+            ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_YIXIN);
+            return;
+        }
+#endif
+        /*------wanglei---SOHU-----*/
+#ifdef NDPI_PROTOCOL_SOHU
+        if (( packet->line[a].len>= 10 && memcmp(packet->line[a].ptr,"GET /sohu/",10) == 0 && strstr(packet->line[a].ptr,"mp4") ) 
+                ||( packet->line[a].len>= 50 && memcmp(packet->line[a].ptr,"GET /p2p",8) == 0 
+                    && strstr(packet->line[a].ptr,"mp4") 
+                    && strstr(packet->line[a].ptr,"u HTTP")) 
+                || (packet->line[a].len >= 50 && memcmp(packet->line[a].ptr,"GET /p2p?=new",13)==0 && strstr(packet->line[a].ptr,"mp4"))
+                || (packet->line[a].len >= 50 && memcmp(packet->line[a].ptr,"GET /sohu/p2p",13)==0 )
+           ){
+            NDPI_LOG(NDPI_PROTOCOL_SOHU, ndpi_struct, NDPI_LOG_DEBUG, "SOHU: sohu found.\n");
+            ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_SOHU);
+            return;
+        }
+#endif
+        /*------wanglei---YOUKU-----*/
+#ifdef NDPI_PROTOCOL_YOUKU
+        if ( (packet->line[a].len>= 12 && ( (memcmp(packet->line[a].ptr,"GET /youku",10) == 0
+                            && strstr(packet->line[a].ptr,"flv"))
+                        //memcmp(packet->line[a].ptr,"GET /ikupv",10) == 0 
+                        //|| memcmp(packet->line[a].ptr,"GET /itudou",11) == 0 
+                        ||(memcmp(packet->line[a].ptr,"GET /player",11) == 0
+                            && strstr(packet->line[a].ptr,"/mp4/"))))
+                || (packet->line[a].len>= 27 && (memcmp(packet->line[a].ptr,"User-Agent: youku-tudou IKU",27) == 0))
+                //							|| (memcmp(packet->line[a].ptr,"User-Agent:",11) == 0 && strstr(packet->line[a].ptr,"youku"))))
+            || (packet->line[a].len>= 22 && memcmp(packet->line[a].ptr,"Cookie: campKeys=ZH4sI",22) == 0 )
+                || (packet->line[a].len>= 30 && memcmp(packet->line[a].ptr,"GET /",5) == 0
+                        &&(strstr(packet->line[a].ptr,"flv")||strstr(packet->line[a].ptr,"mp4"))
+                        &&strstr(packet->line[a].ptr,"expire")
+                        &&strstr(packet->line[a].ptr,"ups_client_netip")
+                        &&strstr(packet->line[a].ptr,"ups_ts"))
+                || (packet->line[a].len>= 70 && memcmp(packet->line[a].ptr,"Referer:",8) == 0 &&strstr(packet->line[a].ptr,"upsplayer")
+                        &&strstr(packet->line[a].ptr,"youku"))
 
+                ){
+                    NDPI_LOG(NDPI_PROTOCOL_YOUKU, ndpi_struct, NDPI_LOG_DEBUG, "YOUKU: youku found.\n");
+                    ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_YOUKU);
+                    return;
+                }
+#endif
+        /*------wanglei---KU6-----*/
+#ifdef NDPI_PROTOCOL_KU6
+        if ((packet->line[0].len >= 10
+                    && memcmp(packet->line[0].ptr,"GET /",5) == 0
+                    && strstr(packet->line[0].ptr,"mp4")
+                    && packet->line[a].len >= 13
+                    && strstr(packet->line[a].ptr,"rbv01.ku6.com"))
+                ||(packet->line[1].len >=13
+                    &&strstr(packet->line[1].ptr,"rbv01.ku6.com")
+                    &&packet->line[a].len >= 12
+                    &&memcmp(packet->line[a].ptr,"Cookie: KUID",12) == 0)
+           ) {
+            NDPI_LOG(NDPI_PROTOCOL_KU6, ndpi_struct, NDPI_LOG_DEBUG, "KU6: ku6 found.\n");
+            ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_KU6);
+            return;
+        }
+#endif
+        /*------wanglei---funshion-----*/
+#ifdef NDPI_PROTOCOL_FUNSHION
+        if (//(packet->line[a].len>= 20 && memcmp(packet->line[a].ptr,"User-Agent: Funshion",20) == 0)
+                (packet->line[a].len>= 26 && memcmp(packet->line[a].ptr,"Referer: http://vas.fun.tv",26) == 0) 
+                || (packet->line[a].len>= 35 && memcmp(packet->line[a].ptr,"Referer: http://static.funshion.com",35) == 0) 
+                || (packet->line[a].len>= 10 && memcmp(packet->line[a].ptr,"GET /",5) == 0
+                    && strstr(packet->line[a].ptr+5,"mp4") && strstr(packet->line[a].ptr+5,"fun")) 
+                || (packet->line[a].len>= 10 && packet->line[0].len>= 10 && memcmp(packet->line[0].ptr,"GET /",5) == 0
+                    && strstr(packet->line[0].ptr+5,"mp4") && strstr(packet->line[a].ptr,"funshion")) 
+           ){
+            NDPI_LOG(NDPI_PROTOCOL_FUNSHION, ndpi_struct, NDPI_LOG_DEBUG, "Funshion User-Agent found.\n");
+            ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_FUNSHION);
+            return;
+        }
+#endif
+        /*------wanglei---LETV-----*/
+#ifdef NDPI_PROTOCOL_LETV
+        if ( (packet->line[a].len>=34 && memcmp(packet->line[a].ptr,"Referer: http://player.letvcdn.com",34) == 0)
+                || (packet->line[0].len>=20 && memcmp(packet->line[0].ptr,"GET /",5) == 0 
+                    && (strstr(packet->line[0].ptr,"leju-client")
+                        || (strstr(packet->line[0].ptr,"letv") 
+                            &&  strstr(packet->line[0].ptr,"mp4"))))
+                //||(packet->line[a].len>=32 && memcmp(packet->line[a].ptr,"Referer: http://client.pc.le.com",32)==0 )
+                || (packet->line[a].len>=20 && (memcmp(packet->line[a].ptr,"Set-Cookie: uid=JG7f",20)==0 
+                        ||(memcmp(packet->line[a].ptr,"Set-Cookie:",11) == 0 
+                            && strstr(packet->line[a].ptr,"letv.com"))))
+           ){
+            NDPI_LOG(NDPI_PROTOCOL_LETV, ndpi_struct, NDPI_LOG_DEBUG, "LETV: letv found.\n");
+            ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_LETV);
+            return;
+        }
+#endif
+        /*------wanglei---QQLIVE-----*/
+#ifdef NDPI_PROTOCOL_QQLIVE
+        if (( packet->line[a].len>= 23 && (memcmp(packet->line[a].ptr,"GET /qqlive",11) == 0 
+                        || memcmp(packet->line[a].ptr,"GET /VuZyqq",11) == 0 
+                        || (memcmp(packet->line[a].ptr,"GET /d?dn",9) == 0 && strstr(packet->line[a].ptr,"qq.com")))) 
+                || (packet->line[a].len>= 22 && memcmp(packet->line[a].ptr,"GET /moviets.tc.qq.com",22) == 0 )
+                || (packet->line[a].len>= 18 && memcmp(packet->line[a].ptr,"User-Agent: QQLive",18) == 0 )
+                || (packet->line[a].len>= 18 && memcmp(packet->line[a].ptr,"GET /vhot2.qqvideo",18) == 0 )
+                || (packet->line[a].len>= 20 && memcmp(packet->line[a].ptr,"GET /",5) == 0 
+                    && strstr(packet->line[a].ptr,"qq.com") 
+                    && strstr(packet->line[a].ptr,"mp4"))
+                || (packet->line[a].len>= 20 && memcmp(packet->line[a].ptr,"GET /video",10) == 0 
+                    && strstr(packet->line[a].ptr,"qq.com") 
+                    && strstr(packet->line[a].ptr,"mp4"))
+                || (packet->line[a].len>= 14 && ( memcmp(packet->line[a].ptr,"Cookie: QQLive",14) == 0 
+                        || (memcmp(packet->line[a].ptr,"GET /kvcollect",14) == 0 && strstr(packet->line[a].ptr,"qq="))))
+           ){
+            NDPI_LOG(NDPI_PROTOCOL_QQLIVE, ndpi_struct, NDPI_LOG_DEBUG, "QQLIVE: qqlive found.\n");
+            ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_QQLIVE);
+            return;
+        }
+#endif
+        /*------wanglei---PPSTREAM-----*/
+#ifdef NDPI_PROTOCOL_PPSTREAM
+        if ( (packet->line[a].len> 50 
+                    && memcmp(packet->line[a].ptr,"GET /videos/",12) == 0
+                    && strstr(packet->line[a].ptr,"f4v") 
+                    && strstr(packet->line[a].ptr,"iqiyi"))
+                || (packet->line[a].len>= 20 
+                    && memcmp(packet->line[a].ptr,"Referer:",8) == 0 
+                    &&strstr(packet->line[a].ptr,"iqiyi.com")
+                    &&strstr(packet->line[a].ptr,"flashplayer"))
+                || (packet->line[a].len>= 30 && memcmp(packet->line[a].ptr,"GET /videos",11) == 0
+                    &&(strstr(packet->line[a].ptr,"f4v")||strstr(packet->line[a].ptr,"mp4"))
+                    &&strstr(packet->line[a].ptr,"dis_dz")
+                    &&strstr(packet->line[a].ptr,"src=iqiyi.com"))
 
-
-	  struct ndpi_packet_struct *packet = &flow->packet;
-	  u_int8_t a ;
-	  for (a = 0; a < packet->parsed_lines; a++) {
-		/*------wanglei---YIXIN-----*/
-		#ifdef NDPI_PROTOCOL_YIXIN
-			if (( packet->line[a].len>10 && memcmp(packet->line[a].ptr,"YX-PN: yxmc",11) == 0) ){
-		  NDPI_LOG(NDPI_PROTOCOL_YIXIN, ndpi_struct, NDPI_LOG_DEBUG, "YIXIN: YX-PN found.\n");
-		  ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_YIXIN);
-		  return;
-		}
-		#endif
-		/*------wanglei---SOHU-----*/
-		#ifdef NDPI_PROTOCOL_SOHU
-			if (( packet->line[a].len>= 10 && memcmp(packet->line[a].ptr,"GET /sohu/",10) == 0 && strstr(packet->line[a].ptr,"mp4") ) 
-			    ||( packet->line[a].len>= 50 && memcmp(packet->line[a].ptr,"GET /p2p",8) == 0 
-		    		&& strstr(packet->line[a].ptr,"mp4") 
-				&& strstr(packet->line[a].ptr,"u HTTP")) 
-			   || (packet->line[a].len >= 50 && memcmp(packet->line[a].ptr,"GET /p2p?=new",13)==0 && strstr(packet->line[a].ptr,"mp4"))
-			   || (packet->line[a].len >= 50 && memcmp(packet->line[a].ptr,"GET /sohu/p2p",13)==0 )
-			){
-		     NDPI_LOG(NDPI_PROTOCOL_SOHU, ndpi_struct, NDPI_LOG_DEBUG, "SOHU: sohu found.\n");
-		     ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_SOHU);
-		     return;
-		  }
-		#endif
-		/*------wanglei---YOUKU-----*/
-		#ifdef NDPI_PROTOCOL_YOUKU
-			if ( (packet->line[a].len>= 12 && ( (memcmp(packet->line[a].ptr,"GET /youku",10) == 0
-								&& strstr(packet->line[a].ptr,"flv"))
-							    //memcmp(packet->line[a].ptr,"GET /ikupv",10) == 0 
-            							//|| memcmp(packet->line[a].ptr,"GET /itudou",11) == 0 
-            						   ||(memcmp(packet->line[a].ptr,"GET /player",11) == 0
-            								&& strstr(packet->line[a].ptr,"/mp4/"))))
-			|| (packet->line[a].len>= 27 && (memcmp(packet->line[a].ptr,"User-Agent: youku-tudou IKU",27) == 0))
-	//							|| (memcmp(packet->line[a].ptr,"User-Agent:",11) == 0 && strstr(packet->line[a].ptr,"youku"))))
-			|| (packet->line[a].len>= 22 && memcmp(packet->line[a].ptr,"Cookie: campKeys=ZH4sI",22) == 0 )
-			|| (packet->line[a].len>= 30 && memcmp(packet->line[a].ptr,"GET /",5) == 0
-				&&(strstr(packet->line[a].ptr,"flv")||strstr(packet->line[a].ptr,"mp4"))
-				&&strstr(packet->line[a].ptr,"expire")
-				&&strstr(packet->line[a].ptr,"ups_client_netip")
-				&&strstr(packet->line[a].ptr,"ups_ts"))
-			|| (packet->line[a].len>= 70 && memcmp(packet->line[a].ptr,"Referer:",8) == 0 &&strstr(packet->line[a].ptr,"upsplayer")
-				&&strstr(packet->line[a].ptr,"youku"))
-		
-		     ){
-		     NDPI_LOG(NDPI_PROTOCOL_YOUKU, ndpi_struct, NDPI_LOG_DEBUG, "YOUKU: youku found.\n");
-		     ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_YOUKU);
-		     return;
-		  }
-		#endif
-		/*------wanglei---KU6-----*/
-		#ifdef NDPI_PROTOCOL_KU6
-			if ((packet->line[0].len >= 10 
-				&& memcmp(packet->line[0].ptr,"GET /",5) == 0 
-                        	&& strstr(packet->line[0].ptr,"mp4") 
-				&& packet->line[a].len >= 13
-                        	&& strstr(packet->line[a].ptr,"rbv01.ku6.com"))
-			   ||(packet->line[1].len >=13
-				&&strstr(packet->line[1].ptr,"rbv01.ku6.com")
-				&&packet->line[a].len >= 12
-				&&memcmp(packet->line[a].ptr,"Cookie: KUID",12) == 0)
-			){
-		     NDPI_LOG(NDPI_PROTOCOL_KU6, ndpi_struct, NDPI_LOG_DEBUG, "KU6: ku6 found.\n");
-		     ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_KU6);
-		     return;
-		  }
-		#endif
-		/*------wanglei---funshion-----*/
-		#ifdef NDPI_PROTOCOL_FUNSHION
-			if (//(packet->line[a].len>= 20 && memcmp(packet->line[a].ptr,"User-Agent: Funshion",20) == 0)
-                           (packet->line[a].len>= 26 && memcmp(packet->line[a].ptr,"Referer: http://vas.fun.tv",26) == 0) 
-                           || (packet->line[a].len>= 35 && memcmp(packet->line[a].ptr,"Referer: http://static.funshion.com",35) == 0) 
-                           || (packet->line[a].len>= 10 && memcmp(packet->line[a].ptr,"GET /",5) == 0
-                           	&& strstr(packet->line[a].ptr+5,"mp4") && strstr(packet->line[a].ptr+5,"fun")) 
-                           || (packet->line[a].len>= 10 && packet->line[0].len>= 10 && memcmp(packet->line[0].ptr,"GET /",5) == 0
-                           	&& strstr(packet->line[0].ptr+5,"mp4") && strstr(packet->line[a].ptr,"funshion")) 
-			   ){
-		     NDPI_LOG(NDPI_PROTOCOL_FUNSHION, ndpi_struct, NDPI_LOG_DEBUG, "Funshion User-Agent found.\n");
-		     ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_FUNSHION);
-		     return;
-		  }
-		#endif
-		/*------wanglei---LETV-----*/
-		#ifdef NDPI_PROTOCOL_LETV
-			if ( (packet->line[a].len>=34 && memcmp(packet->line[a].ptr,"Referer: http://player.letvcdn.com",34) == 0)
-			   || (packet->line[0].len>=20 && memcmp(packet->line[0].ptr,"GET /",5) == 0 
-					&& (strstr(packet->line[0].ptr,"leju-client")
-			   		|| (strstr(packet->line[0].ptr,"letv") 
-			   			&&  strstr(packet->line[0].ptr,"mp4"))))
-			   //||(packet->line[a].len>=32 && memcmp(packet->line[a].ptr,"Referer: http://client.pc.le.com",32)==0 )
-                           || (packet->line[a].len>=20 && (memcmp(packet->line[a].ptr,"Set-Cookie: uid=JG7f",20)==0 
-			   	||(memcmp(packet->line[a].ptr,"Set-Cookie:",11) == 0 
-			   		&& strstr(packet->line[a].ptr,"letv.com"))))
-  			){
-		     NDPI_LOG(NDPI_PROTOCOL_LETV, ndpi_struct, NDPI_LOG_DEBUG, "LETV: letv found.\n");
-		     ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_LETV);
-		     return;
-		  }
-		#endif
-		/*------wanglei---QQLIVE-----*/
-		#ifdef NDPI_PROTOCOL_QQLIVE
-			if (( packet->line[a].len>= 23 && (memcmp(packet->line[a].ptr,"GET /qqlive",11) == 0 
-			   	|| memcmp(packet->line[a].ptr,"GET /VuZyqq",11) == 0 
-			   	|| (memcmp(packet->line[a].ptr,"GET /d?dn",9) == 0 && strstr(packet->line[a].ptr,"qq.com")))) 
-			   || (packet->line[a].len>= 22 && memcmp(packet->line[a].ptr,"GET /moviets.tc.qq.com",22) == 0 )
-			   || (packet->line[a].len>= 18 && memcmp(packet->line[a].ptr,"User-Agent: QQLive",18) == 0 )
-			   || (packet->line[a].len>= 18 && memcmp(packet->line[a].ptr,"GET /vhot2.qqvideo",18) == 0 )
-			   || (packet->line[a].len>= 20 && memcmp(packet->line[a].ptr,"GET /",5) == 0 
-				&& strstr(packet->line[a].ptr,"qq.com") 
-				&& strstr(packet->line[a].ptr,"mp4"))
-			   || (packet->line[a].len>= 20 && memcmp(packet->line[a].ptr,"GET /video",10) == 0 
-				&& strstr(packet->line[a].ptr,"qq.com") 
-				&& strstr(packet->line[a].ptr,"mp4"))
-               		   || (packet->line[a].len>= 14 && ( memcmp(packet->line[a].ptr,"Cookie: QQLive",14) == 0 
-               			|| (memcmp(packet->line[a].ptr,"GET /kvcollect",14) == 0 && strstr(packet->line[a].ptr,"qq="))))
-			){
-		     NDPI_LOG(NDPI_PROTOCOL_QQLIVE, ndpi_struct, NDPI_LOG_DEBUG, "QQLIVE: qqlive found.\n");
-		     ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_QQLIVE);
-		     return;
-		  }
-		#endif
-		/*------wanglei---PPSTREAM-----*/
-		#ifdef NDPI_PROTOCOL_PPSTREAM
-			if ( (packet->line[a].len> 50 
-				&& memcmp(packet->line[a].ptr,"GET /videos/",12) == 0
-			  	&& strstr(packet->line[a].ptr,"f4v") 
-			 	&& strstr(packet->line[a].ptr,"iqiyi"))
-			    || (packet->line[a].len>= 20 
-					&& memcmp(packet->line[a].ptr,"Referer:",8) == 0 
-					&&strstr(packet->line[a].ptr,"iqiyi.com")
-					&&strstr(packet->line[a].ptr,"flashplayer"))
-			    || (packet->line[a].len>= 30 && memcmp(packet->line[a].ptr,"GET /videos",11) == 0
-				&&(strstr(packet->line[a].ptr,"f4v")||strstr(packet->line[a].ptr,"mp4"))
-				&&strstr(packet->line[a].ptr,"dis_dz")
-				&&strstr(packet->line[a].ptr,"src=iqiyi.com"))
-		
-		 ){
-		     NDPI_LOG(NDPI_PROTOCOL_PPSTREAM, ndpi_struct, NDPI_LOG_DEBUG, "PPSTREAM: iqiyi found.\n");
-		     ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_PPSTREAM);
-		     return;
-		  }
-		#endif
-		/*------wanglei---PPLIVE-----*/
+           ){
+            NDPI_LOG(NDPI_PROTOCOL_PPSTREAM, ndpi_struct, NDPI_LOG_DEBUG, "PPSTREAM: iqiyi found.\n");
+            ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_PPSTREAM);
+            return;
+        }
+#endif
+        /*------wanglei---PPLIVE-----*/
 Referer: http://player.pplive.cn/ikan/3.4.2.27/player4player2.swf
-		#ifdef NDPI_PROTOCOL_PPLIVE
-			if ((packet->line[a].len > 20&& memcmp(packet->line[a].ptr,"Pragma: Client=PPLive",21) == 0 )
-			    ||( packet->line[a].len > 37 && memcmp(packet->line[a].ptr,"Referer:",8)==0 && strstr(packet->line[a].ptr+8,"player.pplive.cn")) 
-			    ||( packet->line[a].len > 50 && memcmp(packet->line[a].ptr,"GET /",5)==0 && strstr(packet->line[a].ptr+5,"agent=ppap"))
-			 ){ 
-		       NDPI_LOG(NDPI_PROTOCOL_PPLIVE, ndpi_struct, NDPI_LOG_DEBUG, "PPLIVE feature found.\n");
-		       //NDPI_LOG(NDPI_PROTOCOL_PPLIVE, ndpi_struct, NDPI_LOG_DEBUG, "PPLIVE [%s].\n",packet->line[a].ptr);
-		       ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_PPLIVE);
-		       return;
-		}
-		#endif
-		/*PT 20161229*/
+#ifdef NDPI_PROTOCOL_PPLIVE
+             if ((packet->line[a].len > 20&& memcmp(packet->line[a].ptr,"Pragma: Client=PPLive",21) == 0 )
+                     ||( packet->line[a].len > 37 && memcmp(packet->line[a].ptr,"Referer:",8)==0 && strstr(packet->line[a].ptr+8,"player.pplive.cn")) 
+                     ||( packet->line[a].len > 50 && memcmp(packet->line[a].ptr,"GET /",5)==0 && strstr(packet->line[a].ptr+5,"agent=ppap"))
+                ){ 
+                 NDPI_LOG(NDPI_PROTOCOL_PPLIVE, ndpi_struct, NDPI_LOG_DEBUG, "PPLIVE feature found.\n");
+                 //NDPI_LOG(NDPI_PROTOCOL_PPLIVE, ndpi_struct, NDPI_LOG_DEBUG, "PPLIVE [%s].\n",packet->line[a].ptr);
+                 ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_PPLIVE);
+                 return;
+             }
+#endif
+         /*PT 20161229*/
 
-		#ifdef NDPI_PROTOCOL_ALIWANGWANG
-		if (packet->line[a].len >= NDPI_STATICSTRING_LEN("Cookie: cna=/")
-		 && memcmp(packet->line[a].ptr,"Cookie: cna=/",NDPI_STATICSTRING_LEN("Cookie: cna=/")) == 0
-		){
-		  NDPI_LOG(NDPI_PROTOCOL_ALIWANGWANG, ndpi_struct, NDPI_LOG_DEBUG, "aliwangwang: Cookie: cna=/ found.\n");
-		  ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_ALIWANGWANG);
-		  return;
-		}
-		
-		#endif
+#ifdef NDPI_PROTOCOL_ALIWANGWANG
+         if (packet->line[a].len >= NDPI_STATICSTRING_LEN("Cookie: cna=/")
+                 && memcmp(packet->line[a].ptr,"Cookie: cna=/",NDPI_STATICSTRING_LEN("Cookie: cna=/")) == 0
+            ){
+             NDPI_LOG(NDPI_PROTOCOL_ALIWANGWANG, ndpi_struct, NDPI_LOG_DEBUG, "aliwangwang: Cookie: cna=/ found.\n");
+             ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_ALIWANGWANG);
+             return;
+         }
 
-		/*PT 20161229 end*/
-		#ifdef NDPI_PROTOCOL_TIANXIA3
-		if ((packet->line[a].len>=NDPI_STATICSTRING_LEN("GET /tx2fix")
-			&&memcmp(packet->line[a].ptr,"GET /tx2fix",11)==0)
-		    ||(packet->line[a].len>=NDPI_STATICSTRING_LEN("HEAD /tx2fix")
-			&&memcmp(packet->line[a].ptr,"HEAD /tx2fix",12)==0)
-		    ||(packet->line[a].len>=NDPI_STATICSTRING_LEN("Server: WS CDN Server")
-			&&memcmp(packet->line[a].ptr,"Server: WS CDN Server",21)==0)
-		){
-		  NDPI_LOG(NDPI_PROTOCOL_TIANXIA3, ndpi_struct, NDPI_LOG_DEBUG, "tianxia3:'tx2fix' found.\n");
-		  ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_TIANXIA3);
-		  return;
-		}
-		
-		#endif
-		/*jkjun 2017-08-11 */
-		#ifdef NDPI_PROTOCOL_GAME_DNF
-		if (packet->line[a].len >= NDPI_STATICSTRING_LEN("GET /outer/ad_log_report")
-		    &&memcmp(packet->line[a].ptr,"GET /",5)==0 
-		    &&strstr(packet->line[a].ptr+5,"dnf")
-		){
-		  NDPI_LOG(NDPI_PROTOCOL_GAME_DNF, ndpi_struct, NDPI_LOG_DEBUG, "DNF login / found.\n");
-		  ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_GAME_DNF);
-		  return;
-		}
-		
-		#endif
-		/*jkjun end*/
-
-        /*ltk start*/
-#ifdef NDPI_PROTOCOL_JINWANWEI
-        char static const *jinwanwei_strs[] = {
-            "GET /client_login.php?user_name=",
-            "GET /checkGroupType.php?userName=",
-            "GET /client_getTimes.php?userName=",
-            "GET /client_getIP.php? HTTP/1.1",
-            "POST /client_saveDomainList.php HTTP/1.1",
-            "GET /gnapi/GetServiceProvider.php?ProductName=",
-
-            NULL,
-        };
-        char const **jinwanwei_ptr;
-        for (jinwanwei_ptr = jinwanwei_strs; *jinwanwei_ptr != NULL; jinwanwei_ptr++) {
-            char const *str = *jinwanwei_ptr;
-            int len = strlen(str);
-            if (packet->line[a].len >= len && strncmp(packet->line[a].ptr, str, len) == 0) {
-                ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_JINWANWEI);
-                NDPI_LOG(NDPI_PROTOCOL_JINWANWEI, ndpi_struct, NDPI_LOG_DEBUG, "JinWanWei: Found via %s\n", str);
-                return;
-            }
-        }
-#endif /* NDPI_PROTOCOL_JINWANWEI */
-#ifdef NDPI_PROTOCOL_QQ_TX
-        NDPI_LOG(NDPI_PROTOCOL_QQ_TX, ndpi_struct, NDPI_LOG_DEBUG, "Into QQ transfer file.\n");
-        static char const *qqtx_strs[] = {
-            "GET /ftn_handler",
-            "POST /ftn_handler",
-
-            NULL,
-        };
-        const **qqtx_ptr;
-        for (qqtx_ptr = qqtx_strs; *qqtx_ptr != NULL; qqtx_ptr++) {
-            char const *str = *qqtx_ptr;
-            int len = strlen(str);
-            if (packet->line[a].len >= len && strncmp(packet->line[a].ptr, str, len) == 0) {
-                ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_QQ_TX);
-                NDPI_LOG(NDPI_PROTOCOL_QQ_TX, ndpi_struct, NDPI_LOG_DEBUG, "QQ_TX: Found via %s\n", str);
-                return;
-            }
-        }
-#endif /* NDPI_PROTOCOL_QQ_TX */
-#ifdef NDPI_PROTOCOL_WECHAT_TX
-        NDPI_LOG(NDPI_PROTOCOL_JINWANWEI, ndpi_struct, NDPI_LOG_DEBUG, "Into WECHAT_TX.\n");
-        if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(ndpi_struct->detection_bitmask, NDPI_PROTOCOL_WECHAT_TX) != 0){
-            NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "WeiChat-Tx: bitmask add ok.\n");
-            check_wechat_tx_payload(ndpi_struct, flow);
-        } else {
-            NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "WeiChat-Tx: bitmask add false.\n");
-        }
-#endif /* NDPI_PROTOCOL_WECHAT_TX */
-        /*ltk start*/
-      }
 #endif
 
+         /*PT 20161229 end*/
+#ifdef NDPI_PROTOCOL_TIANXIA3
+         if ((packet->line[a].len>=NDPI_STATICSTRING_LEN("GET /tx2fix")
+                     &&memcmp(packet->line[a].ptr,"GET /tx2fix",11)==0)
+                 ||(packet->line[a].len>=NDPI_STATICSTRING_LEN("HEAD /tx2fix")
+                     &&memcmp(packet->line[a].ptr,"HEAD /tx2fix",12)==0)
+                 ||(packet->line[a].len>=NDPI_STATICSTRING_LEN("Server: WS CDN Server")
+                     &&memcmp(packet->line[a].ptr,"Server: WS CDN Server",21)==0)
+            ){
+             NDPI_LOG(NDPI_PROTOCOL_TIANXIA3, ndpi_struct, NDPI_LOG_DEBUG, "tianxia3:'tx2fix' found.\n");
+             ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_TIANXIA3);
+             return;
+         }
+
+#endif
+         /*jkjun 2017-08-11 */
+#ifdef NDPI_PROTOCOL_GAME_DNF
+         if (packet->line[a].len >= NDPI_STATICSTRING_LEN("GET /outer/ad_log_report")
+                 &&memcmp(packet->line[a].ptr,"GET /",5)==0 
+                 &&strstr(packet->line[a].ptr+5,"dnf")
+            ){
+             NDPI_LOG(NDPI_PROTOCOL_GAME_DNF, ndpi_struct, NDPI_LOG_DEBUG, "DNF login / found.\n");
+             ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_GAME_DNF);
+             return;
+         }
+
+#endif
+         /*jkjun end*/
+
+         /*ltk start*/
+#ifdef NDPI_PROTOCOL_JINWANWEI
+         char static const *jinwanwei_strs[] = {
+             "GET /client_login.php?user_name=",
+             "GET /checkGroupType.php?userName=",
+             "GET /client_getTimes.php?userName=",
+             "GET /client_getIP.php? HTTP/1.1",
+             "POST /client_saveDomainList.php HTTP/1.1",
+             "GET /gnapi/GetServiceProvider.php?ProductName=",
+
+             NULL,
+         };
+         char const **jinwanwei_ptr;
+         for (jinwanwei_ptr = jinwanwei_strs; *jinwanwei_ptr != NULL; jinwanwei_ptr++) {
+             char const *str = *jinwanwei_ptr;
+             int len = strlen(str);
+             if (packet->line[a].len >= len && strncmp(packet->line[a].ptr, str, len) == 0) {
+                 ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_JINWANWEI);
+                 NDPI_LOG(NDPI_PROTOCOL_JINWANWEI, ndpi_struct, NDPI_LOG_DEBUG, "JinWanWei: Found via %s\n", str);
+                 return;
+             }
+         }
+#endif /* NDPI_PROTOCOL_JINWANWEI */
+#ifdef NDPI_PROTOCOL_QQ_TX
+         NDPI_LOG(NDPI_PROTOCOL_QQ_TX, ndpi_struct, NDPI_LOG_DEBUG, "Into QQ transfer file.\n");
+         static char const *qqtx_strs[] = {
+             "GET /ftn_handler",
+             "POST /ftn_handler",
+
+             NULL,
+         };
+         const char **qqtx_ptr;
+         for (qqtx_ptr = qqtx_strs; *qqtx_ptr != NULL; qqtx_ptr++) {
+             const char *str = *qqtx_ptr;
+             int len = strlen(str);
+             if (packet->line[a].len >= len && strncmp(packet->line[a].ptr, str, len) == 0) {
+                 ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_QQ_TX);
+                 NDPI_LOG(NDPI_PROTOCOL_QQ_TX, ndpi_struct, NDPI_LOG_DEBUG, "QQ_TX: Found via %s\n", str);
+                 return;
+             }
+         }
+#endif /* NDPI_PROTOCOL_QQ_TX */
+#ifdef NDPI_PROTOCOL_WECHAT_TX
+         NDPI_LOG(NDPI_PROTOCOL_WECHAT_TX, ndpi_struct, NDPI_LOG_DEBUG, "Into WECHAT_TX.\n");
+         if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(ndpi_struct->detection_bitmask, NDPI_PROTOCOL_WECHAT_TX) != 0){
+             NDPI_LOG(NDPI_PROTOCOL_WECHAT_TX, ndpi_struct, NDPI_LOG_DEBUG, "WeiChat-Tx: bitmask add ok.\n");
+             check_wechat_tx_payload(ndpi_struct, flow);
+         } else {
+             NDPI_LOG(NDPI_PROTOCOL_WECHAT_TX, ndpi_struct, NDPI_LOG_DEBUG, "WeiChat-Tx: bitmask add false.\n");
+         }
+#endif /* NDPI_PROTOCOL_WECHAT_TX */
+#ifdef NDPI_PROTOCOL_QQMUSIC
+         _D("Into QQ music.\n");
+         _D("QQ music: line[%d]: %s\n", a, packet->line[a].ptr);
+         if (!strncmp("GET /", packet->line[a].ptr, 5)) {
+             char *ogg = strstr(packet->line[a].ptr, "ogg");
+             if (ogg && strstr(ogg, "vkey"))
+                 qqmusic_statis += 3;
+         }
+         if (!strncmp("Referer:", packet->line[a].ptr, 8)
+                 && strstr(packet->line[a].ptr, "stream.qqmusic.qq.com")) {
+             qqmusic_statis += 2;
+         }
+         if (!strncmp("Host:", packet->line[a].ptr, 5)
+                 && strstr(packet->line[a].ptr, "stream.qqmusic.qq.com")) {
+             qqmusic_statis += 2;
+         }
+         if (!strncmp("Cookie:", packet->line[a].ptr, 7)) {
+             char *cookies[] = {
+                 "qqmusic_uin", "qqmusic_key",
+                 "qqmusic_gkey",
+                 NULL,
+             };
+             char **c;
+             for (c = cookies; *c != NULL; c++) {
+                 if (memfind(packet->line[a].ptr, 128, *c, strlen(*c)))
+                     qqmusic_statis++;
+             }
+         }
+         _D("qqmusic_statis: %d\n", qqmusic_statis);
+         if (qqmusic_statis >= 5) {
+             ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_QQMUSIC);
+             _D("QQ music: Found!\n");
+             return;
+         }
+#endif /* NDPI_PROTOCOL_QQMUSIC */
+         /*ltk start*/
+    }
 }
 
-static void check_content_line(struct ndpi_detection_module_struct
-						   *ndpi_struct, struct ndpi_flow_struct *flow){
-	struct ndpi_packet_struct *packet = &flow->packet;
-	if (packet->content_line.ptr != NULL && packet->content_line.len != 0) {
-    NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "Content Type Line found %.*s\n",
-	    packet->content_line.len, packet->content_line.ptr);
-	
-  }
+static void check_content_line(struct ndpi_detection_module_struct *ndpi_struct,
+        struct ndpi_flow_struct *flow){
+    struct ndpi_packet_struct *packet = &flow->packet;
+    if (packet->content_line.ptr != NULL && packet->content_line.len != 0) {
+        NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "Content Type Line found %.*s\n",
+                packet->content_line.len, packet->content_line.ptr);
+
+    }
 
 }
 
@@ -874,11 +919,11 @@ static void check_host_line(struct ndpi_detection_module_struct
 
 static void check_accept_line(struct ndpi_detection_module_struct
 						   *ndpi_struct, struct ndpi_flow_struct *flow){
-     struct ndpi_packet_struct *packet = &flow->packet;
-	 if (packet->accept_line.ptr != NULL) {
-	NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "Accept Line found");
-   // NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "Accept Line found %.*s\n",packet->accept_line.len, packet->accept_line.ptr);
-  }
+    struct ndpi_packet_struct *packet = &flow->packet;
+    if (packet->accept_line.ptr != NULL) {
+        NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "Accept Line found");
+        // NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "Accept Line found %.*s\n",packet->accept_line.len, packet->accept_line.ptr);
+    }
 }
 
 static void check_content_type_and_change_protocol(struct ndpi_detection_module_struct
@@ -900,7 +945,7 @@ static void check_content_type_and_change_protocol(struct ndpi_detection_module_
   check_accept_line(ndpi_struct, flow);
 
   /* check custom headers*/
-  check_custom_headers(ndpi_struct, flow); 
+  check_custom_headers(ndpi_struct, flow);
 }
 
 static void check_http_payload(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)

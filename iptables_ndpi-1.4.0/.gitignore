@@ -1,6 +1,7 @@
 .*
 !.gitignore
 *.o
+*.o.cmd
 *.ko
 *.so
 *~
@@ -23,11 +24,12 @@ nDPI/config.h
 nDPI/config.h.in
 nDPI/config.log
 nDPI/config.status
-#nDPI/configure
+nDPI/configure
 nDPI/libtool
-#nDPI/src/include/Makefile
+nDPI/stamp-h1
+nDPI/src/include/Makefile
 nDPI/src/include/Makefile.in
-#nDPI/src/lib/Makefile
+nDPI/src/lib/Makefile
 nDPI/src/lib/Makefile.in
 nDPI/example/pcapReader
 

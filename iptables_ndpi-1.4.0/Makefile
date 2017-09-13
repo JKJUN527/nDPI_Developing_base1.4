@@ -13,14 +13,15 @@ all:
 clean:
 	cd userland; make clean
 	cd kernel; make clean
-	find . -name  "*~" |xargs rm
-	find . -name "*.*o" |xargs rm
+	find . -name  "*~" |xargs rm -rf
+	find . -name "*.*o" |xargs rm -rf
 
 install:
-	# modprobe -r xt_ndpi || echo 'o_0'
+	iptables -F FORWARD
+	modprobe -r xt_ndpi || echo 'o_0'
 	cd userland; make install prefix=$(PREFIX)
 	cd kernel; make install prefix=$(PREFIX)
-	# insmod kernel/xt_ndpi.ko
+	insmod kernel/xt_ndpi.ko
 
 ndpi:
 	#svn co https://svn.ntop.org/svn/ntop/trunk/nDPI/
@@ -71,7 +72,7 @@ test:
 	#iptables -A FORWARD -m ndpi --protos wendao -j REJECT
 	iptables -F FORWARD
 	> /var/log/messages
-	iptables -A FORWARD -m ndpi --protos HuaShengKe -j REJECT
+	iptables -A FORWARD -m ndpi --protos QQMusic -j REJECT
 	watch -n 0.5 'iptables -S -v'
 	#iptables -A JK -p udp --sport 12345 -j REJECT
 m:
