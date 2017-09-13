@@ -827,6 +827,8 @@ ndpi_protocol_match host_match[] = {
   {"baidupcs.com",                "BaiDuPan"           , NDPI_PROTOCOL_BAIDUPAN },
   {"jx3gc.autoupdate.kingsoft.com",  "Jx3"             , NDPI_PROTOCOL_GAME_JX3 },
   {".jx3.xoyo.com",              "Jx3"                 , NDPI_PROTOCOL_GAME_JX3 },
+  {"qn.163.com",                 "qiannyh"             , NDPI_PROTOCOL_GAME_QIANNYH },
+  {"hi-163-qn",                  "qiannyh"             , NDPI_PROTOCOL_GAME_QIANNYH },
 
   /*JK END*/
   /*ltk start*/
@@ -1265,7 +1267,11 @@ static void ndpi_init_protocol_defaults(struct ndpi_detection_module_struct *ndp
    ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_QQMUSIC, "QQMusic",
         		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0),  /* TCP */
         		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
-  /*ltk end*/
+   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_GAME_QIANNYH, "QianNYH",
+        		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0),  /* TCP */
+        		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
+  
+/*ltk end*/
 				
 /**20161207 start stock*/
 /*UNVALID start */
@@ -2834,6 +2840,22 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
         a++;
     }
 #endif
+#ifdef NDPI_PROTOCOL_GAME_QIANNYH
+  if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_GAME_QIANNYH) != 0) {
+    ndpi_struct->callback_buffer[a].func = ndpi_search_qiannyh;
+
+    ndpi_struct->callback_buffer[a].ndpi_selection_bitmask =
+      NDPI_SELECTION_BITMASK_PROTOCOL_V4_V6_TCP_WITH_PAYLOAD;
+
+    NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_UNKNOWN);
+
+    NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_GAME_QIANNYH);
+    NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].excluded_protocol_bitmask, NDPI_PROTOCOL_GAME_QIANNYH);
+
+    a++;
+  }
+#endif
+
 /*JK end*/
 
 

@@ -170,8 +170,9 @@ extern "C" {
 /*jkjun games end*/
 #define NDPI_PROTOCOL_QQMUSIC                           112
 #define NDPI_PROTOCOL_WECHAT_TX                         113
+#define NDPI_PROTOCOL_GAME_QIANNYH                      114
 
-#define NDPI_LAST_IMPLEMENTED_PROTOCOL                 NDPI_PROTOCOL_QQMUSIC
+#define NDPI_LAST_IMPLEMENTED_PROTOCOL                 NDPI_PROTOCOL_GAME_QIANNYH
 
 
 #define NDPI_MAX_SUPPORTED_PROTOCOLS (NDPI_LAST_IMPLEMENTED_PROTOCOL + 1)

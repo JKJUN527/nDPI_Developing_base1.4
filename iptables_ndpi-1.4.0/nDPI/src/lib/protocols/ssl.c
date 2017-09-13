@@ -371,7 +371,7 @@ static void ssl_mark_and_payload_search_for_other_protocols(struct ndpi_detectio
         return;
 
     int rc = sslDetectProtocolFromCertificate(ndpi_struct, flow);
-    if (rc > 0) {       //返回值大于零，即表示已经在match中匹配到相应协议，直接返回
+    if (rc > 0 || (flow->l4.tcp.ssl_stage != 3 && flow->l4.tcp.ssl_stage != 2 - packet->packet_direction) ) {       //返回值大于零，即表示已经在match中匹配到相应协议，直接返回
         return;
     }
     if(!packet->ssl_certificate_detected
@@ -531,8 +531,8 @@ void ndpi_search_ssl_tcp(struct ndpi_detection_module_struct *ndpi_struct, struc
                 && (packet->payload[4] == 0x00 || packet->payload[4] == 0x01 || packet->payload[4] == 0x02)
                 && (packet->payload_packet_len - packet->payload[1] == 2)) {
             NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "sslv2 len match\n");
-            flow->l4.tcp.ssl_stage = 1 + packet->packet_direction;
             ssl_mark_and_payload_search_for_other_protocols(ndpi_struct, flow);
+            flow->l4.tcp.ssl_stage = 1 + packet->packet_direction;
             return;
         }
 
@@ -541,8 +541,8 @@ void ndpi_search_ssl_tcp(struct ndpi_detection_module_struct *ndpi_struct, struc
                 && (packet->payload_packet_len - ntohs(get_u_int16_t(packet->payload, 3)) == 5)) {
             // SSLv3 Record
             NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "sslv3 len match\n");
-            flow->l4.tcp.ssl_stage = 1 + packet->packet_direction;
             ssl_mark_and_payload_search_for_other_protocols(ndpi_struct, flow);
+            flow->l4.tcp.ssl_stage = 1 + packet->packet_direction;
             return;
         }
     }

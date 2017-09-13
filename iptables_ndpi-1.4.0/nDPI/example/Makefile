@@ -1,15 +1,17 @@
 INC=-I../src/include/ -I./ -I /usr/include -I/usr/local/include
 
 LIB=../src/lib/.libs/libndpi.a -lpcap
-#CFILES= flowmeter_util.c flowmeter.c
+CFILES= flowmeter_util.c flowmeter.c
 FLAGS=-g
+#WALL=-Wall
 WALL=
-pcapReader: clean
+pcapReader: 
 	#pcapReader.c Makefile ../src/lib/.libs/libndpi.a
 	gcc $(WALL) $(FLAGS) $(INC) pcapReader.c -o pcapReader $(LIB) -lpthread
-#fm:	
-	#gcc $(WALL) $(FLAGS) $(INC) $(CFILES) -o flowmeter $(LIB) -lpthread -lm -ljson -liLOG3
-
+fm:	
+	gcc $(WALL) $(FLAGS) $(INC) $(CFILES) -o flowmeter $(LIB) -lpthread -lm -ljson -liLOG3
+*: pcapReader fm
+	
 clean:
 	\/bin/rm -f pcapReader
 	\/bin/rm -f flowmeter
