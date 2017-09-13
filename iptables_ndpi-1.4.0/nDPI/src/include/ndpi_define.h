@@ -162,8 +162,8 @@
 #define NDPI_SOULSEEK_CONNECTION_IP_TICK_TIMEOUT               600
 #define NDPI_MANOLITO_SUBSCRIBER_TIMEOUT                       120
 
-#define NDPI_ENABLE_DEBUG_MESSAGES 1
-#define DEBUG 1
+//#define NDPI_ENABLE_DEBUG_MESSAGES 1
+//#define DEBUG 1
 #include "../../config.h"
 
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES

@@ -779,7 +779,6 @@ ndpi_protocol_match host_match[] = {
   { "ourgame.com", "LianZhong", NDPI_PROTOCOL_LIANZHONG}, /*login page*/
   { "lianzhong.com", "LianZhong", NDPI_PROTOCOL_LIANZHONG}, /*login page*/
   { "auth.tiancity.com/popkart/login", "PopKart", NDPI_PROTOCOL_POPKART}, /*login*/
-  { "cf.qq.com", "CF", NDPI_PROTOCOL_GAME_CF}, 
   { "xyq.163.com"           , "MengHuanXiYou"   , NDPI_PROTOCOL_MENGHUANXIYOU}, 
   { "xyq.gdl.netease.com"   , "MengHuanXiYou"   , NDPI_PROTOCOL_MENGHUANXIYOU}, 
   { "xyq.gdl02.netease.com" , "MengHuanXiYou"   , NDPI_PROTOCOL_MENGHUANXIYOU}, 
@@ -2564,25 +2563,6 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
 /* PT END */
 
 /*WL START*/
-
-#ifdef NDPI_PROTOCOL_GAME_CF
-  if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_GAME_CF) != 0) {
-    ndpi_struct->callback_buffer[a].func = ndpi_search_game_cf;
-
-    //NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_FUNSHION);
-
-    ndpi_struct->callback_buffer[a].ndpi_selection_bitmask =
-      NDPI_SELECTION_BITMASK_PROTOCOL_V4_V6_TCP_WITH_PAYLOAD;
-
-    NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_UNKNOWN);
-
-    NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_GAME_CF);
-    NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].excluded_protocol_bitmask, NDPI_PROTOCOL_GAME_CF);
-
-    a++;
-  }
-#endif
-
 #ifdef NDPI_PROTOCOL_GAME_ZHENTU
   if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_GAME_ZHENTU) != 0) {
     ndpi_struct->callback_buffer[a].func = ndpi_search_game_zhentu;
