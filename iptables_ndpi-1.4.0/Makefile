@@ -68,8 +68,8 @@ test:
 	#iptables -A FORWARD -m ndpi --protos PPSTREAM -j REJECT
 	#iptables -A FORWARD -m ndpi --protos ku6 -j REJECT
 	#iptables -A FORWARD -m ndpi --protos jx3 -j REJECT
-	iptables -A FORWARD -m ndpi --protos baidupan -j REJECT
-	iptables -A FORWARD -m ndpi --protos jx3 -j REJECT
+	iptables -A FORWARD -m ndpi --protos qiannyh -j REJECT
+	#iptables -A FORWARD -m ndpi --protos jx3 -j REJECT
 	#iptables -A FORWARD -m ndpi --protos eudemons -j REJECT
 	#iptables -A FORWARD -m ndpi --protos tianxia3 -j REJECT
 	#iptables -A FORWARD -m ndpi --protos wendao -j REJECT

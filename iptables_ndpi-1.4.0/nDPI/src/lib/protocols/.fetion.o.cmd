@@ -1,14 +1,14 @@
-cmd_/root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/protocols/fetion.o := gcc -Wp,-MD,/root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/protocols/.fetion.o.d  -nostdinc -isystem /usr/lib/gcc/x86_64-redhat-linux/4.4.7/include -Iinclude  -I/usr/src/kernels/2.6.32-431.el6.x86_64/include/uapi -I/usr/src/kernels/2.6.32-431.el6.x86_64/arch/x86/include -include /usr/src/kernels/2.6.32-431.el6.x86_64/include/linux/kconfig.h -D__KERNEL__ -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -Werror-implicit-function-declaration -Wno-format-security -fno-delete-null-pointer-checks -O2 -m64 -mtune=generic -mno-red-zone -mcmodel=kernel -funit-at-a-time -maccumulate-outgoing-args -fstack-protector -DCONFIG_AS_CFI=1 -DCONFIG_AS_CFI_SIGNAL_FRAME=1 -DCONFIG_AS_CFI_SECTIONS=1 -DCONFIG_AS_AVX=1 -pipe -Wno-sign-compare -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -Wframe-larger-than=2048 -Wno-unused-but-set-variable -fno-omit-frame-pointer -fno-optimize-sibling-calls -g -pg -Wdeclaration-after-statement -Wno-pointer-sign -fno-strict-overflow -fno-dwarf2-cfi-asm -fconserve-stack -I/root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel -I/root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/include -I/root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/third_party/include  -DMODULE -D"KBUILD_STR(s)=\#s" -D"KBUILD_BASENAME=KBUILD_STR(fetion)"  -D"KBUILD_MODNAME=KBUILD_STR(xt_ndpi)" -D"DEBUG_HASH=12" -D"DEBUG_HASH2=3" -c -o /root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/protocols/.tmp_fetion.o /root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/protocols/fetion.c
+cmd_/root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/protocols/fetion.o := gcc -Wp,-MD,/root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/protocols/.fetion.o.d  -nostdinc -isystem /usr/lib/gcc/x86_64-redhat-linux/4.4.7/include -Iinclude  -I/usr/src/kernels/2.6.32-431.el6.x86_64/include/uapi -I/usr/src/kernels/2.6.32-431.el6.x86_64/arch/x86/include -include /usr/src/kernels/2.6.32-431.el6.x86_64/include/linux/kconfig.h -D__KERNEL__ -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -Werror-implicit-function-declaration -Wno-format-security -fno-delete-null-pointer-checks -O2 -m64 -mtune=generic -mno-red-zone -mcmodel=kernel -funit-at-a-time -maccumulate-outgoing-args -fstack-protector -DCONFIG_AS_CFI=1 -DCONFIG_AS_CFI_SIGNAL_FRAME=1 -DCONFIG_AS_CFI_SECTIONS=1 -DCONFIG_AS_AVX=1 -pipe -Wno-sign-compare -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -Wframe-larger-than=2048 -Wno-unused-but-set-variable -fno-omit-frame-pointer -fno-optimize-sibling-calls -g -pg -Wdeclaration-after-statement -Wno-pointer-sign -fno-strict-overflow -fno-dwarf2-cfi-asm -fconserve-stack -I/root/iptable_ndpi/iptables_ndpi-1.4.0/kernel -I/root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/include -I/root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/third_party/include  -DMODULE -D"KBUILD_STR(s)=\#s" -D"KBUILD_BASENAME=KBUILD_STR(fetion)"  -D"KBUILD_MODNAME=KBUILD_STR(xt_ndpi)" -D"DEBUG_HASH=25" -D"DEBUG_HASH2=24" -c -o /root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/protocols/.tmp_fetion.o /root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/protocols/fetion.c
 
-deps_/root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/protocols/fetion.o := \
-  /root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/protocols/fetion.c \
+deps_/root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/protocols/fetion.o := \
+  /root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/protocols/fetion.c \
   /usr/src/kernels/2.6.32-431.el6.x86_64/include/linux/kconfig.h \
     $(wildcard include/config/h.h) \
     $(wildcard include/config/.h) \
     $(wildcard include/config/booger.h) \
     $(wildcard include/config/foo.h) \
-  /root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_protocols.h \
-  /root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_main.h \
+  /root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_protocols.h \
+  /root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_main.h \
   /usr/src/kernels/2.6.32-431.el6.x86_64/arch/x86/include/asm/byteorder.h \
   include/linux/byteorder/little_endian.h \
   include/linux/types.h \
@@ -41,9 +41,9 @@ deps_/root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/protocols/f
     $(wildcard include/config/x86/bswap.h) \
   include/linux/byteorder/generic.h \
   include/linux/ctype.h \
-  /root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/linux_compat.h \
-  /root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_define.h \
-  /root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/../../config.h \
+  /root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/linux_compat.h \
+  /root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_define.h \
+  /root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/../../config.h \
   include/linux/ip.h \
   include/linux/skbuff.h \
     $(wildcard include/config/nf/conntrack.h) \
@@ -802,15 +802,15 @@ deps_/root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/protocols/f
   include/net/tcp_states.h \
   include/net/timewait_sock.h \
   include/linux/udp.h \
-  /root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_macros.h \
-  /root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_protocols_osdpi.h \
-  /root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_api.h \
-  /root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_public_functions.h \
-  /root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_debug_functions.h \
-  /root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_protocol_history.h \
-  /root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_structs.h \
-  /root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_credis.h \
+  /root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_macros.h \
+  /root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_protocols_osdpi.h \
+  /root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_api.h \
+  /root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_public_functions.h \
+  /root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_debug_functions.h \
+  /root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_protocol_history.h \
+  /root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_structs.h \
+  /root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/include/ndpi_credis.h \
 
-/root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/protocols/fetion.o: $(deps_/root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/protocols/fetion.o)
+/root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/protocols/fetion.o: $(deps_/root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/protocols/fetion.o)
 
-$(deps_/root/iptables-ndpi2/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/protocols/fetion.o):
+$(deps_/root/iptable_ndpi/iptables_ndpi-1.4.0/kernel/../nDPI/src/lib/protocols/fetion.o):

@@ -120,7 +120,8 @@ libndpi_la_SOURCES = \
 			protocols/world_of_warship.c \
 			protocols/jx3.c \
 			protocols/eudemons.c \
-			protocols/huashengke.c
+			protocols/huashengke.c \
+			protocols/qiannyh.c
 			
 #protocols/skype.c \
 # NTOP protocols are at the end

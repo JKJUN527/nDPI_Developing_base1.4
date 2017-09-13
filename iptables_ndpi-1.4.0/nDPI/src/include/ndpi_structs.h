@@ -590,6 +590,9 @@ typedef struct ndpi_flow_struct {
     u_int32_t wechat_tx_authkeyhash;
 #endif
 
+#ifdef NDPI_PROTOCOL_GAME_QIANNYH
+    u_int32_t qiannyh_stage:2;
+#endif
   /* internal structures to save functions calls */
   struct ndpi_packet_struct packet;
   struct ndpi_flow_struct *flow;

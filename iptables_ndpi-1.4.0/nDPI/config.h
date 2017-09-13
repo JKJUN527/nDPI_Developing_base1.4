@@ -2,10 +2,11 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Define if --enable-debug */
+/* #undef DEBUG */
 #define DEBUG 1
-
-/* Define if --enable-debug */
 #define ENABLE_DEBUG_MESSAGES 1
+/* Define if --enable-debug */
+/* #undef ENABLE_DEBUG_MESSAGES */
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1

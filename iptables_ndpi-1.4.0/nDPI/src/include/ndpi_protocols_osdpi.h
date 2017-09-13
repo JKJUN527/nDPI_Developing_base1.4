@@ -168,9 +168,11 @@ extern "C" {
 #define NDPI_PROTOCOL_GAME_EUDEMONS                     110
 #define NDPI_PROTOCOL_GAME_JX3                          111
 /*jkjun games end*/
-#define NDPI_PROTOCOL_WECHAT_TX                         112
 
-#define NDPI_LAST_IMPLEMENTED_PROTOCOL                 NDPI_PROTOCOL_WECHAT_TX
+#define NDPI_PROTOCOL_WECHAT_TX                         112
+#define NDPI_PROTOCOL_GAME_QIANNYH                      113
+
+#define NDPI_LAST_IMPLEMENTED_PROTOCOL                 NDPI_PROTOCOL_GAME_QIANNYH
 
 
 #define NDPI_MAX_SUPPORTED_PROTOCOLS (NDPI_LAST_IMPLEMENTED_PROTOCOL + 1)
