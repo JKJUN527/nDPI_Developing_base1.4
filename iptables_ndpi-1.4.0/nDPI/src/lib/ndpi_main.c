@@ -838,8 +838,9 @@ ndpi_protocol_match host_match[] = {
   { "ddnscom.gnvip.net",        "JinWanWei",   NDPI_PROTOCOL_JINWANWEI },
 
   { "phsle02.oray.net",         "HuaShengKe" , NDPI_PROTOCOL_HUASHENGKE },
-  { ".oray.net",                "HuaShengKe" , NDPI_PROTOCOL_HUASHENGKE },
-  { ".qqmusic.qq.com",          "QQMusic",     NDPI_PROTOCOL_QQMUSIC },
+  { "oray.net",                 "HuaShengKe" , NDPI_PROTOCOL_HUASHENGKE },
+  { "qqmusic.qq.com",           "QQMusic",     NDPI_PROTOCOL_QQMUSIC },
+  { "music.qq.com",             "QQMusic",     NDPI_PROTOCOL_QQMUSIC },
   /*ltk end*/
   { NULL, 0 }
 };

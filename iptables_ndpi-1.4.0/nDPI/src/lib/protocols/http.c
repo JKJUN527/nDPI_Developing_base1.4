@@ -655,7 +655,7 @@ static void check_custom_headers(struct ndpi_detection_module_struct *ndpi_struc
         }
 #endif
         /*------wanglei---PPLIVE-----*/
-Referer: http://player.pplive.cn/ikan/3.4.2.27/player4player2.swf
+        /* Referer: http://player.pplive.cn/ikan/3.4.2.27/player4player2.swf */
 #ifdef NDPI_PROTOCOL_PPLIVE
              if ((packet->line[a].len > 20&& memcmp(packet->line[a].ptr,"Pragma: Client=PPLive",21) == 0 )
                      ||( packet->line[a].len > 37 && memcmp(packet->line[a].ptr,"Referer:",8)==0 && strstr(packet->line[a].ptr+8,"player.pplive.cn")) 
@@ -763,23 +763,43 @@ Referer: http://player.pplive.cn/ikan/3.4.2.27/player4player2.swf
 #ifdef NDPI_PROTOCOL_QQMUSIC
          _D("Into QQ music.\n");
          _D("QQ music: line[%d]: %s\n", a, packet->line[a].ptr);
+         int qqmusic_len = packet->payload_packet_len - (packet->line[a].ptr - packet->payload);
+         _D("QQ music: qqmusic_len: %d\n", qqmusic_len);
+         if (!strncmp("GET /qqmusic/fcgi-bin", packet->line[a].ptr, 21)) {
+             ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_QQMUSIC);
+             _D("QQ music: Found via /qqmusic/fcgi-bin !\n");
+             return;
+         }
+         if (!strncmp("POST /fcgi-bin", packet->line[a].ptr, 14)) /* maybe get player stat */
+             qqmusic_statis ++;
          if (!strncmp("GET /", packet->line[a].ptr, 5)) {
-             char *ogg = strstr(packet->line[a].ptr, "ogg");
-             if (ogg && strstr(ogg, "vkey"))
-                 qqmusic_statis += 3;
+             u_int8_t *file;
+             if (!!(file = memfind(packet->line[a].ptr, qqmusic_len, "ogg", 3))) {
+                 qqmusic_statis += 2;
+             }
+             if (!file && (file = memfind(packet->line[a].ptr, qqmusic_len, "mp3", 3))) {
+                 qqmusic_statis += 2;
+             }
+
+             if (file) {
+                 if (memfind(file, qqmusic_len-(file - packet->line[a].ptr), "vkey", 4))
+                     qqmusic_statis ++;
+                 if (memfind(file, qqmusic_len-(file - packet->line[a].ptr), "guid", 4))
+                     qqmusic_statis ++;
+             }
          }
          if (!strncmp("Referer:", packet->line[a].ptr, 8)
-                 && strstr(packet->line[a].ptr, "stream.qqmusic.qq.com")) {
-             qqmusic_statis += 2;
-         }
-         if (!strncmp("Host:", packet->line[a].ptr, 5)
-                 && strstr(packet->line[a].ptr, "stream.qqmusic.qq.com")) {
-             qqmusic_statis += 2;
+                 || !strncmp("Host:", packet->line[a].ptr, 5)) {
+             if (memfind(packet->line[a].ptr, qqmusic_len, "music", 5))
+                 qqmusic_statis += 3;
+             if (memfind(packet->line[a].ptr, qqmusic_len, "qq", 2))
+                 qqmusic_statis += 2;
          }
          if (!strncmp("Cookie:", packet->line[a].ptr, 7)) {
              char *cookies[] = {
                  "qqmusic_uin", "qqmusic_key",
-                 "qqmusic_gkey",
+                 "qqmusic_gkey", "qqmusic_privatekey",
+                 "qqmusic_fromtag",
                  NULL,
              };
              char **c;
