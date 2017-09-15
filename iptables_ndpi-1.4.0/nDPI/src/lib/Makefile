@@ -115,7 +115,8 @@ am_libndpi_la_OBJECTS = libndpi_la-ahocorasick.lo libndpi_la-node.lo \
 	libndpi_la-fetion.lo libndpi_la-qqspeed.lo libndpi_la-dnf.lo \
 	libndpi_la-world_of_warship.lo libndpi_la-jx3.lo \
 	libndpi_la-eudemons.lo libndpi_la-huashengke.lo \
-	libndpi_la-qqmusic.lo
+	libndpi_la-qqmusic.lo libndpi_la-qiannyh.lo \
+	libndpi_la-qqwuxia.lo
 libndpi_la_OBJECTS = $(am_libndpi_la_OBJECTS)
 libndpi_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -139,12 +140,12 @@ HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
-ACLOCAL = ${SHELL} /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI/missing --run aclocal-1.11
-AMTAR = ${SHELL} /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI/missing --run tar
+ACLOCAL = ${SHELL} /root/iptable_ndpi/iptables_ndpi-1.4.0/nDPI/missing --run aclocal-1.11
+AMTAR = ${SHELL} /root/iptable_ndpi/iptables_ndpi-1.4.0/nDPI/missing --run tar
 AR = ar
-AUTOCONF = ${SHELL} /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI/missing --run autoconf
-AUTOHEADER = ${SHELL} /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI/missing --run autoheader
-AUTOMAKE = ${SHELL} /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI/missing --run automake-1.11
+AUTOCONF = ${SHELL} /root/iptable_ndpi/iptables_ndpi-1.4.0/nDPI/missing --run autoconf
+AUTOHEADER = ${SHELL} /root/iptable_ndpi/iptables_ndpi-1.4.0/nDPI/missing --run autoheader
+AUTOMAKE = ${SHELL} /root/iptable_ndpi/iptables_ndpi-1.4.0/nDPI/missing --run automake-1.11
 AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
@@ -176,7 +177,7 @@ LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LIPO = 
 LN_S = ln -s
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI/missing --run makeinfo
+MAKEINFO = ${SHELL} /root/iptable_ndpi/iptables_ndpi-1.4.0/nDPI/missing --run makeinfo
 MKDIR_P = /bin/mkdir -p
 NM = /usr/bin/nm -B
 NMEDIT = 
@@ -197,10 +198,10 @@ SET_MAKE =
 SHELL = /bin/sh
 STRIP = strip
 VERSION = 1.4.0
-abs_builddir = /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI/src/lib
-abs_srcdir = /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI/src/lib
-abs_top_builddir = /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI
-abs_top_srcdir = /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI
+abs_builddir = /root/iptable_ndpi/iptables_ndpi-1.4.0/nDPI/src/lib
+abs_srcdir = /root/iptable_ndpi/iptables_ndpi-1.4.0/nDPI/src/lib
+abs_top_builddir = /root/iptable_ndpi/iptables_ndpi-1.4.0/nDPI
+abs_top_srcdir = /root/iptable_ndpi/iptables_ndpi-1.4.0/nDPI
 ac_ct_CC = gcc
 ac_ct_DUMPBIN = 
 am__include = include
@@ -228,7 +229,7 @@ host_vendor = unknown
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI/install-sh
+install_sh = ${SHELL} /root/iptable_ndpi/iptables_ndpi-1.4.0/nDPI/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -369,7 +370,9 @@ libndpi_la_SOURCES = \
 			protocols/jx3.c \
 			protocols/eudemons.c \
 			protocols/huashengke.c \
-			protocols/qqmusic.c
+			protocols/qqmusic.c \
+			protocols/qiannyh.c \
+			protocols/qqwuxia.c
 
 all: all-am
 
@@ -505,10 +508,12 @@ include ./$(DEPDIR)/libndpi_la-pplive.Plo
 include ./$(DEPDIR)/libndpi_la-ppstream.Plo
 include ./$(DEPDIR)/libndpi_la-pptp.Plo
 include ./$(DEPDIR)/libndpi_la-qianlong.Plo
+include ./$(DEPDIR)/libndpi_la-qiannyh.Plo
 include ./$(DEPDIR)/libndpi_la-qq.Plo
 include ./$(DEPDIR)/libndpi_la-qqlive.Plo
 include ./$(DEPDIR)/libndpi_la-qqmusic.Plo
 include ./$(DEPDIR)/libndpi_la-qqspeed.Plo
+include ./$(DEPDIR)/libndpi_la-qqwuxia.Plo
 include ./$(DEPDIR)/libndpi_la-radius.Plo
 include ./$(DEPDIR)/libndpi_la-rdp.Plo
 include ./$(DEPDIR)/libndpi_la-rip.Plo
@@ -1282,6 +1287,20 @@ libndpi_la-qqmusic.lo: protocols/qqmusic.c
 #	source='protocols/qqmusic.c' object='libndpi_la-qqmusic.lo' libtool=yes \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libndpi_la-qqmusic.lo `test -f 'protocols/qqmusic.c' || echo '$(srcdir)/'`protocols/qqmusic.c
+
+libndpi_la-qiannyh.lo: protocols/qiannyh.c
+	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libndpi_la-qiannyh.lo -MD -MP -MF $(DEPDIR)/libndpi_la-qiannyh.Tpo -c -o libndpi_la-qiannyh.lo `test -f 'protocols/qiannyh.c' || echo '$(srcdir)/'`protocols/qiannyh.c
+	$(am__mv) $(DEPDIR)/libndpi_la-qiannyh.Tpo $(DEPDIR)/libndpi_la-qiannyh.Plo
+#	source='protocols/qiannyh.c' object='libndpi_la-qiannyh.lo' libtool=yes \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libndpi_la-qiannyh.lo `test -f 'protocols/qiannyh.c' || echo '$(srcdir)/'`protocols/qiannyh.c
+
+libndpi_la-qqwuxia.lo: protocols/qqwuxia.c
+	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libndpi_la-qqwuxia.lo -MD -MP -MF $(DEPDIR)/libndpi_la-qqwuxia.Tpo -c -o libndpi_la-qqwuxia.lo `test -f 'protocols/qqwuxia.c' || echo '$(srcdir)/'`protocols/qqwuxia.c
+	$(am__mv) $(DEPDIR)/libndpi_la-qqwuxia.Tpo $(DEPDIR)/libndpi_la-qqwuxia.Plo
+#	source='protocols/qqwuxia.c' object='libndpi_la-qqwuxia.lo' libtool=yes \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libndpi_la-qqwuxia.lo `test -f 'protocols/qqwuxia.c' || echo '$(srcdir)/'`protocols/qqwuxia.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

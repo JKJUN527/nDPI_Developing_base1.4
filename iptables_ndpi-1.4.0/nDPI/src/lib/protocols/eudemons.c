@@ -31,7 +31,7 @@
 */
 
 #define STR0EUD "\x22\x87\xd7\xcf"
-#define STR1EUD "\x6e\xb7\x16\xcf\xa1\x87\xa9\x8f\x8e\x98\xb6\xa2\x62\x6a\x17\xf0"
+#define STR1EUD "\x6e\xb7\x16\xcf\xa1\x87\xa9\x8f"
 
 static void ndpi_int_eudemons_add_connection(struct ndpi_detection_module_struct *ndpi_struct, 
 					    struct ndpi_flow_struct *flow, ndpi_protocol_type_t protocol_type)

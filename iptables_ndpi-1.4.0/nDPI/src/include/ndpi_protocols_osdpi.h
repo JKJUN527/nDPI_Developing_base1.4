@@ -171,8 +171,9 @@ extern "C" {
 #define NDPI_PROTOCOL_QQ_TX                             115
 #define NDPI_PROTOCOL_QQMUSIC                           116
 #define NDPI_PROTOCOL_GAME_QIANNYH                      117
+#define NDPI_PROTOCOL_GAME_QQWUXIA                      118
 
-#define NDPI_LAST_IMPLEMENTED_PROTOCOL                 NDPI_PROTOCOL_GAME_QIANNYH
+#define NDPI_LAST_IMPLEMENTED_PROTOCOL                 NDPI_PROTOCOL_GAME_QQWUXIA
 
 
 #define NDPI_MAX_SUPPORTED_PROTOCOLS (NDPI_LAST_IMPLEMENTED_PROTOCOL + 1)

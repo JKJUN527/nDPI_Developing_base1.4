@@ -428,8 +428,8 @@ void ndpi_search_worldofwarship(struct ndpi_detection_module_struct *ndpi_struct
 void ndpi_search_jx3(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow);
 void ndpi_search_eudemons(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow);
 void ndpi_search_qqlive(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow);
-
 void ndpi_search_qiannyh(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow);
+void ndpi_search_qqwuxia(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow);
 /*jkjun END*/
 /*ltk*/
 void ndpi_search_huashengke(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow);

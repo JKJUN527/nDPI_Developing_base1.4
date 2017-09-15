@@ -95,6 +95,14 @@ void ndpi_search_qqspeed_tcp(struct ndpi_detection_module_struct *ndpi_struct, s
 		ndpi_int_qqspeed_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
 		return;
 		}
+	
+		if(get_u_int16_t(packet->payload, 0)==htons(0x0000)
+		   &&(packet->payload[4]==0x35)
+		   &&get_u_int16_t(packet->payload,6)==htons(0xffff)
+		){
+			NDPI_LOG(NDPI_PROTOCOL_GAME_QQSPEED, ndpi_struct, NDPI_LOG_DEBUG,"found qqspeed-----tcp3 \n");
+	                ndpi_int_qqspeed_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
+		}
 	}
 	NDPI_LOG(NDPI_PROTOCOL_GAME_QQSPEED, ndpi_struct, NDPI_LOG_DEBUG, "exclude qqspeed.\n");
   	NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_GAME_QQSPEED);

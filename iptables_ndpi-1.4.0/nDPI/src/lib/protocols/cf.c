@@ -74,7 +74,7 @@ __forceinline static
 		return;
 	}
 	//55 0e 03 00 00 00 00 95
-	else if(packet->payload_packet_len >= 11 
+/*	else if(packet->payload_packet_len >= 11 
 	&& (packet->payload[0] == 0x55
 	&& packet->payload[1]  == 0x0e
 	//&& packet->payload[2]  == 0x03
@@ -92,6 +92,7 @@ __forceinline static
 		ndpi_int_game_cf_add_connection(ndpi_struct, flow, NDPI_REAL_PROTOCOL);
 		return;
 	}
+	*/
 	else if(packet->payload_packet_len >= 16
 	&& (packet->payload[0] == 0x01 && packet->payload[1]  == 0x00
 	&& packet->payload[2]  == 0x00 && packet->payload[3]  == 0x00
