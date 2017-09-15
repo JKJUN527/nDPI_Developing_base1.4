@@ -593,6 +593,9 @@ typedef struct ndpi_flow_struct {
 #ifdef NDPI_PROTOCOL_GAME_QIANNYH
     u_int32_t qiannyh_stage:2;
 #endif
+#ifdef NDPI_PROTOCOL_GAME_CSGO
+    u_int32_t csgo_stage:2;
+#endif
   /* internal structures to save functions calls */
   struct ndpi_packet_struct packet;
   struct ndpi_flow_struct *flow;

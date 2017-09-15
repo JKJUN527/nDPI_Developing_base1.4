@@ -116,7 +116,7 @@ am_libndpi_la_OBJECTS = libndpi_la-ahocorasick.lo libndpi_la-node.lo \
 	libndpi_la-world_of_warship.lo libndpi_la-jx3.lo \
 	libndpi_la-eudemons.lo libndpi_la-huashengke.lo \
 	libndpi_la-qqmusic.lo libndpi_la-qiannyh.lo \
-	libndpi_la-qqwuxia.lo
+	libndpi_la-qqwuxia.lo libndpi_la-csgo.lo
 libndpi_la_OBJECTS = $(am_libndpi_la_OBJECTS)
 libndpi_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -372,7 +372,8 @@ libndpi_la_SOURCES = \
 			protocols/huashengke.c \
 			protocols/qqmusic.c \
 			protocols/qiannyh.c \
-			protocols/qqwuxia.c
+			protocols/qqwuxia.c \
+			protocols/csgo.c
 
 all: all-am
 
@@ -455,6 +456,7 @@ include ./$(DEPDIR)/libndpi_la-battlefield.Plo
 include ./$(DEPDIR)/libndpi_la-bgp.Plo
 include ./$(DEPDIR)/libndpi_la-bittorrent.Plo
 include ./$(DEPDIR)/libndpi_la-cf.Plo
+include ./$(DEPDIR)/libndpi_la-csgo.Plo
 include ./$(DEPDIR)/libndpi_la-dazhihui365.Plo
 include ./$(DEPDIR)/libndpi_la-dcerpc.Plo
 include ./$(DEPDIR)/libndpi_la-dhcp.Plo
@@ -1301,6 +1303,13 @@ libndpi_la-qqwuxia.lo: protocols/qqwuxia.c
 #	source='protocols/qqwuxia.c' object='libndpi_la-qqwuxia.lo' libtool=yes \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libndpi_la-qqwuxia.lo `test -f 'protocols/qqwuxia.c' || echo '$(srcdir)/'`protocols/qqwuxia.c
+
+libndpi_la-csgo.lo: protocols/csgo.c
+	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libndpi_la-csgo.lo -MD -MP -MF $(DEPDIR)/libndpi_la-csgo.Tpo -c -o libndpi_la-csgo.lo `test -f 'protocols/csgo.c' || echo '$(srcdir)/'`protocols/csgo.c
+	$(am__mv) $(DEPDIR)/libndpi_la-csgo.Tpo $(DEPDIR)/libndpi_la-csgo.Plo
+#	source='protocols/csgo.c' object='libndpi_la-csgo.lo' libtool=yes \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libndpi_la-csgo.lo `test -f 'protocols/csgo.c' || echo '$(srcdir)/'`protocols/csgo.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

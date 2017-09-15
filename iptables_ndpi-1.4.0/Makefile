@@ -72,9 +72,9 @@ test:
 	#iptables -A FORWARD -m ndpi --protos jx3 -j REJECT
 	#iptables -A FORWARD -m ndpi --protos qqspeed -j REJECT
 	#iptables -A FORWARD -m ndpi --protos jx3 -j REJECT
-	iptables -A FORWARD -m ndpi --protos eudemons -j REJECT
+	#iptables -A FORWARD -m ndpi --protos eudemons -j REJECT
 	#iptables -A FORWARD -m ndpi --protos tianxia3 -j REJECT
-	#iptables -A FORWARD -m ndpi --protos wendao -j REJECT
+	iptables -A FORWARD -m ndpi --protos csgo -j REJECT
 	#iptables -F FORWARD
 	#> /var/log/messages
 	#iptables -A FORWARD -m ndpi --protos QQMusic -j REJECT

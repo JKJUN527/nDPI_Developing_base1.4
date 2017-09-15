@@ -123,7 +123,8 @@ libndpi_la_SOURCES = \
 			protocols/huashengke.c \
 			protocols/qqmusic.c \
 			protocols/qiannyh.c \
-			protocols/qqwuxia.c
+			protocols/qqwuxia.c \
+			protocols/csgo.c
 			
 #protocols/skype.c \
 # NTOP protocols are at the end
