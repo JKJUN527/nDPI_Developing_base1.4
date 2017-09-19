@@ -29,7 +29,7 @@
 # define printf printk
 #endif
 
-#define LOCAL_DEBUG
+//#define LOCAL_DEBUG
 
 #undef _D
 #ifdef LOCAL_DEBUG
