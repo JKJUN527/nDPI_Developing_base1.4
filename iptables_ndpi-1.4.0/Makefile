@@ -47,6 +47,7 @@ start: install
 stop:
 	iptables -F
 	modprobe -r xt_ndpi
+	> /var/log/messages
 	#iptables -D INPUT 1
 	#iptables -D OUTPUT 1
 	#iptables -D INPUT 1
@@ -67,17 +68,7 @@ test_pre:
 
 test:
 	make stop
-	iptables -A FORWARD -m ndpi --protos cf -j REJECT
-	#iptables -A FORWARD -m ndpi --protos ku6 -j REJECT
-	#iptables -A FORWARD -m ndpi --protos jx3 -j REJECT
-	#iptables -A FORWARD -m ndpi --protos qqspeed -j REJECT
-	#iptables -A FORWARD -m ndpi --protos jx3 -j REJECT
-	#iptables -A FORWARD -m ndpi --protos eudemons -j REJECT
-	#iptables -A FORWARD -m ndpi --protos tianxia3 -j REJECT
-	#iptables -A FORWARD -m ndpi --protos csgo -j REJECT
-	#iptables -F FORWARD
-	#> /var/log/messages
-	#iptables -A FORWARD -m ndpi --protos QQMusic -j REJECT
+	iptables -A FORWARD -m ndpi --protos QQMusic -j REJECT
 	watch -n 0.5 'iptables -S -v'
 	#iptables -A JK -p udp --sport 12345 -j REJECT
 m:
