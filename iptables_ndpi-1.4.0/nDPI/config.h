@@ -6,7 +6,7 @@
 #define DEBUG 1
 #define NDPI_ENABLE_DEBUG_MESSAGES 1
 /* Define if --enable-debug */
-/* #undef ENABLE_DEBUG_MESSAGES */
+#define ENABLE_DEBUG_MESSAGES 1
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1

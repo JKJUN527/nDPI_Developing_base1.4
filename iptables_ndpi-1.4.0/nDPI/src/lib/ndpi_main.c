@@ -928,6 +928,9 @@ static void ndpi_init_protocol_defaults(struct ndpi_detection_module_struct *ndp
   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_HTTP, "HTTP",
 			  ndpi_build_default_ports(ports_a, 80, 0 /* ntop */, 0, 0, 0) /* TCP */,
 			  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
+  ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_HTTP_CONNECT, "HTTPCONNECT",
+			  ndpi_build_default_ports(ports_a, 80, 0 /* ntop */, 0, 0, 0) /* TCP */,
+			  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_MDNS, "MDNS",
 			  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0) /* TCP */,
 			  ndpi_build_default_ports(ports_b, 5353, 5354, 0, 0, 0) /* UDP */);
@@ -1171,7 +1174,7 @@ static void ndpi_init_protocol_defaults(struct ndpi_detection_module_struct *ndp
   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_LIANZHONG, "LianZhong",
 			  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0) /* TCP */,
 			  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
-  ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_MENGHUANXIYOU, "PopKart",
+  ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_POPKART, "PopKart",
 			  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0) /* TCP */,
 			  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_MENGHUANXIYOU, "MengHuanXiYou",
@@ -1253,7 +1256,6 @@ static void ndpi_init_protocol_defaults(struct ndpi_detection_module_struct *ndp
 	  		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0) /* TCP */,
 	  		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
   /*jk end*/
-  /*ltk start*/
    ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_HUASHENGKE, "HuaShengKe",
           		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0),  /* TCP */
           		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
@@ -1278,14 +1280,9 @@ static void ndpi_init_protocol_defaults(struct ndpi_detection_module_struct *ndp
    ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_GAME_CSGO, "CSGO",	 
         		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0),  /* TCP */
         		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
-        	
-  
-
-
-
-
-  
-/*ltk end*/
+   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_FACEBOOK, "FaceBook",	 
+        		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0),  /* TCP */
+        		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
 				
 /**20161207 start stock*/
 /*UNVALID start */
