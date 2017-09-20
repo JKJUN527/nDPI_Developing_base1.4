@@ -71,13 +71,11 @@ static void ndpi_int_nizhan_add_connection(struct ndpi_detection_module_struct *
 #else
 __forceinline static
 #endif
-	 void ndpi_search_nizhan_tcp(struct ndpi_detection_module_struct
-												  *ndpi_struct, struct ndpi_flow_struct *flow)
+ void ndpi_search_nizhan_tcp(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {
 	struct ndpi_packet_struct *packet = &flow->packet;
 	NDPI_LOG(NDPI_PROTOCOL_NIZHAN, ndpi_struct, NDPI_LOG_DEBUG, "search for nizhan.\n");
 	NDPI_LOG(NDPI_PROTOCOL_NIZHAN, ndpi_struct, NDPI_LOG_DEBUG, "payload len:%u. nzstage:%u\n",packet->payload_packet_len,flow->nizhan_stage);
-
 	if(packet->payload_packet_len >= 26
 	  && get_u_int32_t(packet->payload,0) == htonl(0x0a05641a)
 	  && get_u_int16_t(packet->payload,4) == htons(0x0)
@@ -118,8 +116,29 @@ void ndpi_search_nizhan_udp(struct ndpi_detection_module_struct
 		&&get_u_int32_t(packet->payload, 12)==htons(0x25a61a81)){
 		ndpi_int_nizhan_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
 		NDPI_LOG(NDPI_PROTOCOL_NIZHAN, ndpi_struct, NDPI_LOG_DEBUG,"found nizhan udp1\n");
+		return;
 	}
-        NDPI_LOG(NDPI_PROTOCOL_NIZHAN, ndpi_struct, NDPI_LOG_DEBUG, "pacaet_len:%u.\n",packet->payload_packet_len);
+//禁止游戏进入房间
+	if(packet->payload_packet_len >=16){
+		if(get_u_int32_t(packet->payload,0)==htonl(0x11000000)
+		   ||get_u_int32_t(packet->payload,0)==htonl(0x19000000)
+		   ||get_u_int32_t(packet->payload,0)==htonl(0x4c000000)
+		   ||get_u_int32_t(packet->payload,0)==htonl(0x4d000000)
+		   ||get_u_int32_t(packet->payload,0)==htonl(0x4e000000)
+		){
+			flow->nizhan_stage++;	
+			NDPI_LOG(NDPI_PROTOCOL_NIZHAN, ndpi_struct, NDPI_LOG_DEBUG,"found nizhan stage:%u \n",flow->nizhan_stage);
+			if(flow->nizhan_stage >= 3){
+				NDPI_LOG(NDPI_PROTOCOL_NIZHAN, ndpi_struct, NDPI_LOG_DEBUG,"found nizhan startgame\n");
+				ndpi_int_nizhan_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
+				return;
+			}
+			return;		
+		}
+			
+
+	}
+       // NDPI_LOG(NDPI_PROTOCOL_NIZHAN, ndpi_struct, NDPI_LOG_DEBUG, "pacaet_len:%u.\n",packet->payload_packet_len);
 	if(packet->payload_packet_len==260)
 	{
 		//flow->nizhan_stage++;
@@ -133,10 +152,12 @@ void ndpi_search_nizhan_udp(struct ndpi_detection_module_struct
 		){
 			flow->nizhan_stage++;
 			NDPI_LOG(NDPI_PROTOCOL_NIZHAN, ndpi_struct, NDPI_LOG_DEBUG, "nizhan_stage:%u.\n",flow->nizhan_stage);
-			}
+			return ;		
+		}
 		if(flow->nizhan_stage >= 1){
 			ndpi_int_nizhan_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
 			NDPI_LOG(NDPI_PROTOCOL_NIZHAN, ndpi_struct, NDPI_LOG_DEBUG,"found nizhan udp2\n");
+			return;
 		}	
 		
 	}else{

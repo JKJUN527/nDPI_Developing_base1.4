@@ -3,8 +3,8 @@
 
 /* Define if --enable-debug */
 /* #undef DEBUG */
-//#define DEBUG 1
-//#define NDPI_ENABLE_DEBUG_MESSAGES 1
+#define DEBUG 1
+#define NDPI_ENABLE_DEBUG_MESSAGES 1
 /* Define if --enable-debug */
 /* #undef ENABLE_DEBUG_MESSAGES */
 

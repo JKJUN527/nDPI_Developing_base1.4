@@ -67,7 +67,7 @@ test_pre:
 
 test:
 	make stop
-	iptables -A FORWARD -m ndpi --protos dingtalk -j REJECT
+	iptables -A FORWARD -m ndpi --protos nizhan -j REJECT
 	#iptables -A FORWARD -m ndpi --protos ku6 -j REJECT
 	#iptables -A FORWARD -m ndpi --protos jx3 -j REJECT
 	#iptables -A FORWARD -m ndpi --protos qqspeed -j REJECT
