@@ -65,7 +65,7 @@ test_pre:
 	#iptables -I OUTPUT 1 -j PT
 	iptables -I FORWARD 1 -j JK
 
-test:
+test: install
 	#iptables -A FORWARD -m ndpi --protos PPSTREAM -j REJECT
 	#iptables -A FORWARD -m ndpi --protos ku6 -j REJECT
 	#iptables -A FORWARD -m ndpi --protos jx3 -j REJECT
