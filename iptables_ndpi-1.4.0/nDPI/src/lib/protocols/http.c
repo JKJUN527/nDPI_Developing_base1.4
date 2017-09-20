@@ -29,13 +29,11 @@
 # define printf printk
 #endif
 
-//#define LOCAL_DEBUG
-
 #undef _D
-#ifdef LOCAL_DEBUG
+#ifdef DEBUG
 # define _D(fmt, ...)    do { \
     char *f = strrchr(__FILE__, '/'); \
-    printf("%s: %d: ", f+1, __LINE__); printf(fmt, ## __VA_ARGS__); \
+    printf("%s: %d: ", f? f+1: __FILE__, __LINE__); printf(fmt, ## __VA_ARGS__); \
 } while (0)
 #else
 # define _D(fmt, ...)    ((void)0)
