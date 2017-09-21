@@ -94,7 +94,7 @@ libndpi_la_SOURCES = \
 			protocols/funshion.c \
 			protocols/nizhan.c \
 			protocols/lol.c \
-			protocols/dragonoath.c \ 
+			protocols/dragonoath.c \
 			protocols/wendao.c \
 			protocols/tianxia3.c \
 			protocols/haofang.c \
@@ -124,7 +124,8 @@ libndpi_la_SOURCES = \
 			protocols/qqmusic.c \
 			protocols/qiannyh.c \
 			protocols/qqwuxia.c \
-			protocols/csgo.c
+			protocols/csgo.c \
+			protocols/minecraft.c
 			
 #protocols/skype.c \
 # NTOP protocols are at the end

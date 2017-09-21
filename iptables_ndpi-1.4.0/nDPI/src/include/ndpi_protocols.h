@@ -432,9 +432,8 @@ void ndpi_search_qiannyh(struct ndpi_detection_module_struct *ndpi_struct, struc
 void ndpi_search_qqwuxia(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow);
 void ndpi_search_csgo(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow);
 /*jkjun END*/
-/*ltk*/
 void ndpi_search_huashengke(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow);
-/*ltk end*/
+void ndpi_search_minecraft(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow);
 
 
 #endif /* __NDPI_PROTOCOLS_INCLUDE_FILE__ */
