@@ -64,7 +64,7 @@ void ndpi_search_funshion_tcp(struct ndpi_detection_module_struct
 												  *ndpi_struct, struct ndpi_flow_struct *flow)
 {
 	struct ndpi_packet_struct *packet = &flow->packet;
-
+/*
 	if(packet->payload_packet_len >= 16
 	   //&&(get_u_int16_t(packet->payload, 0)==htons(0x0273)||
 	//	get_u_int16_t(packet->payload, 0)==htons(0x0528)||
@@ -76,7 +76,7 @@ void ndpi_search_funshion_tcp(struct ndpi_detection_module_struct
 		ndpi_int_funshion_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
 		return;
 	}
-	
+*/	
 	if(packet->payload_packet_len >= (6 * 8 + 2) 
 	//&& (packet->payload[0] == 0x07 || packet->payload[0] == 0x00)
 	//&& (packet->payload[5*8] == 0x12

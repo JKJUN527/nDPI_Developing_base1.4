@@ -30,10 +30,19 @@
 
 00000050  00 01 00 00 00 00 1f 00  1d 00 00 1a 63 6c 6f 75   ........ ....clou
 00000060  64 64 61 74 61 2e 64 69  6e 67 74 61 6c 6b 61 70   ddata.di ngtalkap
+
+00000000  10 53 87 80 01 00 01 00  02 00 02 64 6b 03 00 20   .S...... ...dk.. 
+00000010  b6 21 54 70 0f f4 fc fc  03 c2 f4 f3 17 0f ee 7b   .!Tp.... .......{
+00000020  51 5b d5 13 0d 7a 05 bb  6b 86 74 49 94 b2 61 49   Q[...z.. k.tI..aI
+00000030  04 00 08 16 42 ac 04 a2  59 78 93 05 00 08 03 75   ....B... Yx.....u
+00000040  9b e6 b4 2c 88 25 82 00  02 57 4b 84 00 09 57 4b   ...,.%.. .WK...WK
+00000050  2f 70 31 2e 30 2e 30                               /p1.0.0
 */
 
 #include "ndpi_protocols.h"
 #ifdef NDPI_PROTOCOL_DINGTALK
+#define STR0DING "\x10\x53\x87\x80\x01\x00\x01\x00\x02\x00\x02\x64\x6b\x03\x00\x20"
+#define STR1DING "\x2f\x70\x31\x2e\x30"
 
 static void ndpi_int_dingtalk_add_connection(struct ndpi_detection_module_struct *ndpi_struct, 
 					    struct ndpi_flow_struct *flow, ndpi_protocol_type_t protocol_type)
@@ -51,7 +60,15 @@ void ndpi_search_dingtalk_tcp(struct ndpi_detection_module_struct
 												  *ndpi_struct, struct ndpi_flow_struct *flow)
 {
 	struct ndpi_packet_struct *packet = &flow->packet;
-
+	if(packet->payload_packet_len >=5*16+7){
+		if(memcmp(&packet->payload[0],STR0DING,NDPI_STATICSTRING_LEN(STR0DING)) == 0
+	  	   && memcmp(&packet->payload[5*16],STR1DING,NDPI_STATICSTRING_LEN(STR1DING)) == 0
+		){
+			NDPI_LOG(NDPI_PROTOCOL_DINGTALK, ndpi_struct, NDPI_LOG_DEBUG,"find dingtalk 1");
+			ndpi_int_dingtalk_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
+			return;
+		}
+	}
 	if(packet->payload_packet_len >= (160) 
 	){
 		NDPI_LOG(NDPI_PROTOCOL_DINGTALK, ndpi_struct, NDPI_LOG_DEBUG,"payload[64696e67]:%x%x%x%x \n",packet->payload[125],packet->payload[126],packet->payload[127],packet->payload[128]);
@@ -64,9 +81,10 @@ void ndpi_search_dingtalk_tcp(struct ndpi_detection_module_struct
 			ndpi_int_dingtalk_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
 			return;
 		}else{
-				NDPI_LOG(NDPI_PROTOCOL_DINGTALK, ndpi_struct, NDPI_LOG_DEBUG, "exclude dingtalk.\n");
-			  	NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_DINGTALK);
-		}	
+			NDPI_LOG(NDPI_PROTOCOL_DINGTALK, ndpi_struct, NDPI_LOG_DEBUG, "exclude dingtalk.\n");
+			NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_DINGTALK);
+			
+		}
 	}
 }
 void ndpi_search_dingtalk(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
@@ -82,4 +100,3 @@ void ndpi_search_dingtalk(struct ndpi_detection_module_struct *ndpi_struct, stru
 }
 
 #endif
-

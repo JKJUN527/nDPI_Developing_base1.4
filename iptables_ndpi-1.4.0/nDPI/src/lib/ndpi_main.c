@@ -830,18 +830,21 @@ ndpi_protocol_match host_match[] = {
   {"hi-163-qn",                  "qiannyh"             , NDPI_PROTOCOL_GAME_QIANNYH },
 
   /*JK END*/
-  { "huoban.gnway.com",         "JinWanWei",  NDPI_PROTOCOL_JINWANWEI },
-  { "agent.gnway.com",          "JinWanWei",  NDPI_PROTOCOL_JINWANWEI },
-  { "ddns.gnway.com",           "JinWanWei",  NDPI_PROTOCOL_JINWANWEI },
-  { "tietong-ddns.gnvip.net",   "JinWanWei",  NDPI_PROTOCOL_JINWANWEI },
-  { "ddnscn.gnvip.net",         "JinWanWei",  NDPI_PROTOCOL_JINWANWEI },
-  { "ddnscom.gnvip.net",        "JinWanWei",  NDPI_PROTOCOL_JINWANWEI },
 
-  { "phsle02.oray.net",         "HuaShengKe", NDPI_PROTOCOL_HUASHENGKE },
-  { "oray.net",                 "HuaShengKe", NDPI_PROTOCOL_HUASHENGKE },
-  { "qqmusic.qq.com",           "QQMusic",    NDPI_PROTOCOL_QQMUSIC },
-  { "music.qq.com",             "QQMusic",    NDPI_PROTOCOL_QQMUSIC },
-  { "wuxia.qq.com",             "QQWuXia",    NDPI_PROTOCOL_GAME_QQWUXIA },
+  { "huoban.gnway.com",         "JinWanWei",   NDPI_PROTOCOL_JINWANWEI },
+  { "agent.gnway.com",          "JinWanWei",   NDPI_PROTOCOL_JINWANWEI },
+  { "ddns.gnway.com",           "JinWanWei",   NDPI_PROTOCOL_JINWANWEI },
+  { "tietong-ddns.gnvip.net",   "JinWanWei",   NDPI_PROTOCOL_JINWANWEI },
+  { "ddnscn.gnvip.net",         "JinWanWei",   NDPI_PROTOCOL_JINWANWEI },
+  { "ddnscom.gnvip.net",        "JinWanWei",   NDPI_PROTOCOL_JINWANWEI },
+
+  { "phsle02.oray.net",         "HuaShengKe" , NDPI_PROTOCOL_HUASHENGKE },
+  { "oray.net",                 "HuaShengKe" , NDPI_PROTOCOL_HUASHENGKE },
+  { "qqmusic.qq.com",           "QQMusic",     NDPI_PROTOCOL_QQMUSIC },
+  { "music.qq.com",             "QQMusic",     NDPI_PROTOCOL_QQMUSIC },
+  { "wuxia.qq.com",             "QQWuXia",     NDPI_PROTOCOL_GAME_QQWUXIA },
+  { "nz.qq.com",                "NIZhan",      NDPI_PROTOCOL_NIZHAN },
+  { "nzclientpop",              "NIZhan",      NDPI_PROTOCOL_NIZHAN },
 
   { NULL, 0 }
 };
