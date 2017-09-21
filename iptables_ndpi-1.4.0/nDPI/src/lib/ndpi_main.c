@@ -830,7 +830,7 @@ ndpi_protocol_match host_match[] = {
   {"hi-163-qn",                  "qiannyh"             , NDPI_PROTOCOL_GAME_QIANNYH },
 
   /*JK END*/
-  /*ltk start*/
+
   { "huoban.gnway.com",         "JinWanWei",   NDPI_PROTOCOL_JINWANWEI },
   { "agent.gnway.com",          "JinWanWei",   NDPI_PROTOCOL_JINWANWEI },
   { "ddns.gnway.com",           "JinWanWei",   NDPI_PROTOCOL_JINWANWEI },
@@ -844,8 +844,8 @@ ndpi_protocol_match host_match[] = {
   { "music.qq.com",             "QQMusic",     NDPI_PROTOCOL_QQMUSIC },
   { "wuxia.qq.com",             "QQWuXia",     NDPI_PROTOCOL_GAME_QQWUXIA },
   { "nz.qq.com",                "NIZhan",      NDPI_PROTOCOL_NIZHAN },
-  { "nzclientpop",                "NIZhan",      NDPI_PROTOCOL_NIZHAN },
-  /*ltk end*/
+  { "nzclientpop",              "NIZhan",      NDPI_PROTOCOL_NIZHAN },
+
   { NULL, 0 }
 };
 
@@ -1282,6 +1282,9 @@ static void ndpi_init_protocol_defaults(struct ndpi_detection_module_struct *ndp
         		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
    ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_FACEBOOK, "FaceBook",	 
         		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0),  /* TCP */
+        		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
+   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_MINECRAFT, "Minecraft",	 
+        		  ndpi_build_default_ports(ports_a, /*25565*/0, 0, 0, 0, 0),  /* TCP */
         		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
 				
 /**20161207 start stock*/
@@ -2828,6 +2831,19 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
         NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_HUASHENGKE);
 
         NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].excluded_protocol_bitmask, NDPI_PROTOCOL_HUASHENGKE);
+
+        a++;
+    }
+#endif
+#ifdef NDPI_PROTOCOL_MINECRAFT
+    if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_MINECRAFT) != 0) {
+        ndpi_struct->callback_buffer[a].func = ndpi_search_minecraft;
+        ndpi_struct->callback_buffer[a].ndpi_selection_bitmask = NDPI_SELECTION_BITMASK_PROTOCOL_V4_V6_TCP_WITH_PAYLOAD;
+
+        NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_UNKNOWN);
+        NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_MINECRAFT);
+
+        NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].excluded_protocol_bitmask, NDPI_PROTOCOL_MINECRAFT);
 
         a++;
     }

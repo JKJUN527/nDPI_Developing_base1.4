@@ -116,7 +116,8 @@ am_libndpi_la_OBJECTS = libndpi_la-ahocorasick.lo libndpi_la-node.lo \
 	libndpi_la-world_of_warship.lo libndpi_la-jx3.lo \
 	libndpi_la-eudemons.lo libndpi_la-huashengke.lo \
 	libndpi_la-qqmusic.lo libndpi_la-qiannyh.lo \
-	libndpi_la-qqwuxia.lo libndpi_la-csgo.lo
+	libndpi_la-qqwuxia.lo libndpi_la-csgo.lo \
+	libndpi_la-minecraft.lo
 libndpi_la_OBJECTS = $(am_libndpi_la_OBJECTS)
 libndpi_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -373,7 +374,8 @@ libndpi_la_SOURCES = \
 			protocols/qqmusic.c \
 			protocols/qiannyh.c \
 			protocols/qqwuxia.c \
-			protocols/csgo.c
+			protocols/csgo.c \
+			protocols/minecraft.c
 
 all: all-am
 
@@ -493,6 +495,7 @@ include ./$(DEPDIR)/libndpi_la-mail_pop.Plo
 include ./$(DEPDIR)/libndpi_la-mail_smtp.Plo
 include ./$(DEPDIR)/libndpi_la-mdns.Plo
 include ./$(DEPDIR)/libndpi_la-mgcp.Plo
+include ./$(DEPDIR)/libndpi_la-minecraft.Plo
 include ./$(DEPDIR)/libndpi_la-mms.Plo
 include ./$(DEPDIR)/libndpi_la-mssql.Plo
 include ./$(DEPDIR)/libndpi_la-mysql.Plo
@@ -1310,6 +1313,13 @@ libndpi_la-csgo.lo: protocols/csgo.c
 #	source='protocols/csgo.c' object='libndpi_la-csgo.lo' libtool=yes \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libndpi_la-csgo.lo `test -f 'protocols/csgo.c' || echo '$(srcdir)/'`protocols/csgo.c
+
+libndpi_la-minecraft.lo: protocols/minecraft.c
+	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libndpi_la-minecraft.lo -MD -MP -MF $(DEPDIR)/libndpi_la-minecraft.Tpo -c -o libndpi_la-minecraft.lo `test -f 'protocols/minecraft.c' || echo '$(srcdir)/'`protocols/minecraft.c
+	$(am__mv) $(DEPDIR)/libndpi_la-minecraft.Tpo $(DEPDIR)/libndpi_la-minecraft.Plo
+#	source='protocols/minecraft.c' object='libndpi_la-minecraft.lo' libtool=yes \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libndpi_la-minecraft.lo `test -f 'protocols/minecraft.c' || echo '$(srcdir)/'`protocols/minecraft.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

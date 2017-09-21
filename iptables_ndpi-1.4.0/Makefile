@@ -16,8 +16,7 @@ clean:
 	find . -name  "*~" |xargs rm -rf
 	find . -name "*.*o" |xargs rm -rf
 
-install:
-	iptables -F FORWARD
+install: stop
 	modprobe -r xt_ndpi || echo 'o_0'
 	cd userland; make install prefix=$(PREFIX)
 	cd kernel; make install prefix=$(PREFIX)
@@ -48,12 +47,6 @@ stop:
 	iptables -F
 	modprobe -r xt_ndpi
 	> /var/log/messages
-	#iptables -D INPUT 1
-	#iptables -D OUTPUT 1
-	#iptables -D INPUT 1
-	#iptables -D OUTPUT 1
-	#iptables -D INPUT 1
-	#iptables -D OUTPUT 1
 
 test_pre:
 	#iptables -N PT || iptables -F PT
@@ -66,23 +59,8 @@ test_pre:
 	#iptables -I OUTPUT 1 -j PT
 	iptables -I FORWARD 1 -j JK
 
-test:
-	make stop
-<<<<<<< HEAD
+test: install
 	iptables -A FORWARD -m ndpi --protos nizhan -j REJECT
-	#iptables -A FORWARD -m ndpi --protos ku6 -j REJECT
-	#iptables -A FORWARD -m ndpi --protos jx3 -j REJECT
-	#iptables -A FORWARD -m ndpi --protos qqspeed -j REJECT
-	#iptables -A FORWARD -m ndpi --protos jx3 -j REJECT
-	#iptables -A FORWARD -m ndpi --protos eudemons -j REJECT
-	#iptables -A FORWARD -m ndpi --protos tianxia3 -j REJECT
-	#iptables -A FORWARD -m ndpi --protos csgo -j REJECT
-	#iptables -F FORWARD
-	#> /var/log/messages
-	#iptables -A FORWARD -m ndpi --protos QQMusic -j REJECT
-=======
-	iptables -A FORWARD -m ndpi --protos QQMusic -j REJECT
->>>>>>> origin/master
 	watch -n 0.5 'iptables -S -v'
 	#iptables -A JK -p udp --sport 12345 -j REJECT
 m:
