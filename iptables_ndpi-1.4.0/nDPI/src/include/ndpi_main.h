@@ -209,7 +209,7 @@ extern char* ndpi_get_proto_by_id(struct ndpi_detection_module_struct *ndpi_mod,
 extern int StringFind(const char * pSrc,const char * pDst);
 extern int check_punycode_string(char * buffer , int len);
 /* leetking Add memfind same as strstr() */
-extern void *memfind(const void *mem, size_t memlen, const void *pat, size_t patlen);
+extern void *memfind(const void *mem, ssize_t memlen, const void *pat, ssize_t patlen);
 
  /** Checks when the @p payload starts with the string literal @p str.
    * When the string is larger than the payload, check fails.

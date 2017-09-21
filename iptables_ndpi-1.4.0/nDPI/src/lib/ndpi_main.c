@@ -5307,8 +5307,10 @@ int StringFind(const char *pSrc, const char *pDst)
 *         !NULL the position of pat starting.
 * Author: leetking <li_Tking@163.com>
 */
-extern void *memfind(const void *_mem, size_t memlen, const void *_pat, size_t patlen)
+extern void *memfind(const void *_mem, ssize_t memlen, const void *_pat, ssize_t patlen)
 {
+    if (!_mem || !_pat || memlen < 0 || patlen < 0) return NULL;
+
     u_int8_t *mem = (u_int8_t*)_mem;
     u_int8_t *pat = (u_int8_t*)_pat;
     size_t i;
