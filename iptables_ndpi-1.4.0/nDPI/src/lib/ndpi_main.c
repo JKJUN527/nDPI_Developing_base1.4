@@ -846,6 +846,8 @@ ndpi_protocol_match host_match[] = {
   { "nz.qq.com",                "NIZhan",      NDPI_PROTOCOL_NIZHAN },
   { "nzclientpop",              "NIZhan",      NDPI_PROTOCOL_NIZHAN },
 
+  {"wspeed.qq.com",            "QQMusic",     NDPI_PROTOCOL_QQMUSIC},
+
   { NULL, 0 }
 };
 
@@ -926,9 +928,6 @@ static void ndpi_init_protocol_defaults(struct ndpi_detection_module_struct *ndp
 			  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0) /* TCP */,
 			  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_HTTP, "HTTP",
-			  ndpi_build_default_ports(ports_a, 80, 0 /* ntop */, 0, 0, 0) /* TCP */,
-			  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
-  ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_HTTP_CONNECT, "HTTPCONNECT",
 			  ndpi_build_default_ports(ports_a, 80, 0 /* ntop */, 0, 0, 0) /* TCP */,
 			  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_MDNS, "MDNS",
@@ -1056,7 +1055,7 @@ static void ndpi_init_protocol_defaults(struct ndpi_detection_module_struct *ndp
 			  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_LLMNR, "LLMNR",
 			  ndpi_build_default_ports(ports_a, 5355, 0, 0, 0, 0) /* TCP */,
-			  ndpi_build_default_ports(ports_b, 5355, 0, 0, 0, 0) /* UDP */); /* Missing dissector: port based only *
+			  ndpi_build_default_ports(ports_b, 5355, 0, 0, 0, 0) /* UDP */); /* Missing dissector: port based only */
 
   /* PT START*/
   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_WECHAT, "WeChat",
@@ -5310,8 +5309,10 @@ int StringFind(const char *pSrc, const char *pDst)
 *         !NULL the position of pat starting.
 * Author: leetking <li_Tking@163.com>
 */
-extern void *memfind(const void *_mem, size_t memlen, const void *_pat, size_t patlen)
+extern void *memfind(const void *_mem, ssize_t memlen, const void *_pat, ssize_t patlen)
 {
+    if (!_mem || !_pat || memlen < 0 || patlen < 0) return NULL;
+
     u_int8_t *mem = (u_int8_t*)_mem;
     u_int8_t *pat = (u_int8_t*)_pat;
     size_t i;

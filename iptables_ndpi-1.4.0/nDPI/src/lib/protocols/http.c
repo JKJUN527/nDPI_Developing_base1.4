@@ -761,16 +761,16 @@ static void check_custom_headers(struct ndpi_detection_module_struct *ndpi_struc
 #ifdef NDPI_PROTOCOL_QQMUSIC
          _D("Into QQ music.\n");
          _D("QQ music: line[%d]: %s\n", a, packet->line[a].ptr);
-         int qqmusic_len = packet->payload_packet_len - (packet->line[a].ptr - packet->payload);
+         int qqmusic_len = packet->line[a].len;
          _D("QQ music: qqmusic_len: %d\n", qqmusic_len);
-         if (!strncmp("GET /qqmusic/fcgi-bin", packet->line[a].ptr, 21)) {
+         if (qqmusic_len >= 21 && !strncmp("GET /qqmusic/fcgi-bin", packet->line[a].ptr, 21)) {
              ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_QQMUSIC);
              _D("QQ music: Found via /qqmusic/fcgi-bin !\n");
              return;
          }
-         if (!strncmp("POST /fcgi-bin", packet->line[a].ptr, 14)) /* maybe get player stat */
+         if (qqmusic_len >= 14 && !strncmp("POST /fcgi-bin", packet->line[a].ptr, 14)) /* maybe get player stat */
              qqmusic_statis ++;
-         if (!strncmp("GET /", packet->line[a].ptr, 5)) {
+         if (qqmusic_len >= 5 && !strncmp("GET /", packet->line[a].ptr, 5)) {
              u_int8_t *file;
              if (!!(file = memfind(packet->line[a].ptr, qqmusic_len, "ogg", 3))) {
                  qqmusic_statis += 2;
@@ -786,14 +786,14 @@ static void check_custom_headers(struct ndpi_detection_module_struct *ndpi_struc
                      qqmusic_statis ++;
              }
          }
-         if (!strncmp("Referer:", packet->line[a].ptr, 8)
+         if (qqmusic_len >= 8 && !strncmp("Referer:", packet->line[a].ptr, 8)
                  || !strncmp("Host:", packet->line[a].ptr, 5)) {
              if (memfind(packet->line[a].ptr, qqmusic_len, "music", 5))
                  qqmusic_statis += 3;
              if (memfind(packet->line[a].ptr, qqmusic_len, "qq", 2))
                  qqmusic_statis += 2;
          }
-         if (!strncmp("Cookie:", packet->line[a].ptr, 7)) {
+         if (qqmusic_len >= 7 && !strncmp("Cookie:", packet->line[a].ptr, 7)) {
              char *cookies[] = {
                  "qqmusic_uin", "qqmusic_key",
                  "qqmusic_gkey", "qqmusic_privatekey",
@@ -1097,7 +1097,8 @@ void ndpi_search_http_tcp(struct ndpi_detection_module_struct *ndpi_struct, stru
 
 	NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "http structure detected, adding\n");
 
-	ndpi_int_http_add_connection(ndpi_struct, flow, (filename_start == 8) ? NDPI_PROTOCOL_HTTP_CONNECT : NDPI_PROTOCOL_HTTP);
+	//ndpi_int_http_add_connection(ndpi_struct, flow, (filename_start == 8) ? NDPI_PROTOCOL_HTTP_CONNECT : NDPI_PROTOCOL_HTTP);
+	ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_HTTP);
 	check_content_type_and_change_protocol(ndpi_struct, flow);
 	/* HTTP found, look for host... */
 	if (packet->host_line.ptr != NULL) {
