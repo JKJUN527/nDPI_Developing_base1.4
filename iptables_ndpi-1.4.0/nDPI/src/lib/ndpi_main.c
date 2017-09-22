@@ -846,6 +846,8 @@ ndpi_protocol_match host_match[] = {
   { "nz.qq.com",                "NIZhan",      NDPI_PROTOCOL_NIZHAN },
   { "nzclientpop",              "NIZhan",      NDPI_PROTOCOL_NIZHAN },
 
+  {"wspeed.qq.com",            "QQMusic",     NDPI_PROTOCOL_QQMUSIC},
+
   { NULL, 0 }
 };
 
