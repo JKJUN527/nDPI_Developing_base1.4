@@ -96,7 +96,7 @@ extern "C" {
 #define NDPI_PROTOCOL_DCERPC                    51
 #define NDPI_PROTOCOL_RADIUS                    52
 #define NDPI_PROTOCOL_LLMNR                     53
-#define NDPI_PROTOCOL_HTTP_CONNECT              54
+//#define NDPI_PROTOCOL_HTTP_CONNECT              54
 #define NDPI_PROTOCOL_FTP_DATA                  55
 /* UPDATE UPDATE UPDATE UPDATE UPDATE UPDATE UPDATE UPDATE UPDATE */
 
