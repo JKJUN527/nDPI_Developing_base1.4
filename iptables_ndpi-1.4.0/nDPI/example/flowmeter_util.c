@@ -24,7 +24,7 @@ char data_path[MAX_VALUE_LEN] =  "/var/log/flowmeter/data_log";
 LOG * g = NULL;
 LOG * g_rt = NULL;
 char *config_file_path = NULL;
-u_int32_t COUNT_TIMES = 12; /*60times*5s=5min*/
+u_int32_t COUNT_TIMES = 12; /*12times*5s=1min*/
 u_int32_t max_user_count = 1024;
 u_int32_t want_5s_flag = 5;
 /*global vars end*/
@@ -522,7 +522,10 @@ int64_t find_index_by_ip_int(struct in_addr *all_ip, u_int32_t all_ip_cnt, u_int
 		else if (ntohl(midVal->s_addr) > ip)
 			high = mid - 1;
 		else{
-			// printf("found this ip %d\n", mid);
+			#if 1
+			if ( ip != ntohl(midVal->s_addr))
+				printf("[ERROR] found this ip error: %u s_addr:%u index:%u \n",ip, ntohl(midVal->s_addr), mid );
+			#endif 
 			return mid;
 		}
 	}
@@ -561,11 +564,12 @@ HashEle_t *find_hash_by_index(HashEle_t *head, int index) //找到hash值对应�
 
 HashEle_t *setUrlIntoHashtableById(HashEle_t *hashtable, u_int32_t url_hash_idx) //     两个参数，第一个是HashEle_t的头结点指针，第二个是要设置的
 {
+	int ret;
 	u_int32_t hash_idx;
 	HashEle_t *hash_ele;
 	HashEle_t *hash_tmp;
 	// get hash index
-	if (url_hash_idx == 0x7FFFFFFF)
+	if (url_hash_idx == 0x7FFFFFFF || url_hash_idx == 0)
 		return NULL;
 	/*calc mod*/
 	hash_idx = hash_int(url_hash_idx);
@@ -578,34 +582,69 @@ HashEle_t *setUrlIntoHashtableById(HashEle_t *hashtable, u_int32_t url_hash_idx)
 		while (hash_ele != NULL)
 		{
 			/*compare url hash id (fast than strcmp)*/
+			/*same url*/
 			if (hash_ele->url_id == url_hash_idx)
 			{
 				// printf("same url\n");
 				//found
 				return hash_ele;
 			}
+			#if 1
+			else if (!isHotInfo2( &hash_ele->tick, HOT_DELTA_LONG_PARA )){ /*expire url, reuse it */
+				/*lock to reset it */
+				ret = pthread_mutex_trylock( &hash_ele->mutex ); 
+				if (ret != 0 ){
+					/*cant get this mutex lock,skip it */
+					printf("  init new mutex fail\n");
+					goto last;
+				}
+				/* reset the ele, MUST SAVE subele*/
+				if (hash_ele->url != NULL){
+					/*reset last unused url str*/
+					free(hash_ele->url);
+					hash_ele->url = NULL;
+				}
+				// memset(hash_ele->ip_infos, 0, sizeof(ip_info_t)*all_ip_cnt);
+				pthread_mutex_unlock( &hash_ele->mutex );
+				break;
+			}
+			#endif
 			else
 			{
 				// printf("not same url %s<=>%s, search next\n", hash_ele->url, in_url);
 				//  not found, find sub ele until no any sub
+last:
 				hash_tmp = hash_ele;
 				hash_ele = hash_ele->sub_ele;
 			}
-		}
+		} /*end while*/
 		/*sub ele is null, get a new ele*/
 		if (hash_ele == NULL)
 		{
+			int ret ;
 			printf("not found , malloc a new\n");
 			hash_ele = (HashEle_t *)malloc(sizeof(HashEle_t));
 			if (hash_ele == NULL)
-			{	printf("malloc fail\n");return NULL;};
+			{	
+				printf("malloc fail\n");return NULL;
+			}
+			memset(hash_ele, 0, sizeof(HashEle_t));
+			ret = pthread_mutex_init( &hash_ele->mutex, 0);  
+			if (ret != 0){
+				printf("mutex init fail\n");
+				free(hash_ele);
+				hash_ele = NULL;
+			}
+			else{
+				// printf("mutex success %p\n", &hash_ele->mutex);
+			}
 			hash_ele->ip_infos = (ip_info_t *)malloc(sizeof(ip_info_t)*all_ip_cnt);
 			if (hash_ele->ip_infos == NULL )
 			{	printf("malloc fail\n");return NULL;};
 			memset(hash_ele->ip_infos, 0, sizeof(ip_info_t)*all_ip_cnt);
 			hash_tmp->sub_ele = hash_ele;
-		}
-	}
+		} /* end if*/
+	} /* end if */
 	/*set new hash attr*/
 
 	hash_ele->num = hash_idx;
@@ -622,9 +661,13 @@ HashEle_t *setUrlIntoHashtable(HashEle_t *hashtable, const char *in_url) //     
 	u_int32_t url_hash_idx;
 	url_hash_idx = hash_string((const char*)in_url);
 	hash_ele = setUrlIntoHashtableById(hashtable, url_hash_idx);
+	/*set into hashtable success*/
 	if (hash_ele != NULL){
 		hash_ele->url_id = url_hash_idx;
-		hash_ele->url = ndpi_strdup(in_url);
+		/*when reuse or exists, we dont need to reset the url str*/
+		if (hash_ele->url == NULL){
+			hash_ele->url = ndpi_strdup(in_url);
+		}
 	}
 	return hash_ele;
 }
@@ -672,6 +715,7 @@ u_int8_t initUrlHashtable(HashEle_t *head, u_int32_t hash_size)
 	HashEle_t *p = head; //记录头结点，头结点为不存数据
 	HashEle_t *t = head;
 	char buf[48] = {0};
+	int ret ;
 	for (i = 0; i < hash_size; i++)
 	{
 		if ((i % 100) == 0 && i != 0)
@@ -682,12 +726,23 @@ u_int8_t initUrlHashtable(HashEle_t *head, u_int32_t hash_size)
 		tmp = (HashEle_t *)malloc(sizeof(HashEle_t));
 		if (tmp == NULL)
 			return -1;
+
+                // printf("node address is :%p\n", tmp);
+
 		memset(tmp, 0, sizeof(HashEle_t));
+		ret = pthread_mutex_init( &tmp->mutex, 0 );  /*init mutex*/
+                if (ret != 0){
+                     perror("mutex init fail\n");
+                }
+                else{
+		     // printf("mutex success %p\n", &tmp->mutex);
+                }
+
 		tmp->ip_infos = (ip_info_t *)malloc(sizeof(ip_info_t)*all_ip_cnt);
+		// printf("ip_infos %p\n", tmp->ip_infos);
 		if (tmp->ip_infos == NULL)
 			return -2;
-	        memset(tmp->ip_infos, 0, sizeof(ip_info_t)*all_ip_cnt);
-		
+	    memset(tmp->ip_infos, 0, sizeof(ip_info_t)*all_ip_cnt);
 		tmp->num = i;
 		initIPArr(tmp->ip_infos); //初始化url_node中的ip记录
 		p->next = tmp;
@@ -947,6 +1002,10 @@ int8_t initFlowmeterStruct(HashEle_t **out_hashtable, app_info_t **_app_struct)
 	printf("------------%s-----------\n",__FUNCTION__);
 	*out_hashtable = (HashEle_t *)malloc(sizeof(HashEle_t));
 	memset(*out_hashtable, 0, sizeof(HashEle_t));
+	if (0 != pthread_mutex_init( &(*out_hashtable)->mutex, 0 )){
+		printf("Init hashtable head lock fail, exit\n");
+		exit(1);
+	}
 	(*out_hashtable)->ip_infos = (ip_info_t *)malloc(sizeof(ip_info_t)*all_ip_cnt);
 	memset((*out_hashtable)->ip_infos, 0, sizeof(ip_info_t)*all_ip_cnt);
 	if (initUrlHashtable(*out_hashtable, HASHTABLE_SIZE) != 0)
@@ -956,7 +1015,7 @@ int8_t initFlowmeterStruct(HashEle_t **out_hashtable, app_info_t **_app_struct)
 	}
 	else
 	{
-		printf("\tinitUrlHashtable success\n");
+		printf("\tinitUrlHashtable success %p\n", *out_hashtable);
 	}
 	/*init app struct*/
 	if (initAppStruct(_app_struct, all_ip_cnt) != 0)
@@ -975,18 +1034,21 @@ int8_t initFlowmeterStruct(HashEle_t **out_hashtable, app_info_t **_app_struct)
  * @
  * @
  * @
- * @index: appid*/
-void updateAppData(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow *flow, app_info_t *_app_struct, u_int64_t index)
+ * @ appid
+ * @ ip_index */
+void updateAppData(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow *flow, app_info_t *_app_struct, u_int64_t appid, u_int64_t ip_index)
 {
-		_app_struct->ip_infos[index].tick  = time(NULL);
-		_app_struct->ip_infos[index].localIP = ntohl(all_ip[index].s_addr);
-		_app_struct->ip_infos[index].fiveSecBytes += flow->bytes; //5s bytes will add to 10min every 10min bytes and set to 0
+
+		if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(_app_struct->app_bitmask, appid) == 0) NDPI_ADD_PROTOCOL_TO_BITMASK(_app_struct->app_bitmask, appid);
+		_app_struct->tick = _app_struct->ip_infos[appid].tick  = time(NULL);
+		_app_struct->ip_infos[appid].localIP = ntohl(all_ip[ip_index].s_addr);
+		_app_struct->ip_infos[appid].fiveSecBytes += flow->bytes; //5s bytes will add to 10min every 10min bytes and set to 0
 		// dumpIPInfoLit(&_app_struct->ip_infos[index]);
 }
 
 void updateUrlData(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow *flow, HashEle_t *hash_ele, int64_t index)
 {
-		hash_ele->ip_infos[index].tick  = time(NULL);
+		hash_ele->tick = hash_ele->ip_infos[index].tick  = time(NULL);
 		hash_ele->ip_infos[index].localIP = ntohl(all_ip[index].s_addr);
 		hash_ele->ip_infos[index].fiveSecBytes += flow->bytes    ; //5s bytes will add to 10min every 10min bytes and set to 0
 		hash_ele->ip_infos[index].fiveSecCount += 1; 
@@ -1025,28 +1087,35 @@ void updateFlowData(struct ndpi_detection_module_struct *ndpi_struct, struct ndp
 	// if((index = FIND_IP(ntohl(flow->lower_ip))) != -1 || (index = FIND_IP(ntohl(flow->upper_ip)) != -1))
 
 #define JUDGE_AND_UPDATE  { 								\
-		printf("Found valid ip:"); 					\
-		dumpIP(ntohl(all_ip[index].s_addr));  				\
-		printf("\n"); 							\
+		/* printf("Found valid ip:");*/					\
+		/* dumpIP(ntohl(all_ip[index].s_addr)); */ 				\
+		/* printf("\n"); */							\
 		if (ISHTTP(flow->detected_protocol)) 					\
 		{									\
 			/*1. get hash ele by url*/					\
-			HashEle_t *hash_ele;						\
+			HashEle_t *hash_ele = NULL;					\
 			/* printf("will setUrlIntoHashtable\n"); */			\
 			if (flow->ndpi_flow == NULL){				\
 				hash_ele =  setUrlIntoHashtableById(_hashtable, flow->url_hash_idx);		\
-			}else{							\
-				hash_ele = setUrlIntoHashtable(_hashtable, flow->ndpi_flow->host_server_name);	\
-				if (hash_ele != NULL){					\
-					flow->url_hash_idx = hash_ele->url_id;		\
+			}else{								\
+				if ( flow->ndpi_flow->host_server_name != NULL && strlen(flow->ndpi_flow->host_server_name) > 0) {	\
+					hash_ele = setUrlIntoHashtable(_hashtable, flow->ndpi_flow->host_server_name);	\
+					if (hash_ele != NULL){					\
+						flow->url_hash_idx = hash_ele->url_id;		\
+					}						\
+				}else{							\
+					/* host server is empty*/			\
 				}							\
 			}								\
 			/*2. update data*/						\
 			if (hash_ele != NULL)						\
 			{								\
+				pthread_mutex_lock( &hash_ele->mutex );		\
 				/* printf("will update url: %s\n", hash_ele->url);*/	\
-				/* printf("will updateUrlData\n"); */ 			\
+				/* printf("[URL] updateUrlData\n"); */			\
 				updateUrlData(ndpi_struct, flow, hash_ele, index);	\
+				pthread_mutex_unlock( &hash_ele->mutex );		\
+				/* printf("[URL] updateUrlData over\n"); */		\
 			}								\
 			else								\
 			{								\
@@ -1057,8 +1126,9 @@ void updateFlowData(struct ndpi_detection_module_struct *ndpi_struct, struct ndp
 		{									\
 			/* TODO: shield Unknown data*/					\
 			/* printf("will update app data\n");*/				\
-			/* updateAppData(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow *flow, app_info_t * _app_struct );*/	\
-			updateAppData(ndpi_struct, flow, &_app_struct[index], flow->detected_protocol);	\
+			/* printf("[APP] updateAppData\n"); */			\
+			updateAppData(ndpi_struct, flow, &_app_struct[index], flow->detected_protocol, index);	\
+			/* printf("[APP] updateAppData over\n"); */			\
 		}									\
 	}
 	if((index = FIND_IP(ntohl(flow->lower_ip))) != -1 ){
@@ -1075,17 +1145,31 @@ void accuUrlData(HashEle_t *hash_ele, u_int32_t num, u_int32_t sub_num, u_int32_
 	u_int32_t i = 0;
 	// static u_int32_t cnt = 0;
 	// printf("%u)will accuUrl %u-%u data ten_min_flag:%u rt_flag:%u\n",cnt++,num,sub_num, ten_min_flag, rt_flag);
+	#if 0
+	if (!isHotInfo2(&(hash_ele->tick), HOT_DELTA_LONG_PARA) && hash_ele->tick != 0){
+		printf("[URL] time tick:%u - now:%u = %d\n",hash_ele->tick, time(NULL), time(NULL) - hash_ele->tick);
+	}
+	#endif
+	if ( hash_ele == NULL || !isHotInfo2(&(hash_ele->tick), HOT_DELTA_LONG_PARA))
+		return;
 	for(;i < all_ip_cnt; i++){
 		/*rt data*/
 		// if (isHotInfo((time_t*) &hash_ele->ip_infos[i]))
 		//	printf("%s is hot\n", hash_ele->url);
 		//else
 		//	printf("%s is not hot tick:%u now:%u\n", hash_ele->url, hash_ele->ip_infos[i].tick, time(NULL));
+		if ( !isHotInfo2(&(hash_ele->ip_infos[i].tick), HOT_DELTA_LONG_PARA)) /*this para is 2, when it is 1 it will be reset to 0*/
+		{
+			// hash_ele->ip_infos[i].tenMinBytes = hash_ele->ip_infos[i].fiveSecBytes = hash_ele->ip_infos[i].tenMinCount = hash_ele->ip_infos[i].fiveSecCount = 0;
+			continue;
+		}else{
+			// printf("[URL] common data, will detect\n");
+		}
 		if (rt_flag && isHotInfo((time_t*) &hash_ele->ip_infos[i].tick) && hash_ele->ip_infos[i].fiveSecBytes)
 		{
-			// printf("logging url 5s !\n");	
+			// printf("[URL] logging url 5s !\n");	
 			/*U: www.baidu.com,ip,fiveSecBytes,fiveSecCount*/
-			LOG_FM_RT("T:%11ld U: %s,%u,%u,%u\n", timeFix,hash_ele->url, ntohl(all_ip[i].s_addr), hash_ele->ip_infos[i].fiveSecBytes, hash_ele->ip_infos[i].fiveSecCount);
+			LOG_FM_RT("T:%11ld U: %s,%u,%u,%u\n", timeFix, hash_ele->url, ntohl(all_ip[i].s_addr), hash_ele->ip_infos[i].fiveSecBytes, hash_ele->ip_infos[i].fiveSecCount);
 		}
 		/*accu 5s data*/
 		if (hash_ele->ip_infos[i].fiveSecBytes)
@@ -1097,13 +1181,14 @@ void accuUrlData(HashEle_t *hash_ele, u_int32_t num, u_int32_t sub_num, u_int32_
 		}
 		/*U: www.baidu.com,ip,fiveSecBytes,fiveSecCount*/
 		if (ten_min_flag && hash_ele->ip_infos[i].tenMinBytes){
-			// printf("logging url 10min!\n");
+			// printf("[URL] logging url 10min!\n");
 
 			LOG_FM("U: %s,%u,%u,%u\n", hash_ele->url, ntohl(all_ip[i].s_addr), hash_ele->ip_infos[i].tenMinBytes, hash_ele->ip_infos[i].tenMinCount);  
 			hash_ele->ip_infos[i].tenMinBytes = 0;	
 			hash_ele->ip_infos[i].tenMinCount = 0;	
 		}
 	}
+	// printf("[URL] accu over\n");
 }
 
 void writeAppData(ip_info_lit_t *info){
@@ -1128,28 +1213,31 @@ void accuAppData(app_info_t *_app_struct, u_int32_t ten_min_flag, u_int32_t rt_f
 			jObj=json_object_new_object();
 			jobj_one_ip_app_infos = json_object_new_array();
 			if(jobj_one_ip_app_infos==NULL || jObj ==NULL){
+				if (jobj_one_ip_app_infos) json_object_put(jobj_one_ip_app_infos);
+				if (jObj) json_object_put(jObj);
 				printf("jobj_one_ip_app_infos or jObj is NULL skip..\n");
 				continue;
 			}
 		}
-
+		// printf("[APP] dump---------------\n");
 		// dumpAppStruct(&_app_struct[i_user]);
 		for(; appid < NDPI_MAX_SUPPORTED_PROTOCOLS ;appid++){
 			if (temp_ip == 0 && _app_struct[i_user].ip_infos[appid].localIP != 0) {
 
 				temp_ip = _app_struct[i_user].ip_infos[appid].localIP;
 				snprintf(ip_buf,sizeof(ip_buf),"%u",temp_ip);
-				// printf("setting localIP:%u temp_ip:%u\n", _app_struct[i_user].ip_infos[appid].localIP, temp_ip);
+				// printf("setting localIP:%u temp_ip:%u s_addr:%u ntohl(s_addr):%u\n", _app_struct[i_user].ip_infos[appid].localIP, temp_ip ,all_ip[i_user].s_addr ,ntohl(all_ip[i_user].s_addr));
 			}
 			if(ISHTTP(appid) || appid == 0)
 				continue;
-			if(NDPI_COMPARE_PROTOCOL_TO_BITMASK(/*bitmask*/_app_struct[i_user].app_bitmask,appid)!=0 ||  _app_struct[i_user].ip_infos[appid].fiveSecBytes == 0 ){
+			if(NDPI_COMPARE_PROTOCOL_TO_BITMASK(/*bitmask*/_app_struct[i_user].app_bitmask, appid) == 0 || (_app_struct[i_user].ip_infos[appid].fiveSecBytes == 0 && _app_struct[i_user].ip_infos[appid].tenMinBytes == 0 )){
 				continue; 
 			}
 			/*else{
 				printf("\t5s bytes:%u\n", _app_struct[i_user].ip_infos[appid].fiveSecBytes);
 			}*/
-			if (isHotInfo(&_app_struct[i_user].ip_infos[appid].tick)){
+			// if (isHotInfo(&_app_struct[i_user].ip_infos[appid].tick)){
+			if (_app_struct[i_user].ip_infos[appid].fiveSecBytes){
 				if (rt_flag){
 					// printf("#2 rt_flag in accuAppData!\n");
 					json_object * json_one_app_obj;
@@ -1167,12 +1255,16 @@ void accuAppData(app_info_t *_app_struct, u_int32_t ten_min_flag, u_int32_t rt_f
 				_app_struct[i_user].ip_infos[appid].tenMinBytes += _app_struct[i_user].ip_infos[appid].fiveSecBytes ;
 				_app_struct[i_user].ip_infos[appid].fiveSecBytes = 0;
 			}
-			// if (ten_min_flag)
-			//	printf("should 10min app data; 5sbytes:%u 10minbytes:%u\n",_app_struct[i_user].ip_infos[appid].fiveSecBytes,_app_struct[i_user].ip_infos[appid].tenMinBytes);
+			 if (ten_min_flag)
+				// printf("should 10min app data; 5sbytes:%u 10minbytes:%u\n",_app_struct[i_user].ip_infos[appid].fiveSecBytes,_app_struct[i_user].ip_infos[appid].tenMinBytes);
 			if (ten_min_flag &&  temp_ip && _app_struct[i_user].ip_infos[appid].tenMinBytes){
 				/*ten min data: A: appid,ip,tenMinBytes*/
-				// printf("logging app 10min!\n");
-				LOG_FM("A: %u,%u,%u\n", appid, ntohl(all_ip[i_user].s_addr), _app_struct[i_user].ip_infos[appid].tenMinBytes);  
+				#if 0
+				printf("[APP] logging app 10min!\n");
+				printf("A: %u,%u,%u\n", appid, ntohl(all_ip[i_user].s_addr), _app_struct[i_user].ip_infos[appid].tenMinBytes);  
+				#endif
+				LOG_FM("A: %u,%u,%u\n", appid, ntohl(all_ip[i_user].s_addr), _app_struct[i_user].ip_infos[appid].tenMinBytes); 
+				NDPI_DEL_PROTOCOL_FROM_BITMASK( _app_struct[i_user].app_bitmask, appid); 
 				_app_struct[i_user].ip_infos[appid].tenMinBytes = 0;
 			}
 		}/*for appid*/
@@ -1184,7 +1276,10 @@ void accuAppData(app_info_t *_app_struct, u_int32_t ten_min_flag, u_int32_t rt_f
 					// printf("#3.success rt_flag in accuAppData!\n");	
 					json_object_object_add(jObj,ip_buf,jobj_one_ip_app_infos);
 					// printf("(ip_buf:%s<->ip:%u(0x%x))buf:%s\n",ip_buf,_app_struct->ip_infos[i_user].localIP,_app_struct->ip_infos[i_user].localIP,json_object_to_json_string(jObj));
-					// printf("logging app 5smin!\n");
+					#if 0
+					printf("[APP] logging app 5s!\n");
+					printf("T:%11ld A: %s\n", timeFix,json_object_to_json_string(jObj));
+					# endif
 					LOG_FM_RT("T:%11ld A: %s\n", timeFix,json_object_to_json_string(jObj));
 					// printf("RT_DATA: %s\n",json_object_to_json_string(jObj));
 					temp_ip = 0;
@@ -1209,30 +1304,42 @@ void walkUrlHashtable(HashEle_t *hashtable, void (*cb)(HashEle_t *hash_ele, u_in
 	/*1. walk hash, can get url*/
 	/*2. find a ip*/
 	/*cb(url,ip)*/
+	// static u_int32_t debug = 0;
 	u_int32_t num=0, sub_num=0 ;
 	HashEle_t *p = hashtable; //记录当前要释放的节点
 	HashEle_t *p1 = NULL;			  //记录要释放节点的下个节点
-	HashEle_t *q1; //记录要释放支链节点的下个节点
+	// HashEle_t *q1; //记录要释放支链节点的下个节点
+	// pthread_mutex_t *mutex1, *mutex2;
 	while (p!=NULL)
 	{
+		// mutex1 = mutex2 = &p->mutex;
+		// printf("will get mutex %p %p %p\n", p, p->ip_infos, &p->mutex);
+		// pthread_mutex_lock(mutex2);
 		p1 = p->next;
-		num++;
-		// printf("-------num %u.%u\n",num, sub_num);
 		if (p->url == NULL)
 		{
+			// pthread_mutex_unlock(mutex2);
 			p = p1;
 			continue;
 		}
+		// printf("[debug:%u]-------num %u.%u\n",debug,num, sub_num);
+		num = num +1 ;
 		while (p!=NULL)
 		{
-			q1 = p->sub_ele;
-			sub_num++;
-
+			// printf("will get mutex inner\n");
+			// printf("[debug:%u]-----------cb %u\n",debug,sub_num);
+			pthread_mutex_lock(&p->mutex);
 			cb(p,num,sub_num,write_flag,rt_flag);
-			p = q1;
+			pthread_mutex_unlock(&p->mutex);
+			if (p->sub_ele == NULL) break;
+			p = p->sub_ele;
+			sub_num++;
 		}
+		// pthread_mutex_unlock(mutex2);
 		p = p1;
 	}
+	// debug++;
+	printf("\ttotal HASHTABLE_SIZE:%u num: %u sub_num: %u\n", HASHTABLE_SIZE, num - 1, sub_num );
 	return;
 }
 
@@ -1251,9 +1358,14 @@ void freeHashtable(HashEle_t *hashtable)
 	walkUrlHashtable(hashtable, freeHashEle, 0, 0);
 }
 
-u_int8_t isHotInfo(time_t* tick)
+inline u_int8_t isHotInfo(time_t* tick)
 {
 	return ( (*tick) + HOT_DELTA_SEC) > time(NULL);
+}
+
+inline u_int8_t isHotInfo2(time_t* tick, u_int32_t i)
+{
+	return ( (*tick) + i * HOT_DELTA_SEC) > time(NULL);
 }
 
 void dumpIPInfo(ip_info_t * info){
@@ -1267,7 +1379,7 @@ void dumpIPInfo(ip_info_t * info){
 int test = 0;
 void dumpIPInfoLit(ip_info_lit_t * info){
 	char buf[256];
-	if(isHotInfo((time_t*)info)){
+	if(isHotInfo2((time_t*)info,2)){
 		printf("\t app:%u",test);
 		dumpIP2Str(info->localIP, buf);
 		printf("\t\tIP:%s\t bytes(5s):%lu\t\t bytes(10min):%lu\n"
@@ -1313,26 +1425,26 @@ void clearOldRtData(){
 /*execute every 5s, when write_flag set, write 10min data*/
 void calcFlowThread(HashEle_t *_hashtable, app_info_t *_app_struct, u_int32_t write_flag, u_int32_t rt_flag, u_int8_t keep_data_rt){
 	u_int32_t i = 0 ;
-	#if 0
-	static u_int32_t debug = 0;
+	#if 1
+	// static u_int32_t debug = 0;
 	// debug++;
 	if (rt_flag)
-		printf("rt_data!!!!!\n");
+		printf("[CALC] rt_data!!!!!\n");
 	if (write_flag)
-		printf("10 min data!!!\n");
-	printf("walkUrlHashtable %u\n",debug);	
+		printf("[CALC] 10 min data!!!\n");
+	// printf("walkUrlHashtable %u\n",debug);	
 	#endif
-	// printf("will walk UrlHashtable\n");
+	printf("[URL] will walk UrlHashtable\n");
 	// if (! keep_data_rt)
 	//	clearOldRtData();
 	// update time fix
 	timeFix = getTimeFix();
 	walkUrlHashtable(_hashtable,accuUrlData, write_flag, rt_flag);
-	// printf("walkUrlHashtable end %u\n",debug);
+	printf("[URL] walkUrlHashtable end\n");
 	// printf("accuAppData %u\n",debug);
-	// printf("will accuAppData\n");
+	printf("[APP]will accuAppData\n");
 	accuAppData(_app_struct, write_flag, rt_flag);
-	// printf("accuAppData end %u\n",debug);
+	printf("[APP] accuAppData end \n");
 	
 }
 

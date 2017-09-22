@@ -127,25 +127,34 @@ static void help(u_int long_help) {
 }
 
 static void node_print_known_proto_walker(const void *node, ndpi_VISIT which, int depth, void *user_data);
-void * _fiveSecThread(void)
+void  _fiveSecThread(int sig_num)
 {
     static u_int32_t count = 0;
+    static u_int8_t calc_running = 0;
     int i = 0;
     count++;
-    printf("calc Flow! %u times\n",count);
+    if (calc_running){
+	printf("Last calc thread still running, skip\n");
+	return;
+    }
+    else
+	calc_running = 1;
+
+    printf("[fiveSecThread] calc Flow! %u times tid:%u at: %u \n",count,pthread_self(),time(NULL));
     //for(i=0; i<NUM_ROOTS; i++)
     //  ndpi_twalk(ndpi_flows_root[i], node_print_known_proto_walker, NULL);
     // printf("----------\n");
     // calcFlowThread(hashtable, app_struct, count > COUNT_TIMES, want_5s_flag, keep_data_rt);
     if (! shutdown_app)
-	    calcFlowThread(hashtable, app_struct, count > COUNT_TIMES, 1, keep_data_rt);
+	    calcFlowThread(hashtable, app_struct, count >= COUNT_TIMES, 1, keep_data_rt);
     // printf("calc Flow end\n");
     // if(want_5s_flag>0)
     //	want_5s_flag--;
-    if (count > COUNT_TIMES){
+    if (count >= COUNT_TIMES){
       /*wrote, reset flag*/
       count = 0;
     }
+    calc_running = 0;
 }
 static calcFlowFinal(){
 	static char called = 0;
@@ -543,12 +552,11 @@ static struct ndpi_flow *get_ndpi_flow6(const struct ndpi_ip6_hdr *iph6,
 		       src, dst, proto));
 }
 
-void fiveSecThread(){
+void * fiveSecThread(void *arg){
     int res = 0;
+    #if 0
     struct itimerval tick;
-
     memset(&tick, 0, sizeof(tick));
-
     //Timeout to run first time
     tick.it_value.tv_sec = 5;
     tick.it_value.tv_usec = 0;
@@ -558,14 +566,20 @@ void fiveSecThread(){
     tick.it_interval.tv_usec = 0;
 
     if(setitimer(ITIMER_REAL, &tick, NULL) < 0)
-            printf("Set timer failed!\n");
+          printf("Set timer failed!\n");
+    // signal(SIGALRM, _fiveSecThread);
+    #endif
     printf("register 5s calc func\n");
-    signal(SIGALRM, _fiveSecThread);
     while(!shutdown_app){
+	res++;
 	sleep(1);
-	// _fiveSecThread();
+	if (res == 5){
+		res = 0;
+		 _fiveSecThread(-1);
+	}
     }
     //When get a SIGALRM, the main process will enter another loop for pause()
+    return (void *)0;
 }
 
 void setupFlowmeter(void){
@@ -1084,9 +1098,9 @@ int main(int argc, char **argv)
 	 "------------------------------------------------------------\n\n");
 
   printf("Using nDPI %s (%s)\n", PACKAGE_VERSION, ndpi_revision());
-  signal(SIGUSR1, sigproc5s);
-  signal(SIGUSR2, SIG_IGN);//SIGUSR2 default to termimal the program
-  printf("**** Registered SIGUSR1 ,Use kill -SIGUSR1 %d(pid) to GetRealTimeData\n",getpid());
+  // signal(SIGUSR1, sigproc5s);
+  // signal(SIGUSR2, SIG_IGN);//SIGUSR2 default to termimal the program
+  // printf("**** Registered SIGUSR1 ,Use kill -SIGUSR1 %d(pid) to GetRealTimeData\n",getpid());
   
   for(i=0; i<num_loops; i++)
     test_lib();
