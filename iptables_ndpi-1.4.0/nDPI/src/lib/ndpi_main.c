@@ -840,13 +840,17 @@ ndpi_protocol_match host_match[] = {
 
   { "phsle02.oray.net",         "HuaShengKe" , NDPI_PROTOCOL_HUASHENGKE },
   { "oray.net",                 "HuaShengKe" , NDPI_PROTOCOL_HUASHENGKE },
-  { "qqmusic.qq.com",           "QQMusic",     NDPI_PROTOCOL_QQMUSIC },
-  { "music.qq.com",             "QQMusic",     NDPI_PROTOCOL_QQMUSIC },
   { "wuxia.qq.com",             "QQWuXia",     NDPI_PROTOCOL_GAME_QQWUXIA },
   { "nz.qq.com",                "NIZhan",      NDPI_PROTOCOL_NIZHAN },
   { "nzclientpop",              "NIZhan",      NDPI_PROTOCOL_NIZHAN },
 
   {"wspeed.qq.com",            "QQMusic",     NDPI_PROTOCOL_QQMUSIC},
+  {"y.qq.com",                 "QQMusic",     NDPI_PROTOCOL_QQMUSIC},
+  {"qqmusic.qq.com",           "QQMusic",     NDPI_PROTOCOL_QQMUSIC},
+  {"music.qq.com",             "QQMusic",     NDPI_PROTOCOL_QQMUSIC},
+
+  {"music.163.com",            "NetEaseMusic", NDPI_PROTOCOL_NETEASEMUSIC},
+  {"music.126.net",            "NetEaseMusic", NDPI_PROTOCOL_NETEASEMUSIC},
 
   { NULL, 0 }
 };
@@ -1284,6 +1288,9 @@ static void ndpi_init_protocol_defaults(struct ndpi_detection_module_struct *ndp
         		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
    ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_MINECRAFT, "Minecraft",	 
         		  ndpi_build_default_ports(ports_a, 25565, 0, 0, 0, 0),  /* TCP */
+        		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
+   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_NETEASEMUSIC, "NetEaseMusic",
+        		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0),  /* TCP */
         		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
 				
 /**20161207 start stock*/
@@ -4914,11 +4921,10 @@ void ndpi_packet_dst_ip_get(const struct ndpi_packet_struct *packet, ndpi_ip_add
     ip->ipv4 = packet->iph->daddr;
 }
 
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
 /* get the string representation of ip
  * returns a pointer to a static string
  * only valid until the next call of this function */
-char *ndpi_get_ip_string(struct ndpi_detection_module_struct *ndpi_struct,
+extern char *ndpi_get_ip_string(struct ndpi_detection_module_struct *ndpi_struct,
 			 const ndpi_ip_addr_t * ip)
 {
   const u_int8_t *a = (const u_int8_t *) &ip->ipv4;
@@ -4954,7 +4960,6 @@ char *ndpi_get_packet_dst_ip_string(struct ndpi_detection_module_struct *ndpi_st
   ndpi_packet_dst_ip_get(packet, &ip);
   return ndpi_get_ip_string(ndpi_struct, &ip);
 }
-#endif							/* NDPI_ENABLE_DEBUG_MESSAGES */
 
 /* ****************************************************** */
 

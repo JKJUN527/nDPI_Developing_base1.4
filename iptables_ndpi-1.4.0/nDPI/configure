@@ -2028,7 +2028,7 @@ _ACEOF
 
 
 cat >>confdefs.h <<\_ACEOF
-#define ENABLE_DEBUG_MESSAGES 1
+#define NDPI_ENABLE_DEBUG_MESSAGES 1
 _ACEOF
 
     fi

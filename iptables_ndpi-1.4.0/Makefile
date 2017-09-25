@@ -60,7 +60,7 @@ test_pre:
 	iptables -I FORWARD 1 -j JK
 
 test: install
-	iptables -A FORWARD -m ndpi --protos nizhan -j REJECT
+	iptables -A FORWARD -m ndpi --protos NetEaseMusic -j REJECT
 	watch -n 0.5 'iptables -S -v'
 	#iptables -A JK -p udp --sport 12345 -j REJECT
 m:
