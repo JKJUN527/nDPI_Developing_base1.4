@@ -16,9 +16,9 @@ all: fm pcapReader
 
 pcapReader: pcapReader.c Makefile ../src/lib/.libs/libndpi.a
 	\rm -rf $@
-	gcc $(WALL) $(FLAGS) $(INC) pcapReader.c -o pcapReader $(LIB) -lpthread
+	gcc $(WALL) $(FLAGS) $(INC) pcapReader.c -o pcapReader $(LIB) -lpthread -g
 fm:	
-	gcc $(WALL) $(FLAGS) $(INC) $(CFILES) -o flowmeter $(LIB) -lpthread -lm -ljson -liLOG3
+	gcc $(WALL) $(FLAGS) $(INC) $(CFILES) -o flowmeter $(LIB) -lpthread -lm -ljson -liLOG3 -g
 
 clean:
 	\/bin/rm -f pcapReader

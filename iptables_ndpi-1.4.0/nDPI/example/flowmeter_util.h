@@ -14,12 +14,13 @@
 #include <json/json.h>
 #include <iLOG3/LOG.h>
 #include <signal.h>
+#include <pthread.h> 
 
 /*60times*5s = 5min*/
 
 extern u_int32_t  COUNT_TIMES ;
 #define HOT_DELTA_SEC (COUNT_TIMES*5)
-
+#define HOT_DELTA_LONG_PARA 2
 /*This is to set ip load counter, like user set 1.1.1.1/1, will cause ip load too slow, 65 is slow about 8s*/
 #define IP_LOAD_MAX_COUNT (1024*65)
 #define MAX_CONF_LINES  20
@@ -35,7 +36,7 @@ extern u_int32_t  COUNT_TIMES ;
 #define CONFIG5 0X5
 
 #define IP_FILE     		CONFIG0
-#define IP_FILE_DEFAULT     	NULL
+#define IP_FILE_DEFAULT     	"/var/efw/flowmeter/all_ip.txt"
 #define DATA_PATH     		CONFIG1
 #define DATA_PATH_DEFAULT     		"/var/log/flowmeter/data_log"
 #define DATA_PATH_RT     		CONFIG2
@@ -83,13 +84,20 @@ typedef struct ip_info_lit{
 	//pthread_mutex_t mutex;  //mutex need to init
 }ip_info_lit_t;
 
+/* tick set on first element*/
 typedef struct app_info{
+	time_t tick;
+	pthread_mutex_t mutex;
     NDPI_PROTOCOL_BITMASK app_bitmask;
     struct ip_info_lit ip_infos[NDPI_MAX_SUPPORTED_PROTOCOLS];
 	
 }app_info_t;
 
+
+/* tick set on first element*/
 typedef struct HashEle{
+	time_t tick;
+	pthread_mutex_t mutex;
 	int num;  //记录当前位置
 	int url_id;  //记录url的hash值
 	char *url;  //记录url
@@ -159,7 +167,8 @@ void dumpIPS(struct in_addr *ip, u_int32_t total);
 void dumpHashEle(HashEle_t *hash_ele, u_int32_t num, u_int32_t sub_num,  u_int32_t flag,  u_int32_t flag2);
 void dumpIPInfoLit(ip_info_lit_t * info);
 int btree2InAddr(struct BinaryTree *node, struct in_addr *arr, int index);
-u_int8_t isHotInfo(time_t* tick);
+inline u_int8_t isHotInfo(time_t* tick);
+inline u_int8_t isHotInfo2(time_t* tick, u_int32_t i);
 void dumpAppStruct(app_info_t *app_struct);
 int daemon_fm();
 #endif 

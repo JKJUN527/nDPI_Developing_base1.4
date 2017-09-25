@@ -29,6 +29,7 @@
 #include "ndpi_protocols.h"
 #ifdef NDPI_PROTOCOL_MSSQL
 
+
 static void ndpi_int_mssql_add_connection(struct ndpi_detection_module_struct
 											*ndpi_struct, struct ndpi_flow_struct *flow)
 {
@@ -54,6 +55,20 @@ void ndpi_search_mssql(struct ndpi_detection_module_struct
 		return;
 	}
 
+	if(packet->payload_packet_len >16
+	  &&get_u_int16_t(packet->payload,2)==htons(packet->payload_packet_len)
+	  &&get_u_int32_t(packet->payload,4)==htonl(0x00000100)  
+	){
+		switch (packet->payload[0]){
+			case 0x01:case 0x02:case 0x03:case 0x04:case 0x06:
+			case 0x07:case 0x0F:case 0x10:case 0x11:case 0x12:
+				NDPI_LOG(NDPI_PROTOCOL_MSSQL, ndpi_struct, NDPI_LOG_DEBUG, "found mssql.\n");
+				ndpi_int_mssql_add_connection(ndpi_struct, flow);
+				break;
+			default:
+				return;			
+		}
+	}
 
 	NDPI_LOG(NDPI_PROTOCOL_MSSQL, ndpi_struct, NDPI_LOG_DEBUG, "exclude mssql.\n");
 	NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_MSSQL);
