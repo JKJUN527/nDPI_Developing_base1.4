@@ -1283,7 +1283,7 @@ static void ndpi_init_protocol_defaults(struct ndpi_detection_module_struct *ndp
         		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0),  /* TCP */
         		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
    ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_MINECRAFT, "Minecraft",	 
-        		  ndpi_build_default_ports(ports_a, /*25565*/0, 0, 0, 0, 0),  /* TCP */
+        		  ndpi_build_default_ports(ports_a, 25565, 0, 0, 0, 0),  /* TCP */
         		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
 				
 /**20161207 start stock*/
@@ -4142,115 +4142,114 @@ void ndpi_parse_packet_line_info(struct ndpi_detection_module_struct *ndpi_struc
   packet->line[packet->parsed_lines].len = 0;
 
   for (a = 0; (a+1) < end; a++) {
-    if (get_u_int16_t(packet->payload, a) == ntohs(0x0d0a)) {
+      if (get_u_int16_t(packet->payload, a) != ntohs(0x0d0a))
+          continue;
       packet->line[packet->parsed_lines].len = (u_int16_t)(((unsigned long) &packet->payload[a]) - ((unsigned long) packet->line[packet->parsed_lines].ptr));
 
       if (packet->parsed_lines == 0 && packet->line[0].len >= NDPI_STATICSTRING_LEN("HTTP/1.1 200 ") &&
-	  memcmp(packet->line[0].ptr, "HTTP/1.", NDPI_STATICSTRING_LEN("HTTP/1.")) == 0 &&
-	  packet->line[0].ptr[NDPI_STATICSTRING_LEN("HTTP/1.1 ")] > '0' &&
-	  packet->line[0].ptr[NDPI_STATICSTRING_LEN("HTTP/1.1 ")] < '6') {
-	packet->http_response.ptr = &packet->line[0].ptr[NDPI_STATICSTRING_LEN("HTTP/1.1 ")];
-	packet->http_response.len = packet->line[0].len - NDPI_STATICSTRING_LEN("HTTP/1.1 ");
-	NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG,
-		 "ndpi_parse_packet_line_info: HTTP response parsed: \"%.*s\"\n",
-		 packet->http_response.len, packet->http_response.ptr);
+              memcmp(packet->line[0].ptr, "HTTP/1.", NDPI_STATICSTRING_LEN("HTTP/1.")) == 0 &&
+              packet->line[0].ptr[NDPI_STATICSTRING_LEN("HTTP/1.1 ")] > '0' &&
+              packet->line[0].ptr[NDPI_STATICSTRING_LEN("HTTP/1.1 ")] < '6') {
+          packet->http_response.ptr = &packet->line[0].ptr[NDPI_STATICSTRING_LEN("HTTP/1.1 ")];
+          packet->http_response.len = packet->line[0].len - NDPI_STATICSTRING_LEN("HTTP/1.1 ");
+          NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG,
+                  "ndpi_parse_packet_line_info: HTTP response parsed: \"%.*s\"\n",
+                  packet->http_response.len, packet->http_response.ptr);
       }
       if (packet->line[packet->parsed_lines].len > NDPI_STATICSTRING_LEN("Server:") + 1
-	  && memcmp(packet->line[packet->parsed_lines].ptr, "Server:", NDPI_STATICSTRING_LEN("Server:")) == 0) {
-	// some stupid clients omit a space and place the servername directly after the colon
-	if (packet->line[packet->parsed_lines].ptr[NDPI_STATICSTRING_LEN("Server:")] == ' ') {
-	  packet->server_line.ptr =
-	    &packet->line[packet->parsed_lines].ptr[NDPI_STATICSTRING_LEN("Server:") + 1];
-	  packet->server_line.len =
-	    packet->line[packet->parsed_lines].len - (NDPI_STATICSTRING_LEN("Server:") + 1);
-	} else {
-	  packet->server_line.ptr = &packet->line[packet->parsed_lines].ptr[NDPI_STATICSTRING_LEN("Server:")];
-	  packet->server_line.len = packet->line[packet->parsed_lines].len - NDPI_STATICSTRING_LEN("Server:");
-	}
+              && memcmp(packet->line[packet->parsed_lines].ptr, "Server:", NDPI_STATICSTRING_LEN("Server:")) == 0) {
+          // some stupid clients omit a space and place the servername directly after the colon
+          if (packet->line[packet->parsed_lines].ptr[NDPI_STATICSTRING_LEN("Server:")] == ' ') {
+              packet->server_line.ptr =
+                  &packet->line[packet->parsed_lines].ptr[NDPI_STATICSTRING_LEN("Server:") + 1];
+              packet->server_line.len =
+                  packet->line[packet->parsed_lines].len - (NDPI_STATICSTRING_LEN("Server:") + 1);
+          } else {
+              packet->server_line.ptr = &packet->line[packet->parsed_lines].ptr[NDPI_STATICSTRING_LEN("Server:")];
+              packet->server_line.len = packet->line[packet->parsed_lines].len - NDPI_STATICSTRING_LEN("Server:");
+          }
       }
 
       if (packet->line[packet->parsed_lines].len > 6
-	  && memcmp(packet->line[packet->parsed_lines].ptr, "Host:", 5) == 0) {
-	// some stupid clients omit a space and place the hostname directly after the colon
-	if (packet->line[packet->parsed_lines].ptr[5] == ' ') {
-	  packet->host_line.ptr = &packet->line[packet->parsed_lines].ptr[6];
-	  packet->host_line.len = packet->line[packet->parsed_lines].len - 6;
-	} else {
-	  packet->host_line.ptr = &packet->line[packet->parsed_lines].ptr[5];
-	  packet->host_line.len = packet->line[packet->parsed_lines].len - 5;
-	}
+              && memcmp(packet->line[packet->parsed_lines].ptr, "Host:", 5) == 0) {
+          // some stupid clients omit a space and place the hostname directly after the colon
+          if (packet->line[packet->parsed_lines].ptr[5] == ' ') {
+              packet->host_line.ptr = &packet->line[packet->parsed_lines].ptr[6];
+              packet->host_line.len = packet->line[packet->parsed_lines].len - 6;
+          } else {
+              packet->host_line.ptr = &packet->line[packet->parsed_lines].ptr[5];
+              packet->host_line.len = packet->line[packet->parsed_lines].len - 5;
+          }
       }
 
       if (packet->line[packet->parsed_lines].len > 14
-	  &&
-	  (memcmp
-	   (packet->line[packet->parsed_lines].ptr, "Content-Type: ",
-	    14) == 0 || memcmp(packet->line[packet->parsed_lines].ptr, "Content-type: ", 14) == 0)) {
-	packet->content_line.ptr = &packet->line[packet->parsed_lines].ptr[14];
-	packet->content_line.len = packet->line[packet->parsed_lines].len - 14;
+              && (memcmp(packet->line[packet->parsed_lines].ptr, "Content-Type: ", 14) == 0
+                  || memcmp(packet->line[packet->parsed_lines].ptr, "Content-type: ", 14) == 0)) {
+          packet->content_line.ptr = &packet->line[packet->parsed_lines].ptr[14];
+          packet->content_line.len = packet->line[packet->parsed_lines].len - 14;
       }
 
       if (packet->line[packet->parsed_lines].len > 13
-	  && memcmp(packet->line[packet->parsed_lines].ptr, "Content-type:", 13) == 0) {
-	packet->content_line.ptr = &packet->line[packet->parsed_lines].ptr[13];
-	packet->content_line.len = packet->line[packet->parsed_lines].len - 13;
+              && memcmp(packet->line[packet->parsed_lines].ptr, "Content-type:", 13) == 0) {
+          packet->content_line.ptr = &packet->line[packet->parsed_lines].ptr[13];
+          packet->content_line.len = packet->line[packet->parsed_lines].len - 13;
       }
 
       if (packet->line[packet->parsed_lines].len > 8
-	  && memcmp(packet->line[packet->parsed_lines].ptr, "Accept: ", 8) == 0) {
-	packet->accept_line.ptr = &packet->line[packet->parsed_lines].ptr[8];
-	packet->accept_line.len = packet->line[packet->parsed_lines].len - 8;
+              && memcmp(packet->line[packet->parsed_lines].ptr, "Accept: ", 8) == 0) {
+          packet->accept_line.ptr = &packet->line[packet->parsed_lines].ptr[8];
+          packet->accept_line.len = packet->line[packet->parsed_lines].len - 8;
       }
 
       if (packet->line[packet->parsed_lines].len > 9
-	  && memcmp(packet->line[packet->parsed_lines].ptr, "Referer: ", 9) == 0) {
-	packet->referer_line.ptr = &packet->line[packet->parsed_lines].ptr[9];
-	packet->referer_line.len = packet->line[packet->parsed_lines].len - 9;
+              && memcmp(packet->line[packet->parsed_lines].ptr, "Referer: ", 9) == 0) {
+          packet->referer_line.ptr = &packet->line[packet->parsed_lines].ptr[9];
+          packet->referer_line.len = packet->line[packet->parsed_lines].len - 9;
       }
 
       if (packet->line[packet->parsed_lines].len > 12
-	  && (memcmp(packet->line[packet->parsed_lines].ptr, "User-Agent: ", 12) == 0 ||
-	      memcmp(packet->line[packet->parsed_lines].ptr, "User-agent: ", 12) == 0)) {
-	packet->user_agent_line.ptr = &packet->line[packet->parsed_lines].ptr[12];
-	packet->user_agent_line.len = packet->line[packet->parsed_lines].len - 12;
+              && (memcmp(packet->line[packet->parsed_lines].ptr, "User-Agent: ", 12) == 0 ||
+                  memcmp(packet->line[packet->parsed_lines].ptr, "User-agent: ", 12) == 0)) {
+          packet->user_agent_line.ptr = &packet->line[packet->parsed_lines].ptr[12];
+          packet->user_agent_line.len = packet->line[packet->parsed_lines].len - 12;
       }
 
       if (packet->line[packet->parsed_lines].len > 18
-	  && memcmp(packet->line[packet->parsed_lines].ptr, "Content-Encoding: ", 18) == 0) {
-	packet->http_encoding.ptr = &packet->line[packet->parsed_lines].ptr[18];
-	packet->http_encoding.len = packet->line[packet->parsed_lines].len - 18;
+              && memcmp(packet->line[packet->parsed_lines].ptr, "Content-Encoding: ", 18) == 0) {
+          packet->http_encoding.ptr = &packet->line[packet->parsed_lines].ptr[18];
+          packet->http_encoding.len = packet->line[packet->parsed_lines].len - 18;
       }
 
       if (packet->line[packet->parsed_lines].len > 19
-	  && memcmp(packet->line[packet->parsed_lines].ptr, "Transfer-Encoding: ", 19) == 0) {
-	packet->http_transfer_encoding.ptr = &packet->line[packet->parsed_lines].ptr[19];
-	packet->http_transfer_encoding.len = packet->line[packet->parsed_lines].len - 19;
+              && memcmp(packet->line[packet->parsed_lines].ptr, "Transfer-Encoding: ", 19) == 0) {
+          packet->http_transfer_encoding.ptr = &packet->line[packet->parsed_lines].ptr[19];
+          packet->http_transfer_encoding.len = packet->line[packet->parsed_lines].len - 19;
       }
       if (packet->line[packet->parsed_lines].len > 16
-	  && ((memcmp(packet->line[packet->parsed_lines].ptr, "Content-Length: ", 16) == 0)
-	      || (memcmp(packet->line[packet->parsed_lines].ptr, "content-length: ", 16) == 0))) {
-	packet->http_contentlen.ptr = &packet->line[packet->parsed_lines].ptr[16];
-	packet->http_contentlen.len = packet->line[packet->parsed_lines].len - 16;
+              && ((memcmp(packet->line[packet->parsed_lines].ptr, "Content-Length: ", 16) == 0)
+                  || (memcmp(packet->line[packet->parsed_lines].ptr, "content-length: ", 16) == 0))) {
+          packet->http_contentlen.ptr = &packet->line[packet->parsed_lines].ptr[16];
+          packet->http_contentlen.len = packet->line[packet->parsed_lines].len - 16;
       }
       if (packet->line[packet->parsed_lines].len > 8
-	  && memcmp(packet->line[packet->parsed_lines].ptr, "Cookie: ", 8) == 0) {
-	packet->http_cookie.ptr = &packet->line[packet->parsed_lines].ptr[8];
-	packet->http_cookie.len = packet->line[packet->parsed_lines].len - 8;
+              && memcmp(packet->line[packet->parsed_lines].ptr, "Cookie: ", 8) == 0) {
+          packet->http_cookie.ptr = &packet->line[packet->parsed_lines].ptr[8];
+          packet->http_cookie.len = packet->line[packet->parsed_lines].len - 8;
       }
       if (packet->line[packet->parsed_lines].len > 16
-	  && memcmp(packet->line[packet->parsed_lines].ptr, "X-Session-Type: ", 16) == 0) {
-	packet->http_x_session_type.ptr = &packet->line[packet->parsed_lines].ptr[16];
-	packet->http_x_session_type.len = packet->line[packet->parsed_lines].len - 16;
+              && memcmp(packet->line[packet->parsed_lines].ptr, "X-Session-Type: ", 16) == 0) {
+          packet->http_x_session_type.ptr = &packet->line[packet->parsed_lines].ptr[16];
+          packet->http_x_session_type.len = packet->line[packet->parsed_lines].len - 16;
       }
 
 
       if (packet->line[packet->parsed_lines].len == 0) {
-	packet->empty_line_position = a;
-	packet->empty_line_position_set = 1;
+          packet->empty_line_position = a;
+          packet->empty_line_position_set = 1;
       }
 
       if (packet->parsed_lines >= (NDPI_MAX_PARSE_LINES_PER_PACKET - 1)) {
-	return;
+          return;
       }
 
       packet->parsed_lines++;
@@ -4258,11 +4257,27 @@ void ndpi_parse_packet_line_info(struct ndpi_detection_module_struct *ndpi_struc
       packet->line[packet->parsed_lines].len = 0;
 
       if ((a + 2) >= packet->payload_packet_len) {
-
-	return;
+          return;
       }
       a++;
-    }
+
+      /* parse over. */
+      if (!packet->host_line.ptr) {
+          ndpi_ip_addr_t ip;
+          /* client to server */
+          if (flow->l4.tcp.http_setup_dir == 0) {
+              ndpi_packet_dst_ip_get(packet, &ip);
+          } else {
+              ndpi_packet_src_ip_get(packet, &ip);
+          }
+          const char *ipstr = ndpi_get_ip_string(ndpi_struct, &ip);
+          int len = ndpi_min(strlen(ipstr), 255);
+          strncpy(flow->host_server_name, ipstr, len);
+          flow->host_server_name[len] = '\0';
+          packet->host_line.ptr = flow->host_server_name;
+          packet->host_line.len = len;
+          NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, "ndpi_main.c: flow->:%s\n", flow->host_server_name);
+      }
   }
 
   if (packet->parsed_lines >= 1) {
