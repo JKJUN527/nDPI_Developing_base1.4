@@ -45,7 +45,7 @@ start: install
 
 stop:
 	iptables -F
-	modprobe -r xt_ndpi
+	modprobe -r xt_ndpi || echo '0_0'
 	> /var/log/messages
 
 test_pre:
@@ -60,8 +60,8 @@ test_pre:
 	iptables -I FORWARD 1 -j JK
 
 test: install
-	iptables -A FORWARD -m ndpi --protos qqmusic  -j REJECT
-	iptables -A FORWARD -m ndpi --protos dingtalk -j REJECT
+#	iptables -A FORWARD -m ndpi --protos qqmusic  -j REJECT
+	iptables -A FORWARD -m ndpi --protos rdp -j REJECT
 	watch -n 0.5 'iptables -S -v'
 	#iptables -A JK -p udp --sport 12345 -j REJECT
 m:

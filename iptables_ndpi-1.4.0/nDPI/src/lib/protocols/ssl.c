@@ -64,7 +64,8 @@ static void ndpi_int_ssl_add_connection(struct ndpi_detection_module_struct *ndp
 	  if((sport == 465) || (dport == 465))      protocol = NDPI_PROTOCOL_MAIL_SMTPS;
 	  else if((sport == 993) || (dport == 993)) protocol = NDPI_PROTOCOL_MAIL_IMAPS;
 	  else if((sport == 995) || (dport == 995)) protocol = NDPI_PROTOCOL_MAIL_POPS;
-	  else if((sport == 990) || (dport == 990)) protocol = NDPI_PROTOCOL_FTPS;	  
+	  else if((sport == 990) || (dport == 990)) protocol = NDPI_PROTOCOL_FTPS;//隐式加密模式	  
+	  else if((sport == 21) || (dport == 21)) protocol = NDPI_PROTOCOL_FTPS; //显式加密模式	  
 	  
 	}
 	break;

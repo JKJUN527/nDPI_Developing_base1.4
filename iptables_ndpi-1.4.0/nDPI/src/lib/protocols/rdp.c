@@ -39,12 +39,16 @@ void ndpi_search_rdp(struct ndpi_detection_module_struct *ndpi_struct, struct nd
 //      struct ndpi_id_struct         *src=ndpi_struct->src;
 //      struct ndpi_id_struct         *dst=ndpi_struct->dst;
 
+	NDPI_LOG(NDPI_PROTOCOL_RDP, ndpi_struct, NDPI_LOG_DEBUG, "RDP search .\n");
+	//NDPI_LOG(NDPI_PROTOCOL_RDP, ndpi_struct, NDPI_LOG_DEBUG, "RDP payload[0] .\n");
 	if (packet->payload_packet_len > 10
-		&& get_u_int8_t(packet->payload, 0) > 0
-		&& get_u_int8_t(packet->payload, 0) < 4 && get_u_int16_t(packet->payload, 2) == ntohs(packet->payload_packet_len)
+		&& packet->payload[0] == 0x03
+		&& packet->payload[1] == 0x00 
+		&& get_u_int16_t(packet->payload, 2) == ntohs(packet->payload_packet_len)
 		&& get_u_int8_t(packet->payload, 4) == packet->payload_packet_len - 5
 		&& get_u_int8_t(packet->payload, 5) == 0xe0
-		&& get_u_int16_t(packet->payload, 6) == 0 && get_u_int16_t(packet->payload, 8) == 0 && get_u_int8_t(packet->payload, 10) == 0) {
+		&& get_u_int16_t(packet->payload, 6) == 0 && get_u_int16_t(packet->payload, 8) == 0 && get_u_int8_t(packet->payload, 10) == 0 //DstRef”和“SrcRef”含义未知，一般都为0 “Class” 含义 为止一般也为零 
+	){
 		NDPI_LOG(NDPI_PROTOCOL_RDP, ndpi_struct, NDPI_LOG_DEBUG, "RDP detected.\n");
 		ndpi_int_rdp_add_connection(ndpi_struct, flow);
 		return;
