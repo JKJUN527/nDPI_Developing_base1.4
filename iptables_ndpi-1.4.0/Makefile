@@ -17,7 +17,7 @@ clean:
 	find . -name "*.*o" |xargs rm -rf
 
 install: stop
-	modprobe -r xt_ndpi || echo 'o_0'
+	-modprobe -r xt_ndpi
 	cd userland; make install prefix=$(PREFIX)
 	cd kernel; make install prefix=$(PREFIX)
 	insmod kernel/xt_ndpi.ko
@@ -31,7 +31,7 @@ ndpi:
 
 start: install
 	# Remove
-	modprobe -r xt_ndpi || echo 'o_0'
+	-modprobe -r xt_ndpi
 	# Insert
 	modprobe xt_ndpi
 	depmod
@@ -45,7 +45,7 @@ start: install
 
 stop:
 	iptables -F
-	modprobe -r xt_ndpi
+	-modprobe -r xt_ndpi
 	> /var/log/messages
 
 test_pre:
