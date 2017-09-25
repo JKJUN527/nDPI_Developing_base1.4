@@ -11,6 +11,7 @@
 # define PRINT      printf
 #endif
 
+#undef _D
 #ifdef DEBUG
 # define _D(...)    PRINT(__VA_ARGS__)
 #else

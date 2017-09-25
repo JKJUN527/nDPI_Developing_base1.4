@@ -5,7 +5,7 @@ AC_ARG_ENABLE([debug],
     [AS_HELP_STRING([--enable-debug],[output debug log (default is no)])],
     [if test "$enableval" == "yes"; then
         AC_DEFINE([DEBUG],[1],[Define if --enable-debug])
-        AC_DEFINE([ENABLE_DEBUG_MESSAGES],[1],[Define if --enable-debug])
+        AC_DEFINE([NDPI_ENABLE_DEBUG_MESSAGES],[1],[Define if --enable-debug])
     fi
     ])
 

@@ -707,7 +707,6 @@ static void check_custom_headers(struct ndpi_detection_module_struct *ndpi_struc
 #endif
          /*jkjun end*/
 
-         /*ltk start*/
 #ifdef NDPI_PROTOCOL_JINWANWEI
          char static const *jinwanwei_strs[] = {
              "GET /client_login.php?user_name=",
@@ -786,12 +785,11 @@ static void check_custom_headers(struct ndpi_detection_module_struct *ndpi_struc
                      qqmusic_statis ++;
              }
          }
-         if (qqmusic_len >= 8 && !strncmp("Referer:", packet->line[a].ptr, 8)
+         if ((qqmusic_len >= 8 && !strncmp("Referer:", packet->line[a].ptr, 8))
                  || !strncmp("Host:", packet->line[a].ptr, 5)) {
-             if (memfind(packet->line[a].ptr, qqmusic_len, "music", 5))
-                 qqmusic_statis += 3;
-             if (memfind(packet->line[a].ptr, qqmusic_len, "qq", 2))
-                 qqmusic_statis += 2;
+             if (memfind(packet->line[a].ptr, qqmusic_len, "music", 5) &&
+                     memfind(packet->line[a].ptr, qqmusic_len, "qq", 2))
+                 qqmusic_statis += 5;
          }
          if (qqmusic_len >= 7 && !strncmp("Cookie:", packet->line[a].ptr, 7)) {
              char *cookies[] = {
@@ -813,7 +811,9 @@ static void check_custom_headers(struct ndpi_detection_module_struct *ndpi_struc
              return;
          }
 #endif /* NDPI_PROTOCOL_QQMUSIC */
-         /*ltk start*/
+#ifdef NDPI_PROTOCOL_NETEASEMUSIC   /* 网易云音乐 */
+
+#endif /* NDPI_PROTOCOL_NETEASEMUSIC */
     }
 }
 

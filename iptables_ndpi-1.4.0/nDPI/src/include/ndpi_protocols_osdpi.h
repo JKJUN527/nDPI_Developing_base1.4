@@ -167,15 +167,16 @@ extern "C" {
 /*jkjun games end*/
 #define NDPI_PROTOCOL_HUASHENGKE                        112
 #define NDPI_PROTOCOL_JINWANWEI                         113
-#define NDPI_PROTOCOL_WECHAT_TX                         114
-#define NDPI_PROTOCOL_QQ_TX                             115
+#define NDPI_PROTOCOL_WECHAT_TX                         114 /* 微信文件传输 */
+#define NDPI_PROTOCOL_QQ_TX                             115 /* QQ 文件传输 */
 #define NDPI_PROTOCOL_QQMUSIC                           116
 #define NDPI_PROTOCOL_GAME_QIANNYH                      117
 #define NDPI_PROTOCOL_GAME_QQWUXIA                      118
 #define NDPI_PROTOCOL_GAME_CSGO                         119
 #define NDPI_PROTOCOL_MINECRAFT                         120
+#define NDPI_PROTOCOL_NETEASEMUSIC                      121 /* 网易云音乐 */
 
-#define NDPI_LAST_IMPLEMENTED_PROTOCOL                 NDPI_PROTOCOL_MINECRAFT
+#define NDPI_LAST_IMPLEMENTED_PROTOCOL                 NDPI_PROTOCOL_NETEASEMUSIC
 
 
 #define NDPI_MAX_SUPPORTED_PROTOCOLS (NDPI_LAST_IMPLEMENTED_PROTOCOL + 1)
