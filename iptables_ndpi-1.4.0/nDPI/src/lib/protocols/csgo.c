@@ -51,16 +51,25 @@ void ndpi_search_csgo_udp(struct ndpi_detection_module_struct
 	struct ndpi_packet_struct *packet = &flow->packet;
 
 	if(packet->payload_packet_len >= 16
-	   &&memcmp(&packet->payload[0],STR0CSGO,NDPI_STATICSTRING_LEN(STR0CSGO))==0
              //        ||memcmp(&packet->payload[0],STR1CSGO,NDPI_STATICSTRING_LEN(STR1CSGO))==0)
 	){
-		//flow->csgo_stage++;
-		//if(flow->csgo_stage >=2){
-			
+		if(memcmp(&packet->payload[0],STR0CSGO,NDPI_STATICSTRING_LEN(STR0CSGO))==0){
 			NDPI_LOG(NDPI_PROTOCOL_GAME_CSGO, ndpi_struct, NDPI_LOG_DEBUG,"found csgo------0 \n");
 			ndpi_int_csgo_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
 			return;
-		//}
+		}
+		if(get_u_int32_t(packet->payload,0) == htonl(0x56533031)){
+			u_int8_t i = 0;
+			for(i=0;i<8;i++){
+				if(get_u_int16_t(packet->payload,i+8) == htonl(0x2641)
+				   ||packet->payload[i+8] == 0x02
+				){	
+				NDPI_LOG(NDPI_PROTOCOL_GAME_CSGO, ndpi_struct, NDPI_LOG_DEBUG,"found csgo------1 \n");
+				ndpi_int_csgo_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
+				return;
+				}
+			}
+		}
 		//return;
 	}
 	NDPI_LOG(NDPI_PROTOCOL_GAME_CSGO, ndpi_struct, NDPI_LOG_DEBUG, "exclude csgo.\n");

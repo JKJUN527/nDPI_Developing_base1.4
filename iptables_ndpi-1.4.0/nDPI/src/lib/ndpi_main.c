@@ -828,6 +828,7 @@ ndpi_protocol_match host_match[] = {
   {".jx3.xoyo.com",              "Jx3"                 , NDPI_PROTOCOL_GAME_JX3 },
   {"qn.163.com",                 "qiannyh"             , NDPI_PROTOCOL_GAME_QIANNYH },
   {"hi-163-qn",                  "qiannyh"             , NDPI_PROTOCOL_GAME_QIANNYH },
+  {"cm01-sha.cm.steampowered.com", "csgo"              , NDPI_PROTOCOL_GAME_CSGO },//可能和stream其他游戏冲突
 
   /*JK END*/
 

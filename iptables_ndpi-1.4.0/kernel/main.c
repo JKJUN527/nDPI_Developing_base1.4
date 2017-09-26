@@ -214,7 +214,7 @@ static int set_lru_ct_entry( struct LruCacheEntryValue *entry, struct nf_conn *c
 	pr_info( "[NDPI] will kmalloc entry %s()\n", __FUNCTION__ );
 #endif
 	/*PT test lock*/
-	spin_lock_bh( &ndpi_lock );
+	// spin_lock_bh( &ndpi_lock );
 
 	if(!entry->src)   entry->src  = kmalloc( ndpi_proto_size, GFP_ATOMIC );
 	if(!entry->dst)   entry->dst  = kmalloc( ndpi_proto_size, GFP_ATOMIC );
@@ -240,7 +240,7 @@ static int set_lru_ct_entry( struct LruCacheEntryValue *entry, struct nf_conn *c
 		entry->dport	= ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.all;
 		entry->proto	= ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.l3num;
 
-		spin_unlock_bh( &ndpi_lock );
+		// spin_unlock_bh( &ndpi_lock );
 		return(0);
 	} else{
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
@@ -249,7 +249,7 @@ static int set_lru_ct_entry( struct LruCacheEntryValue *entry, struct nf_conn *c
 		kfree(entry->src);  entry->src = NULL;
 		kfree(entry->dst);  entry->dst = NULL;
 		kfree(entry->flow); entry->flow = NULL;
-		spin_unlock_bh( &ndpi_lock );
+		// spin_unlock_bh( &ndpi_lock );
 		return(-1);
 	}
 }
@@ -309,7 +309,7 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 #endif
 	spin_lock_bh( &ndpi_lock );
 	node = add_to_lru_cache( lru_cache, key );
-	spin_unlock_bh( &ndpi_lock );
+	// spin_unlock_bh( &ndpi_lock );
 
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 	pr_info( "[NDPI] add_to_lru over#2\n" );
@@ -322,6 +322,7 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 		pr_info( "[NDPI] add_to_lru_cache() returned NULL\n" );
 #endif
 
+		spin_unlock_bh( &ndpi_lock );
 		return(verdict);
 	} else
 		entry = &node->node.value;
@@ -351,6 +352,7 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 			pr_info( "[NDPI] Returning default verdict (%d)\n", 1 );
 #endif
+			spin_unlock_bh( &ndpi_lock );
 			return(verdict);
 		}
 	} else {
@@ -434,6 +436,7 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 #endif
 		dumpLruCacheEntryValue( entry, verdict );
 		NDPI_CB_RECORD( _skb, entry );
+		spin_unlock_bh( &ndpi_lock );
 		return(verdict);
 	}
 
@@ -450,6 +453,7 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 
 
 		NDPI_CB_RECORD( _skb, entry );
+		spin_unlock_bh( &ndpi_lock );
 		return(false /* PASS */);
 	} else
 		entry->last_processed_skb = _skb;
@@ -465,6 +469,7 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 	{
 		if (unlikely( debug ))
 			pr_info( "[NDPI] skb_copy() failed.\n" );
+		spin_unlock_bh( &ndpi_lock );
 		return(verdict);
 	}
 
@@ -479,9 +484,9 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 	entry->num_packets_processed++;
 
 	/*PT test lock*/
-	spin_lock_bh( &ipq_lock);
+	// spin_lock_bh( &ndpi_lock);
 	entry->ndpi_proto = ndpi_detection_process_packet( ndpi_struct, entry->flow, ip, ip_len, time, entry->src, entry->dst );
-	spin_unlock_bh( &ipq_lock );
+	// spin_unlock_bh( &ndpi_lock );
 
 	if ( (entry->ndpi_proto != NDPI_PROTOCOL_UNKNOWN)
 	                                        /* || (iph->protocol != IPPROTO_TCP) */
@@ -507,9 +512,9 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 			 ? "NotYet" : ndpi_get_proto_name( ndpi_struct, entry->ndpi_proto ) );
 
 #endif
-		spin_lock_bh( &ndpi_lock );
+		// spin_lock_bh( &ndpi_lock );
 		free_LruCacheEntryValue( entry ); /* Free nDPI memory */
-		spin_unlock_bh( &ndpi_lock );
+		// spin_unlock_bh( &ndpi_lock );
 
 	} else {
 		/*
@@ -536,6 +541,7 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 	pr_info( "-----------1) END-----------\n" );
 #endif
+	spin_unlock_bh( &ndpi_lock );
 	return(verdict);
 }
 
@@ -668,7 +674,7 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 #endif
 	spin_lock_bh( &ndpi_lock );
 	node = add_to_lru_cache( lru_cache, key );
-	spin_unlock_bh( &ndpi_lock );
+	// spin_unlock_bh( &ndpi_lock );
 
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 	pr_info( "[NDPI] add_to_lru over#2\n" );
@@ -681,6 +687,7 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 		pr_info( "[NDPI] add_to_lru_cache() returned NULL\n" );
 #endif
 
+		spin_unlock_bh( &ndpi_lock );
 		return(verdict);
 	} else
 		entry = &node->node.value;
@@ -710,6 +717,7 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 			pr_info( "[NDPI] Returning default verdict (%d)\n", 1 );
 #endif
+			spin_unlock_bh( &ndpi_lock );
 			return(verdict);
 		}
 	} else {
@@ -777,6 +785,7 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 	if ( entry->protocol_detected )
 	{
 		NDPI_CB_RECORD( _skb, entry );
+		spin_unlock_bh( &ndpi_lock );
 		return(verdict);
 	}
 
@@ -792,6 +801,7 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 
 
 		NDPI_CB_RECORD( _skb, entry );
+		spin_unlock_bh( &ndpi_lock );
 		return(verdict /* PASS */);
 	} else
 		entry->last_processed_skb = _skb;
@@ -804,6 +814,7 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 	{
 		if (unlikely( debug ))
 			pr_info( "[NDPI] skb_copy() failed.\n" );
+		spin_unlock_bh( &ndpi_lock );
 		return(verdict);
 	}
 
@@ -818,9 +829,9 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 	entry->num_packets_processed++;
 
 	/*PT test lock*/
-	spin_lock_bh( &ipq_lock);
+	// spin_lock_bh( &ndpi_lock);
 	entry->ndpi_proto = ndpi_detection_process_packet( ndpi_struct, entry->flow, ip, ip_len, time, entry->src, entry->dst );
-	spin_unlock_bh( &ipq_lock );
+	// spin_unlock_bh( &ndpi_lock );
 
 	if ( (entry->ndpi_proto != NDPI_PROTOCOL_UNKNOWN)
 	                                        /* || (iph->protocol != IPPROTO_TCP) */
@@ -841,9 +852,9 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 
 		NDPI_CB_RECORD( _skb, entry );
 
-		spin_lock_bh( &ndpi_lock );
+		// spin_lock_bh( &ndpi_lock );
 		free_LruCacheEntryValue( entry ); /* Free nDPI memory */
-		spin_unlock_bh( &ndpi_lock );
+		// spin_unlock_bh( &ndpi_lock );
 
 	} else {
 		/*
@@ -859,6 +870,7 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 
 	kfree_skb( copied_skb );
 
+	spin_unlock_bh( &ndpi_lock );
 	return(verdict);
 }
 
