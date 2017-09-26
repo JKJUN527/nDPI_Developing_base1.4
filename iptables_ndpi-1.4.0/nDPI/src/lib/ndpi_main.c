@@ -5336,9 +5336,9 @@ extern void *memfind(const void *_mem, ssize_t memlen, const void *_pat, ssize_t
 
     u_int8_t *mem = (u_int8_t*)_mem;
     u_int8_t *pat = (u_int8_t*)_pat;
-    size_t i;
+    ssize_t i;
     for (i = 0; i+patlen-1 < memlen; i++) {
-        size_t j;
+        ssize_t j;
         for (j = 0; j < patlen; j++)
             if (mem[i+j] != pat[j])
                 break;
