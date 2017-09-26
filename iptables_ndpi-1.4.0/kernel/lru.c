@@ -87,9 +87,9 @@ void free_lru_cache_unit( struct LruCacheUnit *cache_unit )
 	{
 		struct LruCacheNode *next = head->lru_list.next;
 
-		spin_lock_bh( &ndpi_lock );
+		// spin_lock_bh( &ndpi_lock );
 		free_LruCacheEntryValue( &head->node.value );
-		spin_unlock_bh( &ndpi_lock );
+		// spin_unlock_bh( &ndpi_lock );
 
 		kfree( head );
 		head = next;
@@ -170,10 +170,10 @@ static int delete_oldest_lru_cache_unit( struct LruCacheUnit *cache_unit )
 	//usenum++;
 	//pr_info( "delete_oldest_lru_cache_unit USE NUM IS:%u \n",usenum);
 	
-    spin_lock_bh( &ndpi_lock );
-    free_LruCacheEntryValue( &node->node.value );
-    spin_unlock_bh( &ndpi_lock );
+	// spin_lock_bh( &ndpi_lock );
+	free_LruCacheEntryValue( &node->node.value );
 	kfree( node );
+	// spin_unlock_bh( &ndpi_lock );
 	cache_unit->current_size--;
 	return(0);
 }
