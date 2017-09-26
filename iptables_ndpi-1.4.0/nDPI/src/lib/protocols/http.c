@@ -806,7 +806,7 @@ static void check_custom_headers(struct ndpi_detection_module_struct *ndpi_struc
                  }
              }
          }
-         _D("qqmusic_statis: %d\n", qqmusic_statis);
+         _D("QQ music: qqmusic_statis: %d\n", qqmusic_statis);
          if (qqmusic_statis >= 5) {
              ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_QQMUSIC);
              _D("QQ music: Found!\n");
