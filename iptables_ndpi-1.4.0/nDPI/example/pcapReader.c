@@ -25,7 +25,7 @@
 #include <winsock2.h> /* winsock.h is included automatically */
 #include <process.h>
 #include <io.h>
-#include <getopt.h> 
+#include <getopt.h>
 #define getopt getopt____
 #else
 #include <unistd.h>
@@ -40,8 +40,7 @@
 #include "../config.h"
 #include "linux_compat.h"
 #include "ndpi_main.h"
-#define DEBUG 1
-#define ENABLE_DEBUG_MESSAGES 1
+
 static void setupDetection(void);
 
 // cli options
@@ -239,7 +238,7 @@ static char* ipProto2Name(u_short proto_id) {
     break;
   }
 
-  snprintf(proto, sizeof(proto), "%u", proto_id);
+  snprintf(proto, sizeof(proto), "%-3u", proto_id);
   return(proto);
 }
 
@@ -278,15 +277,15 @@ char* intoaV4(unsigned int addr, char* buf, u_short bufLen) {
 static void printFlow(struct ndpi_flow *flow) {
   char buf1[32], buf2[32];
 
-  printf("\t%s %s:%u > %s:%u [proto: %u/%s][%u pkts/%u bytes]\n",
-	 ipProto2Name(flow->protocol),
-	 intoaV4(ntohl(flow->lower_ip), buf1, sizeof(buf1)),
-	 ntohs(flow->lower_port),
-	 intoaV4(ntohl(flow->upper_ip), buf2, sizeof(buf2)),
-	 ntohs(flow->upper_port),
-	 flow->detected_protocol,
-	 ndpi_get_proto_name(ndpi_struct, flow->detected_protocol),
-	 flow->packets, flow->bytes);
+  printf("%s %s:%-5u > %s:%-5u [proto: %u/%s][%u pkts/%u bytes]\n",
+          ipProto2Name(flow->protocol),
+          intoaV4(ntohl(flow->lower_ip), buf1, sizeof(buf1)),
+          ntohs(flow->lower_port),
+          intoaV4(ntohl(flow->upper_ip), buf2, sizeof(buf2)),
+          ntohs(flow->upper_port),
+          flow->detected_protocol,
+          ndpi_get_proto_name(ndpi_struct, flow->detected_protocol),
+          flow->packets, flow->bytes);
 }
 
 static void node_print_unknown_proto_walker(const void *node, ndpi_VISIT which, int depth, void *user_data) {
@@ -563,7 +562,7 @@ static void terminateDetection(void)
   ndpi_exit_detection_module(ndpi_struct, free_wrapper);
 }
 
-static unsigned int packet_processing(const u_int64_t time, 
+static unsigned int packet_processing(const u_int64_t time,
 				      const struct ndpi_iphdr *iph,
 				      struct ndpi_ip6_hdr *iph6,
 				      u_int16_t ip_offset,
@@ -593,26 +592,17 @@ static unsigned int packet_processing(const u_int64_t time,
 
   if(flow->detection_completed) return;
 
-
-  #ifdef DEBUG
-  printf("[zllz] ----- before ndpi_detection_process ndpi_flow:{%s}\n",\
-  ndpi_flow->packet.payload);
-  
-  #endif
   printFlow( flow);
-  protocol = (const u_int32_t)ndpi_detection_process_packet(ndpi_struct, ndpi_flow, 
+  protocol = (const u_int32_t)ndpi_detection_process_packet(ndpi_struct, ndpi_flow,
 							    iph ? (uint8_t *)iph : (uint8_t *)iph6,
 							    ipsize, time, src, dst);
 
 
 
-  #if 0
-    printf("[NDPI][NDPI2] -----after process_packet. top payload:%s \n",ndpi_flow->packet.payload);//no any payload here
-  #endif
   if(verbose > 1) {
     char buf1[32], buf2[32];
     
-    printf("%s %s:%u > %s:%u [proto: %u/%s]\n",
+    printf("%s %s:%-5u > %s:%-5u [proto: %u/%s]\n",
 	   ipProto2Name(flow->protocol),
 	   intoaV4(ntohl(flow->lower_ip), buf1, sizeof(buf1)), ntohs(flow->lower_port),
 	   intoaV4(ntohl(flow->upper_ip), buf2, sizeof(buf2)), ntohs(flow->upper_port),
@@ -626,26 +616,13 @@ static unsigned int packet_processing(const u_int64_t time,
      || ((proto == IPPROTO_TCP) && (flow->packets > 10))) {
     flow->detection_completed = 1;
 
-#if 0
-    if(flow->ndpi_flow->l4.tcp.host_server_name[0] != '\0')
-      printf("%s\n", flow->ndpi_flow->l4.tcp.host_server_name);
-#endif
-
     free_ndpi_flow(flow);
   }
-
-#if 0
-  if(ndpi_flow->l4.tcp.host_server_name[0] != '\0')
-    printf("%s\n", ndpi_flow->l4.tcp.host_server_name);
-#endif  
-
   return 0;
 }
 
 /* ****************************************************** */
-
-
-char* formatTraffic(float numBits, int bits, char *buf) {
+char *formatTraffic(float numBits, int bits, char *buf) {
   char unit;
 
   if(bits)
@@ -751,7 +728,9 @@ static void closePcapFile(void)
 void sigproc(int sig) {
   static int called = 0;
 
-  if(called) return; else called = 1;
+  if(called) return;
+
+  called = 1;
   shutdown_app = 1;
 
   closePcapFile();
@@ -800,7 +779,7 @@ static void openPcapFileOrDevice(void)
     alarm(capture_until);
     signal(SIGALRM, sigproc);
 #endif
-    capture_until += time(NULL);    
+    capture_until += time(NULL);
   }
 }
 
@@ -924,7 +903,7 @@ static void pcap_packet_callback(u_char * args, const struct pcap_pkthdr *header
   }
 
   // process the packet
-  packet_processing(time, iph, iph6, ip_offset, header->len - ip_offset, header->len);  
+  packet_processing(time, iph, iph6, ip_offset, header->len - ip_offset, header->len);
 }
 
 static void runPcapLoop(void)

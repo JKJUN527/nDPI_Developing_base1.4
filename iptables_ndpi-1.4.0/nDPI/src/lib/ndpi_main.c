@@ -3554,34 +3554,35 @@ unsigned int ndpi_detection_process_packet_by_bitmask(struct ndpi_detection_modu
 }
 
 
-void print_payload(struct ndpi_detection_module_struct *ndpi_struct, 
+void print_payload(struct ndpi_detection_module_struct *ndpi_struct,
 					    struct ndpi_flow_struct *flow, char* type){
 //#ifndef __KERNEL__
-	struct ndpi_packet_struct *packet = &flow->packet;
-	int i=0;
-	
-	NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, "\n---------------%s payload-------------\n",type);
-	if(packet->payload!=NULL){
-		while(packet->payload + i !=NULL && i< packet->payload_packet_len){
-			
-			NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, "%2x", *(packet->payload + i));
-			
-			i++;
-			if(i%16==0){
-				int j=0;
-				NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, " | ");
-				for(;j<=(i-1)%16;j++){
-					NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, "%c", *(packet->payload + i -16 + j));
-				}
-				NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, "\r\n");
-				
-			}else if(i%8 == 0){
-				NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, "  ");
-			}
-			
-		}
-	}
-	NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, "\n---------------%s payload end-------------\n",type);
+    struct ndpi_packet_struct *packet = &flow->packet;
+    int i=0;
+
+    NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, "\n---------------%s payload-------------\n",type);
+    if(packet->payload != NULL){
+        while(packet->payload + i !=NULL && i< packet->payload_packet_len){
+
+            NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, "%02x", *(packet->payload + i));
+
+            i++;
+            if(i%16==0){
+                int j=0;
+                NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, " | ");
+                for(;j<=(i-1)%16;j++){
+                    int ch = packet->payload[i-16+j];
+                    NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, "%c", isprint(ch)? packet->payload[i-16+j]: '.');
+                }
+                NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, "\r\n");
+
+            }else if(i%8 == 0){
+                NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, "  ");
+            }
+
+        }
+    }
+    NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, "\n---------------%s payload end-------------\n",type);
 //#endif
 }
 
@@ -3634,7 +3635,7 @@ unsigned int ndpi_detection_process_packet(struct ndpi_detection_module_struct *
     return NDPI_PROTOCOL_UNKNOWN;
   }
   #ifdef DEBUG
-  //printf("[NDPI][NDPI2] --------------b. top payload:%s\n",flow->packet.payload);
+  printf("[NDPI][NDPI2] --------------b. top payload:%s\n",flow->packet.payload);
   #endif
   /* detect traffic for tcp or udp only */
 
@@ -3694,8 +3695,7 @@ unsigned int ndpi_detection_process_packet(struct ndpi_detection_module_struct *
   #endif
     if (flow->packet.payload_packet_len != 0) {
 		#ifdef DEBUG
-				//printf("[NDPI][NDPI2] payload:%s\n",flow->packet.payload);
-				print_payload(ndpi_struct,flow,"tcp");
+				print_payload(ndpi_struct, flow, "tcp");
 				printf("[NDPI][NDPI2] checking number:");
 		#endif
       for (a = 0; a < ndpi_struct->callback_buffer_size_tcp_payload; a++) {
@@ -3748,9 +3748,7 @@ unsigned int ndpi_detection_process_packet(struct ndpi_detection_module_struct *
 
 	  if(flow->detected_protocol_stack[0] != NDPI_PROTOCOL_UNKNOWN){
 	  	#ifdef DEBUG
-	  		printf(
-
-"FOUND!");
+	  		printf("FOUND!");
 		#endif
 	    break; /* Stop after detecting the first protocol */
       }
@@ -3763,10 +3761,8 @@ unsigned int ndpi_detection_process_packet(struct ndpi_detection_module_struct *
 	  	}
   } else if (flow != NULL && flow->packet.udp != NULL) {
   #ifdef DEBUG
-
 		printf("[NDPI][NDPI2] check top of udp \n");
-		//printf("[NDPI][NDPI2] payload:%s\n",flow->packet.payload);
-		print_payload(ndpi_struct,flow,"udp");
+		print_payload(ndpi_struct,flow, "udp");
 		printf("[NDPI][NDPI2] checking number:");
   #endif
 	for (a = 0; a < ndpi_struct->callback_buffer_size_udp; a++) {
@@ -3796,7 +3792,7 @@ unsigned int ndpi_detection_process_packet(struct ndpi_detection_module_struct *
   } else {
   #ifdef DEBUG
 	  printf("[NDPI][NDPI2] check top of non_tcp_udp \n");
-	  printf("[NDPI][NDPI2] payload:%s\n",flow->packet.payload);
+	  //printf("[NDPI][NDPI2] payload:%s\n",flow->packet.payload);
 	  printf("[NDPI][NDPI2] checking number:");
   #endif
     for (a = 0; a < ndpi_struct->callback_buffer_size_non_tcp_udp; a++) {
@@ -3836,10 +3832,8 @@ unsigned int ndpi_detection_process_packet(struct ndpi_detection_module_struct *
 	
   a = flow->packet.detected_protocol_stack[0];
   #ifdef DEBUG
-	  print_payload(ndpi_struct,flow,"end detection");
-	  printf(
-
-"[NDPI][NDPI2] ----------2) END ndpi_detection_process_packet check over, proto:%s!\n",ndpi_get_proto_by_id( ndpi_struct,a));
+  printf("[NDPI][NDPI2] ----------2) END ndpi_detection_process_packet check over, proto:%s!\n",
+          ndpi_get_proto_by_id( ndpi_struct,a));
   #endif
   if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(ndpi_struct->detection_bitmask, a) == 0)
     a = NDPI_PROTOCOL_UNKNOWN;
