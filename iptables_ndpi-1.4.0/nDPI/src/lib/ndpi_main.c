@@ -828,7 +828,7 @@ ndpi_protocol_match host_match[] = {
   {".jx3.xoyo.com",              "Jx3"                 , NDPI_PROTOCOL_GAME_JX3 },
   {"qn.163.com",                 "qiannyh"             , NDPI_PROTOCOL_GAME_QIANNYH },
   {"hi-163-qn",                  "qiannyh"             , NDPI_PROTOCOL_GAME_QIANNYH },
-  {"cm01-sha.cm.steampowered.com", "csgo"              , NDPI_PROTOCOL_GAME_CSGO },//可能和stream其他游戏冲突
+  {"cm.steampowered.com",        "csgo"                , NDPI_PROTOCOL_GAME_CSGO },//可能和stream其他游戏冲突
 
   /*JK END*/
 
@@ -1674,6 +1674,7 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
 		 "callback_buffer_size is %u, should be 0\n", ndpi_struct->callback_buffer_size);
 
 #ifdef NDPI_PROTOCOL_HTTP
+#if 0
 #ifdef NDPI_PROTOCOL_QQ
   if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_QQ) != 0)
     goto hack_do_http_detection;
@@ -1714,23 +1715,25 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
   if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_HTTP) != 0) {
 
   hack_do_http_detection:
+#endif
   	#ifdef DEBUG
     // ndpi_struct->subprotocol_conf[NDPI_PROTOCOL_HTTP].func = ndpi_http_subprotocol_conf;
      //printf("[zllz] -----hack_do_http start\n");
 	#endif
+  if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_HTTP) != 0) {
     ndpi_struct->callback_buffer[a].func = ndpi_search_http_tcp;
     ndpi_struct->callback_buffer[a].ndpi_selection_bitmask = NDPI_SELECTION_BITMASK_PROTOCOL_V4_V6_TCP_WITH_PAYLOAD;
 
     NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_UNKNOWN);
     NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_HTTP);
-
+#if 0
 #ifdef NDPI_PROTOCOL_THUNDER	// PT
 	NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_THUNDER);
 #endif
 #ifdef NDPI_PROTOCOL_WECHAT		//PT
 	NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_WECHAT);
 #endif
-
+#endif
     NDPI_BITMASK_SET(ndpi_struct->callback_buffer[a].excluded_protocol_bitmask,
 		     ndpi_struct->callback_buffer[a].detection_bitmask);
     NDPI_DEL_PROTOCOL_FROM_BITMASK(ndpi_struct->callback_buffer[a].excluded_protocol_bitmask,

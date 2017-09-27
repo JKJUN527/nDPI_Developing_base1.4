@@ -1081,9 +1081,12 @@ void ndpi_search_http_tcp(struct ndpi_detection_module_struct *ndpi_struct, stru
 	/* parse one more packet .. */
 	NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "just one line, search next packet\n");
 
+	NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "http_stage0: %u\n",flow->l4.tcp.http_stage);
 	packet->http_method.ptr = packet->line[0].ptr;
         packet->http_method.len = filename_start - 1;
 	flow->l4.tcp.http_stage = 1;
+	
+	NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "http_stage1: %u\n",flow->l4.tcp.http_stage);
 	return;
       }
       // parsed_lines > 1 here

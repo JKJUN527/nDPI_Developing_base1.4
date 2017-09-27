@@ -45,6 +45,7 @@ __forceinline static
 #endif
 #define STR0CSGO "\x01\x00\x73\x64\x70\x69\x6e\x67"
 #define STR1CSGO "\x02\x12\x54\x6c\x74\x61\x00\x6d\x6f\x62\x00\x62\x78\x64\x00\x74"	
+#define STR2CSGO "\x00\x42\x43\x49\x55\x51\x41\x57\x52\x44\x42\x4f\x49\x43\x41\x00"//探测局域网联机主机	
 void ndpi_search_csgo_udp(struct ndpi_detection_module_struct
 												  *ndpi_struct, struct ndpi_flow_struct *flow)
 {
@@ -53,22 +54,24 @@ void ndpi_search_csgo_udp(struct ndpi_detection_module_struct
 	if(packet->payload_packet_len >= 16
              //        ||memcmp(&packet->payload[0],STR1CSGO,NDPI_STATICSTRING_LEN(STR1CSGO))==0)
 	){
-		if(memcmp(&packet->payload[0],STR0CSGO,NDPI_STATICSTRING_LEN(STR0CSGO))==0){
+		if(memcmp(&packet->payload[0],STR0CSGO,NDPI_STATICSTRING_LEN(STR0CSGO))==0
+		  ||memcmp(&packet->payload[0],STR2CSGO,NDPI_STATICSTRING_LEN(STR2CSGO))==0
+		){
 			NDPI_LOG(NDPI_PROTOCOL_GAME_CSGO, ndpi_struct, NDPI_LOG_DEBUG,"found csgo------0 \n");
 			ndpi_int_csgo_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
 			return;
 		}
 		if(get_u_int32_t(packet->payload,0) == htonl(0x56533031)){
-			u_int8_t i = 0;
+		/*	u_int8_t i = 0;
 			for(i=0;i<8;i++){
 				if(get_u_int16_t(packet->payload,i+8) == htonl(0x2641)
 				   ||packet->payload[i+8] == 0x02
 				){	
-				NDPI_LOG(NDPI_PROTOCOL_GAME_CSGO, ndpi_struct, NDPI_LOG_DEBUG,"found csgo------1 \n");
+		*/		NDPI_LOG(NDPI_PROTOCOL_GAME_CSGO, ndpi_struct, NDPI_LOG_DEBUG,"found csgo------1 \n");
 				ndpi_int_csgo_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
 				return;
-				}
-			}
+		//		}
+		//	}
 		}
 		//return;
 	}

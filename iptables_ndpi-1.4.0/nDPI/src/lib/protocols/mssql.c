@@ -64,6 +64,7 @@ void ndpi_search_mssql(struct ndpi_detection_module_struct
 			case 0x07:case 0x0F:case 0x10:case 0x11:case 0x12:
 				NDPI_LOG(NDPI_PROTOCOL_MSSQL, ndpi_struct, NDPI_LOG_DEBUG, "found mssql.\n");
 				ndpi_int_mssql_add_connection(ndpi_struct, flow);
+				return;
 				break;
 			default:
 				return;			
