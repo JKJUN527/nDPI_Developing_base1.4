@@ -4147,10 +4147,10 @@ void ndpi_parse_packet_line_info(struct ndpi_detection_module_struct *ndpi_struc
     if (!packet->host_line.ptr) {
         ndpi_ip_addr_t ip;
         /* client to server */
-        if (flow->l4.tcp.http_setup_dir == 0) {
-            ndpi_packet_src_ip_get(packet, &ip);
-        } else {
+        if (flow->l4.tcp.http_setup_dir == 1) {
             ndpi_packet_dst_ip_get(packet, &ip);
+        } else {
+            ndpi_packet_src_ip_get(packet, &ip);
         }
         const char *ipstr = ndpi_get_ip_string(ndpi_struct, &ip);
         int len = ndpi_min(strlen(ipstr), 255);
