@@ -60,8 +60,8 @@ test_pre:
 	iptables -I FORWARD 1 -j JK
 
 test: install
-	#iptables -A FORWARD -m ndpi --protos dota2 -j REJECT
-	iptables -A FORWARD -m ndpi --protos CSGO -j REJECT
+	iptables -A FORWARD -m ndpi --protos KuGouMusic -j REJECT
+	iptables -A FORWARD -p udp -j REJECT
 	watch -n 0.5 'iptables -S -v'
 	#iptables -A JK -p udp --sport 12345 -j REJECT
 m:

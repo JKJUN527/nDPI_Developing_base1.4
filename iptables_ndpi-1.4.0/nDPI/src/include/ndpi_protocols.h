@@ -434,6 +434,7 @@ void ndpi_search_csgo(struct ndpi_detection_module_struct *ndpi_struct, struct n
 /*jkjun END*/
 void ndpi_search_huashengke(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow);
 void ndpi_search_minecraft(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow);
+void ndpi_search_kugou_music(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow);
 
 
 #endif /* __NDPI_PROTOCOLS_INCLUDE_FILE__ */

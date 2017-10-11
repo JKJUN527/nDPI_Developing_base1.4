@@ -611,12 +611,14 @@ static unsigned int packet_processing(const u_int64_t time,
 
   flow->detected_protocol = protocol;
 
-  if((flow->detected_protocol != NDPI_PROTOCOL_UNKNOWN)
-     || (proto == IPPROTO_UDP)
-     || ((proto == IPPROTO_TCP) && (flow->packets > 10))) {
-    flow->detection_completed = 1;
+  printf("ndpi_flow->packet_counter: %d\n", ndpi_flow->packet_counter);
+  if ((flow->detected_protocol == NDPI_PROTOCOL_HTTP && ndpi_flow->packet_counter >= 5)
+          || (flow->detected_protocol != NDPI_PROTOCOL_UNKNOWN && flow->detected_protocol != NDPI_PROTOCOL_HTTP)
+          || (proto == IPPROTO_UDP)
+          || ((proto == IPPROTO_TCP) && (flow->packets > 10))) {
+      flow->detection_completed = 1;
 
-    free_ndpi_flow(flow);
+      free_ndpi_flow(flow);
   }
   return 0;
 }

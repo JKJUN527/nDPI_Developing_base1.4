@@ -684,8 +684,6 @@ static void check_custom_headers(struct ndpi_detection_module_struct *ndpi_struc
                      &&memcmp(packet->line[a].ptr,"GET /tx2fix",11)==0)
                  ||(packet->line[a].len>=NDPI_STATICSTRING_LEN("HEAD /tx2fix")
                      &&memcmp(packet->line[a].ptr,"HEAD /tx2fix",12)==0)
-                 ||(packet->line[a].len>=NDPI_STATICSTRING_LEN("Server: WS CDN Server")
-                     &&memcmp(packet->line[a].ptr,"Server: WS CDN Server",21)==0)
             ){
              NDPI_LOG(NDPI_PROTOCOL_TIANXIA3, ndpi_struct, NDPI_LOG_DEBUG, "tianxia3:'tx2fix' found.\n");
              ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_TIANXIA3);
@@ -696,9 +694,8 @@ static void check_custom_headers(struct ndpi_detection_module_struct *ndpi_struc
          /*jkjun 2017-08-11 */
 #ifdef NDPI_PROTOCOL_GAME_DNF
          if (packet->line[a].len >= NDPI_STATICSTRING_LEN("GET /outer/ad_log_report")
-                 &&memcmp(packet->line[a].ptr,"GET /",5)==0 
-                 &&strstr(packet->line[a].ptr+5,"dnf")
-            ){
+                 &&memcmp(packet->line[a].ptr,"GET /",5)==0
+                 &&strstr(packet->line[a].ptr+5,"dnf")) {
              NDPI_LOG(NDPI_PROTOCOL_GAME_DNF, ndpi_struct, NDPI_LOG_DEBUG, "DNF login / found.\n");
              ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_GAME_DNF);
              return;
@@ -946,6 +943,65 @@ static void check_accept_line(struct ndpi_detection_module_struct
     }
 }
 
+#ifdef NDPI_PROTOCOL_KUGOUMUSIC
+/**
+ * Detect KuGouMusic protocol
+ * @return: 0: pass, don't change anything
+ *          1: found and mark
+ *          2: exclude this protocol
+ */
+static int kugou_music_http_check(struct ndpi_detection_module_struct *ndpi, struct ndpi_flow_struct *flow)
+{
+    _D("Into http KuGouMusic at check_http_payload().\n");
+    if (0 != flow-> kugou_music_type && 3 != flow->kugou_music_type)
+        return 0;
+    struct ndpi_packet_struct *packet = &flow->packet;
+    if (!packet->http_payload.ptr)
+        return 0;
+    _D("KuGouMusic: stage: %d | %02x%02x\n", flow->kugou_music_stage,
+            packet->http_payload.ptr[0], packet->http_payload.ptr[1]);
+    flow->kugou_music_type = 3;
+    switch (flow->kugou_music_stage) {
+    case 0:
+        if (packet->http_method.len >= 4 && !strncmp("POST", packet->http_method.ptr, 4)
+                && (packet->http_payload.len >= 66 && ntohs(0x0100) == get_u_int16_t(packet->http_payload.ptr, 0))) {
+            flow->kugou_music_stage = 1;
+            return 0;
+        }
+        goto kugou_music_http_exclude_tag;
+        break;
+    case 1:
+        if (packet->http_payload.len >= 48 && (ntohs(0x3200) == get_u_int16_t(packet->http_payload.ptr, 0))) {
+            ndpi_int_http_add_connection(ndpi, flow, NDPI_PROTOCOL_KUGOUMUSIC);
+            return 1;
+        }
+        goto kugou_music_http_exclude_tag;
+        break;
+
+    default:
+        break;
+    }
+
+    return 0;
+
+kugou_music_http_exclude_tag:
+    NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_KUGOUMUSIC);
+    _D("exclude KuGouMusic.\n");
+    return 2;
+}
+#endif /* NDPI_PROTOCOL_KUGOUMUSIC */
+
+static void check_normal_http(struct ndpi_detection_module_struct *ndpi, struct ndpi_flow_struct *flow)
+{
+    NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi, NDPI_LOG_DEBUG, "called check_normal_http.\n");
+#ifdef NDPI_PROTOCOL_KUGOUMUSIC
+    if (1 == kugou_music_http_check(ndpi, flow))
+        return;
+#endif /* NDPI_PROTOCOL_KUGOUMUSIC */
+
+    /* add other protocol there */
+}
+
 static void check_content_type_and_change_protocol(struct ndpi_detection_module_struct
 						   *ndpi_struct, struct ndpi_flow_struct *flow)
 {
@@ -966,12 +1022,14 @@ static void check_content_type_and_change_protocol(struct ndpi_detection_module_
 
   /* check custom headers*/
   check_custom_headers(ndpi_struct, flow);
+
+  /* check normal all http part */
+  check_normal_http(ndpi_struct, flow);
 }
 
 static void check_http_payload(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {
-  NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "called check_http_payload.\n");
-
+    NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "called check_http_payload.\n");
 }
 
 /**
@@ -1152,10 +1210,10 @@ void ndpi_search_http_tcp(struct ndpi_detection_module_struct *ndpi_struct, stru
     /* We have received a response for a previously identified partial HTTP request */
     
     if((packet->parsed_lines == 1) && (packet->packet_direction == 1 /* server -> client */)) {
-      /* 
-	 In apache if you do "GET /\n\n" the response comes without any header so we can assume that
-	 this can be the case
-      */
+      /*
+       * In apache if you do "GET /\n\n" the response comes without any header so we can assume that
+       * this can be the case
+       */
       ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_HTTP);
       return;
     }
@@ -1175,25 +1233,25 @@ void ndpi_search_http_tcp(struct ndpi_detection_module_struct *ndpi_struct, stru
       /* check for url here */
       filename_start = http_request_url_offset(ndpi_struct, flow);
       if (filename_start != 0 && packet->parsed_lines > 1 && packet->line[0].len >= (9 + filename_start)
-	  && memcmp(&packet->line[0].ptr[packet->line[0].len - 9], " HTTP/1.", 8) == 0) {
-	packet->http_url_name.ptr = &packet->payload[filename_start];
-	packet->http_url_name.len = packet->line[0].len - (filename_start + 9);
+          && memcmp(&packet->line[0].ptr[packet->line[0].len - 9], " HTTP/1.", 8) == 0) {
+            packet->http_url_name.ptr = &packet->payload[filename_start];
+            packet->http_url_name.len = packet->line[0].len - (filename_start + 9);
 
-	packet->http_method.ptr = packet->line[0].ptr;
-	packet->http_method.len = filename_start - 1;
+            packet->http_method.ptr = packet->line[0].ptr;
+            packet->http_method.len = filename_start - 1;
 
-	NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "next http action, "
-		"resetting to http and search for other protocols later.\n");
-	ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_HTTP);
+            NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "next http action, "
+                "resetting to http and search for other protocols later.\n");
+            ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_HTTP);
       }
       check_content_type_and_change_protocol(ndpi_struct, flow);
       /* HTTP found, look for host... */
       if (packet->host_line.ptr != NULL) {
-	NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG,
-		"HTTP RUN MAYBE NEXT HOST found, skipping all packets from this direction\n");
-	/* aaahh, skip this direction and wait for a server reply here */
-	flow->l4.tcp.http_stage = 2;
-	return;
+        NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG,
+            "HTTP RUN MAYBE NEXT HOST found, skipping all packets from this direction\n");
+        /* aaahh, skip this direction and wait for a server reply here */
+        flow->l4.tcp.http_stage = 2;
+        return;
       }
       NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG,
 	      "HTTP RUN MAYBE NEXT HOST NOT found, scanning one more packet from this direction\n");

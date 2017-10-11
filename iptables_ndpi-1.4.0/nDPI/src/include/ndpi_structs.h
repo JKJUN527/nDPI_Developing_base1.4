@@ -286,6 +286,7 @@ typedef struct ndpi_packet_struct {
   struct ndpi_int_one_line_struct server_line;
   struct ndpi_int_one_line_struct http_method;
   struct ndpi_int_one_line_struct http_response;
+  struct ndpi_int_one_line_struct http_payload;
 
 
   u_int16_t l3_packet_len;
@@ -580,14 +581,6 @@ typedef struct ndpi_flow_struct {
 #ifdef NDPI_PROTOCOL_GAME_EUDEMONS
 	u_int32_t eudemons_stage:2;
 #endif
-#ifdef NDPI_PROTOCOL_HUASHENGKE
-    u_int8_t huashengke_stage;  /* for version 2 */
-    u_int8_t huashengke3_stage; /* for version 3 */
-#endif
-#ifdef NDPI_PROTOCOL_WECHAT_TX
-    u_int32_t wechat_tx_authkeyhash;
-#endif
-
 #ifdef NDPI_PROTOCOL_GAME_QIANNYH
     u_int32_t qiannyh_stage:2;
 #endif
@@ -596,6 +589,21 @@ typedef struct ndpi_flow_struct {
 #endif
 #ifdef NDPI_PROTOCOL_MINECRAFT
     u_int32_t minecraft_compressed:1;
+#endif
+#ifdef NDPI_PROTOCOL_KUGOUMUSIC
+    u_int32_t kugou_music_type:2;   /* 0, uninit; 1, nornaml; 2, udp; 3, http+类似udp协议 */
+    u_int32_t kugou_music_stage:2;
+#endif
+
+#ifdef NDPI_PROTOCOL_KUGOUMUSIC
+    u_int16_t kugou_music_udp_seq;    /* guess it is a sequence. */
+#endif
+#ifdef NDPI_PROTOCOL_HUASHENGKE
+    u_int8_t huashengke_stage;  /* for version 2 */
+    u_int8_t huashengke3_stage; /* for version 3 */
+#endif
+#ifdef NDPI_PROTOCOL_WECHAT_TX
+    u_int32_t wechat_tx_authkeyhash;
 #endif
 
   /* internal structures to save functions calls */

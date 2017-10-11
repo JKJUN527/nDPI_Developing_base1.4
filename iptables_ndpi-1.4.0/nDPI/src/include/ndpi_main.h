@@ -215,7 +215,7 @@ extern void *memfind(const void *mem, ssize_t memlen, const void *pat, ssize_t p
    * When the string is larger than the payload, check fails.
    * @return non-zero if check succeeded
    */
-  int ndpi_match_prefix(const u_int8_t *payload, size_t payload_len,
+int ndpi_match_prefix(const u_int8_t *payload, size_t payload_len,
 			const char *str, size_t str_len);
 /* version of ndpi_match_prefix with string literal */
 #define ndpi_match_strprefix(payload, payload_len, str)			\

@@ -845,14 +845,16 @@ ndpi_protocol_match host_match[] = {
   { "nz.qq.com",                "NIZhan",      NDPI_PROTOCOL_NIZHAN },
   { "nzclientpop",              "NIZhan",      NDPI_PROTOCOL_NIZHAN },
 
-  {"x19mclobt.nie.netease",     "Minecraft",   NDPI_PROTOCOL_MINECRAFT},
-  {"wspeed.qq.com",             "QQMusic",     NDPI_PROTOCOL_QQMUSIC},
-  {"y.qq.com",                  "QQMusic",     NDPI_PROTOCOL_QQMUSIC},
-  {"qqmusic.qq.com",            "QQMusic",     NDPI_PROTOCOL_QQMUSIC},
-  {"music.qq.com",              "QQMusic",     NDPI_PROTOCOL_QQMUSIC},
+  { "x19mclobt.nie.netease",     "Minecraft",   NDPI_PROTOCOL_MINECRAFT},
+  { "wspeed.qq.com",             "QQMusic",     NDPI_PROTOCOL_QQMUSIC},
+  { "y.qq.com",                  "QQMusic",     NDPI_PROTOCOL_QQMUSIC},
+  { "qqmusic.qq.com",            "QQMusic",     NDPI_PROTOCOL_QQMUSIC},
+  { "music.qq.com",              "QQMusic",     NDPI_PROTOCOL_QQMUSIC},
 
-  {"music.163.com",             "NetEaseMusic", NDPI_PROTOCOL_NETEASEMUSIC},
-  {"music.126.net",             "NetEaseMusic", NDPI_PROTOCOL_NETEASEMUSIC},
+  { "music.163.com",             "NetEaseMusic", NDPI_PROTOCOL_NETEASEMUSIC},
+  { "music.126.net",             "NetEaseMusic", NDPI_PROTOCOL_NETEASEMUSIC},
+
+  { "kugou.com",                 "KuGouMusic", NDPI_PROTOCOL_KUGOUMUSIC },
 
   { NULL, 0 }
 };
@@ -1294,11 +1296,12 @@ static void ndpi_init_protocol_defaults(struct ndpi_detection_module_struct *ndp
    ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_NETEASEMUSIC, "NetEaseMusic",
         		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0),  /* TCP */
         		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
+   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_KUGOUMUSIC, "KuGouMusic",
+        		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0), /* TCP */
+        		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0)  /* UDP */);
 				
 /**20161207 start stock*/
-/*UNVALID start */
   
-/*UNVALID end */
   init_string_based_protocols(ndpi_mod);
 
   for(i=0; i<(int)ndpi_mod->ndpi_num_supported_protocols; i++) {
@@ -2841,7 +2844,18 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
 
         a++;
     }
-#endif
+#endif /* NDPI_PROTOCOL_HUASHENGKE */
+#ifdef NDPI_PROTOCOL_KUGOUMUSIC
+  if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_KUGOUMUSIC) != 0) {
+      ndpi_struct->callback_buffer[a].func = ndpi_search_kugou_music;
+      ndpi_struct->callback_buffer[a].ndpi_selection_bitmask = NDPI_SELECTION_BITMASK_PROTOCOL_V4_V6_UDP_WITH_PAYLOAD;
+
+      NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_UNKNOWN);
+      NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].excluded_protocol_bitmask, NDPI_PROTOCOL_KUGOUMUSIC);
+
+      a++;
+  }
+#endif /* NDPI_PROTOCOL_KUGOUMUSIC */
 #ifdef NDPI_PROTOCOL_MINECRAFT
     if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_MINECRAFT) != 0) {
         ndpi_struct->callback_buffer[a].func = ndpi_search_minecraft;
@@ -3288,10 +3302,9 @@ void ndpi_connection_tracking(struct ndpi_detection_module_struct *ndpi_struct,
   //uint8_t                               new_connection;
 
   u_int8_t proxy_enabled = 0;
-  #ifdef DEBUG
+#ifdef DEBUG
   printf("[NDPI][NDPI2] --------trackings. top payload:%s\n",flow->packet.payload);
- 
-  #endif
+#endif
 
   packet->tcp_retransmission = 0;
 
@@ -3333,7 +3346,7 @@ void ndpi_connection_tracking(struct ndpi_detection_module_struct *ndpi_struct,
       flow->l4.tcp.seen_ack = 1;
     }
     if ((flow->next_tcp_seq_nr[0] == 0 && flow->next_tcp_seq_nr[1] == 0)
-	|| (proxy_enabled && (flow->next_tcp_seq_nr[0] == 0 || flow->next_tcp_seq_nr[1] == 0))) {
+          || (proxy_enabled && (flow->next_tcp_seq_nr[0] == 0 || flow->next_tcp_seq_nr[1] == 0))) {
       /* initalize tcp sequence counters */
       /* the ack flag needs to be set to get valid sequence numbers from the other
        * direction. Usually it will catch the second packet syn+ack but it works
@@ -3343,43 +3356,35 @@ void ndpi_connection_tracking(struct ndpi_detection_module_struct *ndpi_struct,
        * otherwise use the payload length.
        */
       if (tcph->ack != 0) {
-	flow->next_tcp_seq_nr[flow->packet.packet_direction] =
-	  ntohl(tcph->seq) + (tcph->syn ? 1 : packet->payload_packet_len);
-	if (!proxy_enabled) {
-	  flow->next_tcp_seq_nr[1 -flow->packet.packet_direction] = ntohl(tcph->ack_seq);
-	}
+        flow->next_tcp_seq_nr[flow->packet.packet_direction] =
+          ntohl(tcph->seq) + (tcph->syn ? 1 : packet->payload_packet_len);
+        if (!proxy_enabled) {
+          flow->next_tcp_seq_nr[1 -flow->packet.packet_direction] = ntohl(tcph->ack_seq);
+        }
       }
     } else if (packet->payload_packet_len > 0) {
       /* check tcp sequence counters */
       if (((u_int32_t)
-	   (ntohl(tcph->seq) -
-	    flow->next_tcp_seq_nr[packet->packet_direction])) >
-	  ndpi_struct->tcp_max_retransmission_window_size) {
+           (ntohl(tcph->seq) - flow->next_tcp_seq_nr[packet->packet_direction])) >
+           ndpi_struct->tcp_max_retransmission_window_size) {
+        packet->tcp_retransmission = 1;
 
-	packet->tcp_retransmission = 1;
-
-
-	/*CHECK IF PARTIAL RETRY IS HAPPENENING */
-	if ((flow->next_tcp_seq_nr[packet->packet_direction] - ntohl(tcph->seq) < packet->payload_packet_len)) {
-	  /* num_retried_bytes actual_payload_len hold info about the partial retry
-	     analyzer which require this info can make use of this info
-	     Other analyzer can use packet->payload_packet_len */
-	  packet->num_retried_bytes = (u_int16_t)(flow->next_tcp_seq_nr[packet->packet_direction] - ntohl(tcph->seq));
-	  packet->actual_payload_len = packet->payload_packet_len - packet->num_retried_bytes;
-	  flow->next_tcp_seq_nr[packet->packet_direction] = ntohl(tcph->seq) + packet->payload_packet_len;
-	}
+        /*CHECK IF PARTIAL RETRY IS HAPPENENING */
+        if ((flow->next_tcp_seq_nr[packet->packet_direction] - ntohl(tcph->seq) < packet->payload_packet_len)) {
+          /* num_retried_bytes actual_payload_len hold info about the partial retry
+             analyzer which require this info can make use of this info
+             Other analyzer can use packet->payload_packet_len */
+          packet->num_retried_bytes = (u_int16_t)(flow->next_tcp_seq_nr[packet->packet_direction] - ntohl(tcph->seq));
+          packet->actual_payload_len = packet->payload_packet_len - packet->num_retried_bytes;
+          flow->next_tcp_seq_nr[packet->packet_direction] = ntohl(tcph->seq) + packet->payload_packet_len;
+        }
       }
-      /*normal path
-	actual_payload_len is initialized to payload_packet_len during tcp header parsing itself.
-	It will be changed only in case of retransmission */
+      /* normal path actual_payload_len is initialized to payload_packet_len during tcp header parsing itself.
+        It will be changed only in case of retransmission */
       else {
-
-
-	packet->num_retried_bytes = 0;
-	flow->next_tcp_seq_nr[packet->packet_direction] = ntohl(tcph->seq) + packet->payload_packet_len;
+        packet->num_retried_bytes = 0;
+        flow->next_tcp_seq_nr[packet->packet_direction] = ntohl(tcph->seq) + packet->payload_packet_len;
       }
-
-
     }
 
     if (tcph->rst) {
@@ -4135,6 +4140,8 @@ void ndpi_parse_packet_line_info(struct ndpi_detection_module_struct *ndpi_struc
     packet->http_method.len = 0;
     packet->http_response.ptr = NULL;
     packet->http_response.len = 0;
+    packet->http_payload.ptr = NULL;
+    packet->http_payload.len = 0;
 
     if((packet->payload_packet_len == 0)
             || (packet->payload == NULL))
@@ -4284,6 +4291,8 @@ void ndpi_parse_packet_line_info(struct ndpi_detection_module_struct *ndpi_struc
         packet->line[packet->parsed_lines].len
             = (u_int16_t)(((unsigned long) &packet->payload[packet->payload_packet_len]) -
                     ((unsigned long) packet->line[packet->parsed_lines].ptr));
+        packet->http_payload.ptr = packet->line[packet->parsed_lines].ptr;
+        packet->http_payload.len = packet->line[packet->parsed_lines].len;
         packet->parsed_lines++;
     }
     NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, "[PT] call ndpi_parse_packet_line_info,lines:%u \n",packet->parsed_lines);

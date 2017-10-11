@@ -175,9 +175,9 @@ extern "C" {
 #define NDPI_PROTOCOL_GAME_CSGO                         119
 #define NDPI_PROTOCOL_MINECRAFT                         120
 #define NDPI_PROTOCOL_NETEASEMUSIC                      121 /* 网易云音乐 */
+#define NDPI_PROTOCOL_KUGOUMUSIC                        122 /* 酷狗音乐 */
 
-#define NDPI_LAST_IMPLEMENTED_PROTOCOL                 NDPI_PROTOCOL_NETEASEMUSIC
-
+#define NDPI_LAST_IMPLEMENTED_PROTOCOL                 NDPI_PROTOCOL_KUGOUMUSIC
 
 #define NDPI_MAX_SUPPORTED_PROTOCOLS (NDPI_LAST_IMPLEMENTED_PROTOCOL + 1)
 #define NDPI_MAX_NUM_CUSTOM_PROTOCOLS                           128
