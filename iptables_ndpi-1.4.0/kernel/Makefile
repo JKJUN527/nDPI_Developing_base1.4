@@ -128,7 +128,8 @@ NDPI_LIB_OBJS= \
 	$(NDPI_LIB_PROTOCOLS)/qiannyh.o \
 	$(NDPI_LIB_PROTOCOLS)/qqwuxia.o \
 	$(NDPI_LIB_PROTOCOLS)/csgo.o \
-	$(NDPI_LIB_PROTOCOLS)/minecraft.o
+	$(NDPI_LIB_PROTOCOLS)/minecraft.o \
+	$(NDPI_LIB_PROTOCOLS)/yy.o
 
 #	$(NDPI_LIB_PROTOCOLS)/skype.o \
 SRC=lru.c lru.h ndpi.c ndpi.h main.c

@@ -757,12 +757,10 @@ ndpi_protocol_match host_match[] = {
   /* -------wanglei host-------*/
   { "ugcdl.video.gtimg.com",    "QQLive", 		NDPI_PROTOCOL_QQLIVE },
   //{ "rbv01.ku6.com",  		"Ku6", 			NDPI_PROTOCOL_KU6 },
-  { "m.yy.com",  		"YY", 			NDPI_PROTOCOL_YY },
-  { "www.yy.com",  		"YY", 			NDPI_PROTOCOL_YY },
   { "yixin.im",  		"YiXin", 		NDPI_PROTOCOL_YIXIN },
   { "yy.duowan.com",  		"YY", 			NDPI_PROTOCOL_YY },
   { "yydl.duowan.com",  	"YY", 			NDPI_PROTOCOL_YY },
-  { "www.yy.com",  		"YY", 			NDPI_PROTOCOL_YY },
+  { "yy.com",   		"YY", 			NDPI_PROTOCOL_YY },
 
   /*---------wanglei host end*/
   /*added by zhanglei */
@@ -1292,6 +1290,9 @@ static void ndpi_init_protocol_defaults(struct ndpi_detection_module_struct *ndp
         		  ndpi_build_default_ports(ports_a, 25565, 0, 0, 0, 0),  /* TCP */
         		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
    ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_NETEASEMUSIC, "NetEaseMusic",
+        		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0),  /* TCP */
+        		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
+   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_YY, "yy",
         		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0),  /* TCP */
         		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
 				
@@ -2898,6 +2899,21 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
 
     NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_GAME_CSGO);
     NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].excluded_protocol_bitmask, NDPI_PROTOCOL_GAME_CSGO);
+
+    a++;
+  }
+#endif
+#ifdef NDPI_PROTOCOL_YY 
+  if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_YY) != 0) {
+    ndpi_struct->callback_buffer[a].func = ndpi_search_yy;
+
+    ndpi_struct->callback_buffer[a].ndpi_selection_bitmask =
+      NDPI_SELECTION_BITMASK_PROTOCOL_V4_V6_TCP_WITH_PAYLOAD;
+
+    NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_UNKNOWN);
+
+    NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_YY);
+    NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].excluded_protocol_bitmask, NDPI_PROTOCOL_YY);
 
     a++;
   }

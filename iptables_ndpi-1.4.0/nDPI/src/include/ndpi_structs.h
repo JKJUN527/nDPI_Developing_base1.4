@@ -597,7 +597,9 @@ typedef struct ndpi_flow_struct {
 #ifdef NDPI_PROTOCOL_MINECRAFT
     u_int32_t minecraft_compressed:1;
 #endif
-
+#ifdef NDPI_PROTOCOL_YY
+    u_int32_t yy_stage:1;
+#endif
   /* internal structures to save functions calls */
   struct ndpi_packet_struct packet;
   struct ndpi_flow_struct *flow;

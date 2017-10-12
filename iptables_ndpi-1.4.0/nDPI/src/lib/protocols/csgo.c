@@ -55,7 +55,7 @@ void ndpi_search_csgo_udp(struct ndpi_detection_module_struct
              //        ||memcmp(&packet->payload[0],STR1CSGO,NDPI_STATICSTRING_LEN(STR1CSGO))==0)
 	){
 		if(memcmp(&packet->payload[0],STR0CSGO,NDPI_STATICSTRING_LEN(STR0CSGO))==0
-		  ||memcmp(&packet->payload[0],STR2CSGO,NDPI_STATICSTRING_LEN(STR2CSGO))==0
+		//  ||memcmp(&packet->payload[0],STR2CSGO,NDPI_STATICSTRING_LEN(STR2CSGO))==0
 		){
 			NDPI_LOG(NDPI_PROTOCOL_GAME_CSGO, ndpi_struct, NDPI_LOG_DEBUG,"found csgo------0 \n");
 			ndpi_int_csgo_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);

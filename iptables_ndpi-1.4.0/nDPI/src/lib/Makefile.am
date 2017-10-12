@@ -125,7 +125,9 @@ libndpi_la_SOURCES = \
 			protocols/qiannyh.c \
 			protocols/qqwuxia.c \
 			protocols/csgo.c \
-			protocols/minecraft.c
+			protocols/minecraft.c \
+			protocols/yy.c
+	
 			
 #protocols/skype.c \
 # NTOP protocols are at the end

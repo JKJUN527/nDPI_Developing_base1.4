@@ -77,7 +77,7 @@ void ndpi_search_qqspeed_tcp(struct ndpi_detection_module_struct *ndpi_struct, s
 		if(get_u_int16_t(packet->payload, 0)==htons(0x0000)
 			&&(get_u_int16_t(packet->payload, 6)==htons(0xffff)//客户端请求
 			   ||get_u_int16_t(packet->payload, 6)==htons(0x02ee))//服务端响应
-			&&(packet->payload[4]==0x35)
+			//&&(packet->payload[4]==0x35)
 			&&(get_u_int32_t(packet->payload, 12)==htonl(0x25a61a81)
 			   ||get_u_int32_t(packet->payload, 12)==htonl(0x6fb362d3))
 		){//登录后特征
