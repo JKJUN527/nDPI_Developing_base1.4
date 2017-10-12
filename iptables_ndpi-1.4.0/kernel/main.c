@@ -833,30 +833,29 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 	entry->ndpi_proto = ndpi_detection_process_packet( ndpi_struct, entry->flow, ip, ip_len, time, entry->src, entry->dst );
 	// spin_unlock_bh( &ndpi_lock );
 
-	if ( (entry->ndpi_proto != NDPI_PROTOCOL_UNKNOWN)
-	                                        /* || (iph->protocol != IPPROTO_TCP) */
-	     || ( (iph->protocol == IPPROTO_UDP) && (entry->num_packets_processed > 10) )
-	     || ( (iph->protocol == IPPROTO_TCP) && (entry->num_packets_processed > 18) ) )
-	{
-		entry->protocol_detected = 1;   /* We have made a decision */
-		if (unlikely( debug ))
-			pr_info( "[NDPI][NDPI2] set protocol_detected=1" );
-		if ( (entry->ndpi_proto == NDPI_PROTOCOL_UNKNOWN) && guess_protocol )
-		{
-			entry->ndpi_proto = ndpi_guess_undetected_protocol( ndpi_struct, iph->protocol,
-									    ntohl( entry->src_ip ), ntohs( entry->sport ),
-									    ntohl( entry->dst_ip ), ntohs( entry->dport ) );
-			if (unlikely( debug ))
-				pr_info( "[NDPI][NDPI2] process dont find, guessed \n" );
-		}
+    if ( (entry->ndpi_proto != NDPI_PROTOCOL_UNKNOWN && entry->ndpi_proto != NDPI_PROTOCOL_HTTP)
+            || ((iph->protocol == IPPROTO_UDP) && (entry->num_packets_processed > 10))
+            || ((iph->protocol == IPPROTO_TCP) && (entry->num_packets_processed > 18))
+            || (entry->ndpi_proto == NDPI_PROTOCOL_HTTP && entry->num_packets_processed >= 5) ) {
+        entry->protocol_detected = 1;   /* We have made a decision */
+        if (unlikely( debug ))
+            pr_info( "[NDPI][NDPI2] set protocol_detected=1" );
+        if ( (entry->ndpi_proto == NDPI_PROTOCOL_UNKNOWN) && guess_protocol )
+        {
+            entry->ndpi_proto = ndpi_guess_undetected_protocol( ndpi_struct, iph->protocol,
+                    ntohl( entry->src_ip ), ntohs( entry->sport ),
+                    ntohl( entry->dst_ip ), ntohs( entry->dport ) );
+            if (unlikely( debug ))
+                pr_info( "[NDPI][NDPI2] process dont find, guessed \n" );
+        }
 
-		NDPI_CB_RECORD( _skb, entry );
+        NDPI_CB_RECORD( _skb, entry );
 
-		// spin_lock_bh( &ndpi_lock );
-		free_LruCacheEntryValue( entry ); /* Free nDPI memory */
-		// spin_unlock_bh( &ndpi_lock );
+        // spin_lock_bh( &ndpi_lock );
+        free_LruCacheEntryValue( entry ); /* Free nDPI memory */
+        // spin_unlock_bh( &ndpi_lock );
 
-	} else {
+    } else {
 		/*
 		 * In this case we have not yet detected the protocol but the user has specified unknown as protocol
 		 */

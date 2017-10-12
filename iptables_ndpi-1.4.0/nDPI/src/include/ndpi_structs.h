@@ -596,7 +596,8 @@ typedef struct ndpi_flow_struct {
 #endif
 
 #ifdef NDPI_PROTOCOL_KUGOUMUSIC
-    u_int16_t kugou_music_udp_seq;    /* guess it is a sequence. */
+    u_int32_t kugou_music_hash;      /* store hash */
+    u_int8_t kugou_music_udp_seq;    /* guess it is a sequence. */
 #endif
 #ifdef NDPI_PROTOCOL_HUASHENGKE
     u_int8_t huashengke_stage;  /* for version 2 */
