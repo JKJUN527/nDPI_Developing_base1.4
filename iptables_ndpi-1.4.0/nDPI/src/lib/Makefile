@@ -117,7 +117,8 @@ am_libndpi_la_OBJECTS = libndpi_la-ahocorasick.lo libndpi_la-node.lo \
 	libndpi_la-eudemons.lo libndpi_la-huashengke.lo \
 	libndpi_la-qqmusic.lo libndpi_la-qiannyh.lo \
 	libndpi_la-qqwuxia.lo libndpi_la-csgo.lo \
-	libndpi_la-minecraft.lo libndpi_la-kugou-music.lo
+	libndpi_la-minecraft.lo libndpi_la-kugou-music.lo \
+	libndpi_la-yy.lo
 libndpi_la_OBJECTS = $(am_libndpi_la_OBJECTS)
 libndpi_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -376,7 +377,8 @@ libndpi_la_SOURCES = \
 			protocols/qqwuxia.c \
 			protocols/csgo.c \
 			protocols/minecraft.c \
-			protocols/kugou-music.c
+			protocols/kugou-music.c \
+			protocols/yy.c
 
 all: all-am
 
@@ -554,6 +556,7 @@ include ./$(DEPDIR)/libndpi_la-world_of_warcraft.Plo
 include ./$(DEPDIR)/libndpi_la-world_of_warship.Plo
 include ./$(DEPDIR)/libndpi_la-xbox.Plo
 include ./$(DEPDIR)/libndpi_la-youku.Plo
+include ./$(DEPDIR)/libndpi_la-yy.Plo
 include ./$(DEPDIR)/libndpi_la-zattoo.Plo
 include ./$(DEPDIR)/libndpi_la-zhaoshangzhengquan.Plo
 include ./$(DEPDIR)/libndpi_la-zhengfu.Plo
@@ -1329,6 +1332,12 @@ libndpi_la-kugou-music.lo: protocols/kugou-music.c
 #	source='protocols/kugou-music.c' object='libndpi_la-kugou-music.lo' libtool=yes \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libndpi_la-kugou-music.lo `test -f 'protocols/kugou-music.c' || echo '$(srcdir)/'`protocols/kugou-music.c
+libndpi_la-yy.lo: protocols/yy.c
+	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libndpi_la-yy.lo -MD -MP -MF $(DEPDIR)/libndpi_la-yy.Tpo -c -o libndpi_la-yy.lo `test -f 'protocols/yy.c' || echo '$(srcdir)/'`protocols/yy.c
+	$(am__mv) $(DEPDIR)/libndpi_la-yy.Tpo $(DEPDIR)/libndpi_la-yy.Plo
+#	source='protocols/yy.c' object='libndpi_la-yy.lo' libtool=yes \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libndpi_la-yy.lo `test -f 'protocols/yy.c' || echo '$(srcdir)/'`protocols/yy.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

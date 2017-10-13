@@ -590,6 +590,9 @@ typedef struct ndpi_flow_struct {
 #ifdef NDPI_PROTOCOL_MINECRAFT
     u_int32_t minecraft_compressed:1;
 #endif
+#ifdef NDPI_PROTOCOL_YY
+    u_int32_t yy_stage:1;
+#endif
 #ifdef NDPI_PROTOCOL_KUGOUMUSIC
     u_int32_t kugou_music_type:2;   /* 0, uninit; 1, nornaml; 2, udp; 3, http+类似udp协议 */
     u_int32_t kugou_music_stage:2;
