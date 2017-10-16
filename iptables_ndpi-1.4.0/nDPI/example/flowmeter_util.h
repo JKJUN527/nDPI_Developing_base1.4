@@ -22,7 +22,7 @@ extern u_int32_t  COUNT_TIMES ;
 #define HOT_DELTA_SEC (COUNT_TIMES*5)
 #define HOT_DELTA_LONG_PARA 2
 /*This is to set ip load counter, like user set 1.1.1.1/1, will cause ip load too slow, 65 is slow about 8s*/
-#define IP_LOAD_MAX_COUNT (1024*65)
+#define IP_LOAD_MAX_COUNT (256*256*256L+1)
 #define MAX_CONF_LINES  20
 #define MAX_KEY_LEN 48
 #define MAX_VALUE_LEN 512
@@ -89,8 +89,8 @@ typedef struct app_info{
 	time_t tick;
 	pthread_mutex_t mutex;
     NDPI_PROTOCOL_BITMASK app_bitmask;
-    struct ip_info_lit ip_infos[NDPI_MAX_SUPPORTED_PROTOCOLS];
-	
+    // struct ip_info_lit ip_infos[NDPI_MAX_SUPPORTED_PROTOCOLS];
+	struct ip_info_lit *ip_infos[NDPI_MAX_SUPPORTED_PROTOCOLS];
 }app_info_t;
 
 
@@ -105,7 +105,7 @@ typedef struct HashEle{
 	struct HashEle *next100;
 	struct HashEle *sub_ele;
 	// struct ip_info ip_infos[MAX_USER_COUNT];
-	struct ip_info *ip_infos;
+	struct ip_info **ip_infos;
 }HashEle_t;
 
 /*1,暴力,描述,system,路径*/
@@ -157,6 +157,7 @@ void dump_config(conf_row_t *global_conf);
 void set_config_default(conf_row_t *global_conf);
 void read_config(char *filename, conf_row_t *global_conf);
 conf_row_t *get_conf_by_key(char *key, conf_row_t *global_conf);
+char * formatBytes(u_int32_t bytes, char *buf);
 
 u_int8_t isValidIP();
 u_int8_t initUrlHashtable(HashEle_t *head, u_int32_t hash_size);
@@ -171,4 +172,5 @@ inline u_int8_t isHotInfo(time_t* tick);
 inline u_int8_t isHotInfo2(time_t* tick, u_int32_t i);
 void dumpAppStruct(app_info_t *app_struct);
 int daemon_fm();
+
 #endif 
