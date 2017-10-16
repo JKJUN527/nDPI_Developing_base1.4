@@ -53,17 +53,17 @@ void ndpi_search_webqq_tcp(struct ndpi_detection_module_struct*ndpi_struct, stru
 
 		}
 
-		if(packet->payload_packet_len >32 
-			&&get_u_int16_t(packet->payload, 0)==htons(0x1703)){
-			if(get_u_int32_t(packet->payload, 8)==htons(0x00000000)
-			    ||get_u_int32_t(packet->payload, 8)==htons(0xe369135f)
-			    ||get_u_int32_t(packet->payload, 8)==htons(0x24f0217c)){
-			NDPI_LOG(NDPI_PROTOCOL_WEBQQ, ndpi_struct, NDPI_LOG_DEBUG,"found webqq tcp:%u\n",ntohl(packet->iph->daddr));
-			NDPI_LOG(NDPI_PROTOCOL_WEBQQ, ndpi_struct, NDPI_LOG_DEBUG,"found webqq tcp \n");
-			ndpi_int_webqq_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);	
-			}
+	//	if(packet->payload_packet_len >32 
+	//		&&get_u_int16_t(packet->payload, 0)==htons(0x1703)){
+	//		if(get_u_int32_t(packet->payload, 8)==htons(0x00000000)
+	//		    ||get_u_int32_t(packet->payload, 8)==htons(0xe369135f)
+	//		    ||get_u_int32_t(packet->payload, 8)==htons(0x24f0217c)){
+	//		NDPI_LOG(NDPI_PROTOCOL_WEBQQ, ndpi_struct, NDPI_LOG_DEBUG,"found webqq tcp:%u\n",ntohl(packet->iph->daddr));
+	//		NDPI_LOG(NDPI_PROTOCOL_WEBQQ, ndpi_struct, NDPI_LOG_DEBUG,"found webqq tcp \n");
+	//		ndpi_int_webqq_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);	
+	//		}
 
-		}else{
+		else{
 		NDPI_LOG(NDPI_PROTOCOL_WEBQQ, ndpi_struct, NDPI_LOG_DEBUG, "exclude webqq.\n");
   		NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_WEBQQ);
 		}
