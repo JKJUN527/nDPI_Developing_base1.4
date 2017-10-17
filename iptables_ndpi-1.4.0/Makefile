@@ -60,8 +60,8 @@ test_pre:
 	iptables -I FORWARD 1 -j JK
 
 test: install
-	#iptables -A FORWARD -m ndpi --protos dota2 -j REJECT
-	iptables -A FORWARD -m ndpi --protos tongdaxin -j REJECT
+	iptables -A FORWARD -m ndpi --protos worldofwarship -j REJECT
+	#iptables -A FORWARD -m ndpi --protos tongdaxin -j REJECT
 	#iptables -A FORWARD -m ndpi --protos qianlong -j REJECT
 	#iptables -A FORWARD -m ndpi --protos dazhihui365 -j REJECT
 	#iptables -A FORWARD -m ndpi --protos zhinanzhen -j REJECT
