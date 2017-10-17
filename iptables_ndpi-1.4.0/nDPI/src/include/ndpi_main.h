@@ -83,6 +83,14 @@ typedef uint   u_int32_t;
 typedef unsigned __int64 u_int64_t;
 #endif /* Win32 */
 
+typedef enum {
+    NDPI_LOG_ERROR,
+    NDPI_LOG_TRACE,
+    NDPI_LOG_DEBUG
+} ndpi_log_level_t;
+
+typedef void (*ndpi_debug_function_ptr) (u_int32_t protocol,
+        void *module_struct, ndpi_log_level_t log_level, const char *format, ...);
 
 #include "linux_compat.h"
 
@@ -107,7 +115,6 @@ typedef unsigned __int64 u_int64_t;
 #endif
 
 #include "ndpi_define.h"
-#include "ndpi_macros.h"
 #include "ndpi_protocols_osdpi.h"
 
 typedef enum {
@@ -173,10 +180,10 @@ u_int32_t ndpi_bytestream_dec_or_hex_to_number(const u_int8_t * str, u_int16_t m
 u_int64_t ndpi_bytestream_dec_or_hex_to_number64(const u_int8_t * str, u_int16_t max_chars_to_read, u_int16_t * bytes_read);
 u_int32_t ndpi_bytestream_to_ipv4(const u_int8_t * str, u_int16_t max_chars_to_read, u_int16_t * bytes_read);
 
-#include "ndpi_api.h"
-#include "ndpi_protocol_history.h"
+#include "ndpi_macros.h"
 #include "ndpi_structs.h"
-
+#include "ndpi_protocol_history.h"
+#include "ndpi_api.h"
 
 /* function to parse a packet which has line based information into a line based structure
  * this function will also set some well known line pointers like:

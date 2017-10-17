@@ -27,13 +27,20 @@
 #ifndef NDPI_PROTOCOL_HISTORY_H
 #define NDPI_PROTOCOL_HISTORY_H
 
+#include "ndpi_structs.h"
+
 typedef enum {
   NDPI_REAL_PROTOCOL = 0,
   NDPI_CORRELATED_PROTOCOL = 1
 } ndpi_protocol_type_t;
 
-void ndpi_int_add_connection(struct ndpi_detection_module_struct *ndpi_struct,                             
-                             struct ndpi_flow_struct *flow,
-                             u_int16_t detected_protocol, ndpi_protocol_type_t protocol_type);
+/* generic function for setting a protocol for a flow
+ *
+ * what it does is:
+ * 1.call ndpi_int_change_protocol
+ * 2.set protocol in detected bitmask for src and dst
+ */
+extern void ndpi_int_add_connection(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow,
+			     u_int16_t detected_protocol, ndpi_protocol_type_t protocol_type);
 
 #endif

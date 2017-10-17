@@ -117,7 +117,7 @@ am_libndpi_la_OBJECTS = libndpi_la-ahocorasick.lo libndpi_la-node.lo \
 	libndpi_la-eudemons.lo libndpi_la-huashengke.lo \
 	libndpi_la-qqmusic.lo libndpi_la-qiannyh.lo \
 	libndpi_la-qqwuxia.lo libndpi_la-csgo.lo \
-	libndpi_la-minecraft.lo libndpi_la-kugou-music.lo \
+	libndpi_la-minecraft.lo libndpi_la-kugou_music.lo \
 	libndpi_la-yy.lo
 libndpi_la_OBJECTS = $(am_libndpi_la_OBJECTS)
 libndpi_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -377,7 +377,7 @@ libndpi_la_SOURCES = \
 			protocols/qqwuxia.c \
 			protocols/csgo.c \
 			protocols/minecraft.c \
-			protocols/kugou-music.c \
+			protocols/kugou_music.c \
 			protocols/yy.c
 
 all: all-am
@@ -490,7 +490,7 @@ include ./$(DEPDIR)/libndpi_la-jabber.Plo
 include ./$(DEPDIR)/libndpi_la-jinwutuan.Plo
 include ./$(DEPDIR)/libndpi_la-jizhan.Plo
 include ./$(DEPDIR)/libndpi_la-jx3.Plo
-include ./$(DEPDIR)/libndpi_la-kugou-music.Plo
+include ./$(DEPDIR)/libndpi_la-kugou_music.Plo
 include ./$(DEPDIR)/libndpi_la-l2tp.Plo
 include ./$(DEPDIR)/libndpi_la-ldap.Plo
 include ./$(DEPDIR)/libndpi_la-lol.Plo
@@ -1326,12 +1326,12 @@ libndpi_la-minecraft.lo: protocols/minecraft.c
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libndpi_la-minecraft.lo `test -f 'protocols/minecraft.c' || echo '$(srcdir)/'`protocols/minecraft.c
 
-libndpi_la-kugou-music.lo: protocols/kugou-music.c
-	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libndpi_la-kugou-music.lo -MD -MP -MF $(DEPDIR)/libndpi_la-kugou-music.Tpo -c -o libndpi_la-kugou-music.lo `test -f 'protocols/kugou-music.c' || echo '$(srcdir)/'`protocols/kugou-music.c
-	$(am__mv) $(DEPDIR)/libndpi_la-kugou-music.Tpo $(DEPDIR)/libndpi_la-kugou-music.Plo
-#	source='protocols/kugou-music.c' object='libndpi_la-kugou-music.lo' libtool=yes \
+libndpi_la-kugou_music.lo: protocols/kugou_music.c
+	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libndpi_la-kugou_music.lo -MD -MP -MF $(DEPDIR)/libndpi_la-kugou_music.Tpo -c -o libndpi_la-kugou_music.lo `test -f 'protocols/kugou_music.c' || echo '$(srcdir)/'`protocols/kugou_music.c
+	$(am__mv) $(DEPDIR)/libndpi_la-kugou_music.Tpo $(DEPDIR)/libndpi_la-kugou_music.Plo
+#	source='protocols/kugou_music.c' object='libndpi_la-kugou_music.lo' libtool=yes \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libndpi_la-kugou-music.lo `test -f 'protocols/kugou-music.c' || echo '$(srcdir)/'`protocols/kugou-music.c
+#	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libndpi_la-kugou_music.lo `test -f 'protocols/kugou_music.c' || echo '$(srcdir)/'`protocols/kugou_music.c
 libndpi_la-yy.lo: protocols/yy.c
 	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libndpi_la-yy.lo -MD -MP -MF $(DEPDIR)/libndpi_la-yy.Tpo -c -o libndpi_la-yy.lo `test -f 'protocols/yy.c' || echo '$(srcdir)/'`protocols/yy.c
 	$(am__mv) $(DEPDIR)/libndpi_la-yy.Tpo $(DEPDIR)/libndpi_la-yy.Plo

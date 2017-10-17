@@ -28,7 +28,6 @@
 
 #include "ndpi_credis.h"
 #include "linux_compat.h"
-
 #include "ndpi_define.h"
 
 #ifdef NDPI_DETECTION_SUPPORT_IPV6
@@ -66,6 +65,13 @@ struct ndpi_ipv6hdr {
   struct ndpi_ip6_addr daddr;
 };
 #endif							/* NDPI_DETECTION_SUPPORT_IPV6 */
+
+/* hash table */
+typedef struct ndpi_hash_t {
+    int hash_size;
+    u_int32_t (*hash_fn)(u_int8_t const *key, int len);
+    int table[1];                 /* just store protocol */
+} ndpi_hash_t;
 
 typedef union {
   u_int32_t ipv4;
@@ -428,6 +434,7 @@ typedef struct ndpi_detection_module_struct {
 
   /* Cache */
   NDPI_REDIS redis;
+  ndpi_hash_t *meta2protocol;       /* for ftp_data and tftp, save 5-meta infomation mapping to protocol */
 
   /* Skype (we need a lock as this cache can be accessed concurrently) */
   struct ndpi_LruCache skypeCache;
@@ -616,5 +623,5 @@ typedef struct ndpi_flow_struct {
   struct ndpi_id_struct *src;
   struct ndpi_id_struct *dst;
 } ndpi_flow_struct_t;
-		     
+
 #endif							/* __NDPI_STRUCTS_INCLUDE_FILE__ */

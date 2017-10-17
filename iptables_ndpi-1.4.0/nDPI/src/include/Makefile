@@ -188,6 +188,7 @@ top_builddir = ../..
 top_srcdir = ../..
 library_includedir = $(includedir)/libndpi-1.4/libndpi
 library_include_HEADERS = ndpi_api.h \
+		  ndpi_main.h \
 		  ndpi_debug_functions.h \
 		  ndpi_define.h \
 		  ndpi_macros.h \

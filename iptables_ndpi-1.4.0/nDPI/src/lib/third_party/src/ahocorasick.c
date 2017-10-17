@@ -22,8 +22,6 @@
 
 
 #include "ndpi_main.h"
-#include "ndpi_protocols.h"
-#include "ndpi_utils.h"
 #include "ahocorasick.h"
 
 #ifndef __KERNEL__
