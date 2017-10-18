@@ -121,17 +121,19 @@ static void ftp_add_server_port_to_hash(struct ndpi_detection_module_struct *ndp
     int ip[4];
     int port[2];
 
+    char const *p;
+    int offset;
     data[len-1] = '\0';
-    char const *p = memfind(data, len, "(", 1);
+    p = memfind(data, len, "(", 1);
     if (!p || (6 != sscanf(p, "(%d,%d,%d,%d,%d,%d)", ip, ip+1, ip+2, ip+3, port, port+1))) {
         data[len-1] = save;
         return;
     }
+    data[len-1] = save;
     NDPI_LOG(NDPI_PROTOCOL_FTP_CONTROL, ndpi, NDPI_LOG_DEBUG, "FTP 227 %d,%d,%d,%d %d,%d\n",
             ip[0], ip[1], ip[2], ip[3], port[0], port[1]);
-    data[len-1] = save;
 
-    int offset = ipsize+2;
+    offset = ipsize+2;
     /* store as networking order */
     key_buff[offset]   = 0xff & ip[0];
     key_buff[offset+1] = 0xff & ip[1];
@@ -139,7 +141,7 @@ static void ftp_add_server_port_to_hash(struct ndpi_detection_module_struct *ndp
     key_buff[offset+3] = 0xff & ip[3];      /* server ip */
     offset += ipsize;
     key_buff[offset]   = 0xff & port[0];
-    key_buff[offset+1] = 0xff & port[1]; /* server port */
+    key_buff[offset+1] = 0xff & port[1];    /* server port */
     offset += 2;
     key_buff[offset] = IPPROTO_TCP;         /* tcp or udp */
 
@@ -149,10 +151,10 @@ static void ftp_add_server_port_to_hash(struct ndpi_detection_module_struct *ndp
 
 extern void ndpi_search_ftp_control(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {
-    NDPI_LOG(NDPI_PROTOCOL_FTP_CONTROL, ndpi_struct, NDPI_LOG_DEBUG, "FTP_CONTROL detection...\n");
-
     struct ndpi_packet_struct *packet = &flow->packet;
     u_int32_t payload_len = packet->payload_packet_len;
+
+    NDPI_LOG(NDPI_PROTOCOL_FTP_CONTROL, ndpi_struct, NDPI_LOG_DEBUG, "FTP_CONTROL detection...\n");
 
     /* Check connection over TCP */
     if(!packet->tcp)
@@ -190,6 +192,8 @@ extern void ndpi_search_ftp_control(struct ndpi_detection_module_struct *ndpi_st
     case 1:
         if (ndpi_ftp_control_check_response(packet->payload, payload_len)) {
             flow->ftp_control_stage = 2;
+            NDPI_LOG(NDPI_PROTOCOL_FTP_CONTROL, ndpi_struct, NDPI_LOG_DEBUG, "Found FTP_CONTROL in stage 1.\n");
+            ndpi_int_ftp_control_add_connection(ndpi_struct, flow);
             return;
         }
 
@@ -200,13 +204,6 @@ extern void ndpi_search_ftp_control(struct ndpi_detection_module_struct *ndpi_st
 
         /* Wait for PORT and PASV command */
     case 2:
-        /* maybe it is ftp_control, just need find via PORT and PASV */
-        if (flow->packet_counter > 10) {
-            NDPI_LOG(NDPI_PROTOCOL_FTP_CONTROL, ndpi_struct, NDPI_LOG_DEBUG, "Exclude FTP_CONTROL after 10 packets.\n");
-            NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_FTP_CONTROL);
-            return;
-        }
-
         if (payload_len > 4 && (!memcmp(packet->payload, "PASV", 4) || !memcmp(packet->payload, "pasv", 4))) {
             NDPI_LOG(NDPI_PROTOCOL_FTP_CONTROL, ndpi_struct, NDPI_LOG_DEBUG, "Seen FTP_CONTROL PASV command.\n");
             flow->ftp_control_stage = 3;        /* goto parsing pasv response */

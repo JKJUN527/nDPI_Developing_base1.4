@@ -298,11 +298,11 @@ __forceinline static
 			&& ndpi_mem_cmp(packet->line[3].ptr, "Content-Length: ", 16) == 0
 			&& packet->line[4].len == 22
 			&& ndpi_mem_cmp(packet->line[4].ptr, "Connection: Keep-Alive", 22) == 0
-			&& packet->line[5].len ==0 ){
+			&& packet->line[5].len ==0 ) {
+			const char * media_ptr = packet->line[6].ptr;
 			NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG, "thunder: may thunder http header in thunder.c .\n");
 		    
 			//check media len and content-len
-			const char * media_ptr = packet->line[6].ptr;
 			// 0 88:58:03:26
 			if(packet->payload_packet_len > 80
 			&& ndpi_mem_cmp(media_ptr, "\x88\x58\x03\x26", 4) == 0

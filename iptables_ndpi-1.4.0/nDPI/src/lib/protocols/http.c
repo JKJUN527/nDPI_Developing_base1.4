@@ -373,7 +373,6 @@ static u_int32_t wechat_authkey_hash(u_int8_t *authkey)
 }
 static void check_wechat_tx_payload(struct ndpi_detection_module_struct *ndpi, struct ndpi_flow_struct *flow)
 {
-    NDPI_LOG(NDPI_PROTOCOL_WECHAT_TX, ndpi, NDPI_LOG_DEBUG, "HTTP WECHAT TX: into check_wechat_tx_payload\n");
     const static char *methods[] = {
         "POST /uploadcheckmd5",
         "POST /uploadv3",
@@ -384,6 +383,7 @@ static void check_wechat_tx_payload(struct ndpi_detection_module_struct *ndpi, s
     char *payload = (char*)packet->payload;
     char const **method;
     int find = 0;
+    NDPI_LOG(NDPI_PROTOCOL_WECHAT_TX, ndpi, NDPI_LOG_DEBUG, "HTTP WECHAT TX: into check_wechat_tx_payload\n");
     for (method = methods; *method != NULL && !find; method++) {
         char const *str = *method;
         int len = strlen(str);
@@ -952,10 +952,10 @@ static void check_accept_line(struct ndpi_detection_module_struct
  */
 static int kugou_music_http_check(struct ndpi_detection_module_struct *ndpi, struct ndpi_flow_struct *flow)
 {
+    struct ndpi_packet_struct *packet = &flow->packet;
     _D("Into http KuGouMusic at check_http_payload().\n");
     if (0 != flow-> kugou_music_type && 3 != flow->kugou_music_type)
         return 0;
-    struct ndpi_packet_struct *packet = &flow->packet;
     if (!packet->http_payload.ptr)
         return 0;
     _D("KuGouMusic: stage: %d | %02x%02x\n", flow->kugou_music_stage,

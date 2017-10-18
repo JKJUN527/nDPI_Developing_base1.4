@@ -1442,7 +1442,7 @@ struct ndpi_detection_module_struct *ndpi_init_detection_module(u_int32_t ticks_
 #endif
 
   /* table size is a prime number. use the default hash function */
-  ndpi_str->meta2protocol = ndpi_hash_create(63, NULL);
+  ndpi_str->meta2protocol = ndpi_hash_create(67, NULL);
 
   ndpi_init_protocol_defaults(ndpi_str);
   return ndpi_str;
@@ -4174,14 +4174,16 @@ void ndpi_parse_packet_line_info(struct ndpi_detection_module_struct *ndpi_struc
     /* parse over. */
     if (!packet->host_line.ptr) {
         ndpi_ip_addr_t ip;
+        const char *ipstr;
+        int len;
         /* client to server */
         if (flow->l4.tcp.http_setup_dir == 1) {
             ndpi_packet_dst_ip_get(packet, &ip);
         } else {
             ndpi_packet_src_ip_get(packet, &ip);
         }
-        const char *ipstr = ndpi_get_ip_string(ndpi_struct, &ip);
-        int len = ndpi_min(strlen(ipstr), 255);
+        ipstr = ndpi_get_ip_string(ndpi_struct, &ip);
+        len = ndpi_min(strlen(ipstr), 255);
         strncpy(flow->host_server_name, ipstr, len);
         flow->host_server_name[len] = '\0';
         packet->host_line.ptr = flow->host_server_name;
@@ -5353,11 +5355,12 @@ int StringFind(const char *pSrc, const char *pDst)
  */
 extern void *memfind(const void *_mem, ssize_t memlen, const void *_pat, ssize_t patlen)
 {
-    if (!_mem || !_pat || memlen < 0 || patlen < 0) return NULL;
-
     u_int8_t *mem = (u_int8_t*)_mem;
     u_int8_t *pat = (u_int8_t*)_pat;
     ssize_t i;
+
+    if (!_mem || !_pat || memlen < 0 || patlen < 0) return NULL;
+
     for (i = 0; i+patlen-1 < memlen; i++) {
         ssize_t j;
         for (j = 0; j < patlen; j++)
@@ -5372,8 +5375,8 @@ extern void *memfind(const void *_mem, ssize_t memlen, const void *_pat, ssize_t
 static u_int32_t ndpi_default_hash_fn(u_int8_t const *key, int len)
 {
     u_int32_t hash = 0;
-    if (!key) return hash;
     u_int8_t const *end;
+    if (!key) return hash;
     for (end = key+len; key < end; key++)
          hash = 31*hash + *key;
     return hash;
@@ -5385,7 +5388,7 @@ extern ndpi_hash_t *ndpi_hash_create(int tablesize, u_int32_t (*hash_fn)(u_int8_
 {
     ndpi_hash_t *ret;
     if (tablesize <= 0)
-        tablesize = 63;
+        tablesize = 67;
     ret = ndpi_malloc(sizeof(*ret) + sizeof(int)*tablesize);
     if (!ret) return NULL;
     /* set -1 */

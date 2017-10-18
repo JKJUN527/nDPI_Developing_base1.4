@@ -612,6 +612,11 @@ static unsigned int packet_processing(const u_int64_t time,
   flow->detected_protocol = protocol;
 
   printf("ndpi_flow->packet_counter: %d\n", ndpi_flow->packet_counter);
+  if (NDPI_PROTOCOL_FTP_CONTROL == flow->detected_protocol) {
+      printf("find FTP_CONTROL\n");
+      return 0;
+  }
+
   if ((flow->detected_protocol == NDPI_PROTOCOL_HTTP && ndpi_flow->packet_counter >= 5)
           || (flow->detected_protocol != NDPI_PROTOCOL_UNKNOWN && flow->detected_protocol != NDPI_PROTOCOL_HTTP)
           || (proto == IPPROTO_UDP && flow->packets > 10)

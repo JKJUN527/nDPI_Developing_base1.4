@@ -86,9 +86,9 @@ static void  ndpi_print_bitmask( const struct xt_ndpi_protocols *info, char * st
 {
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 
+	u_int i, flag;
 	u_int num_supported_protocols = ndpi_get_num_supported_protocols( ndpi_struct ) + 1 /* NOT_YET protocol */;
 	pr_info( "[NDPI] Protos: %s", str );
-	u_int i, flag;
 	for ( i = 0; i < num_supported_protocols; i++ )
 	{
 		if ( NDPI_COMPARE_PROTOCOL_TO_BITMASK( info->protocols, i ) != 0 )
@@ -488,11 +488,11 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 	entry->ndpi_proto = ndpi_detection_process_packet( ndpi_struct, entry->flow, ip, ip_len, time, entry->src, entry->dst );
 	// spin_unlock_bh( &ndpi_lock );
 
-	if ( (entry->ndpi_proto != NDPI_PROTOCOL_UNKNOWN)
-	                                        /* || (iph->protocol != IPPROTO_TCP) */
-	     || ( (iph->protocol == IPPROTO_UDP) && (entry->num_packets_processed > 10) )
-	     || ( (iph->protocol == IPPROTO_TCP) && (entry->num_packets_processed > 18) ) )
-	{
+    if ( (entry->ndpi_proto != NDPI_PROTOCOL_FTP_CONTROL)
+            && ((entry->ndpi_proto != NDPI_PROTOCOL_UNKNOWN && entry->ndpi_proto != NDPI_PROTOCOL_HTTP)
+                || ((iph->protocol == IPPROTO_UDP) && (entry->num_packets_processed > 10))
+                || ((iph->protocol == IPPROTO_TCP) && (entry->num_packets_processed > 18))
+                || (entry->ndpi_proto == NDPI_PROTOCOL_HTTP && entry->num_packets_processed >= 5)) ) {
 		entry->protocol_detected = 1;   /* We have made a decision */
 		if (unlikely( debug ))
 			pr_info( "[NDPI][NDPI2] set protocol_detected=1" );
@@ -833,10 +833,11 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 	entry->ndpi_proto = ndpi_detection_process_packet( ndpi_struct, entry->flow, ip, ip_len, time, entry->src, entry->dst );
 	// spin_unlock_bh( &ndpi_lock );
 
-    if ( (entry->ndpi_proto != NDPI_PROTOCOL_UNKNOWN && entry->ndpi_proto != NDPI_PROTOCOL_HTTP)
-            || ((iph->protocol == IPPROTO_UDP) && (entry->num_packets_processed > 10))
-            || ((iph->protocol == IPPROTO_TCP) && (entry->num_packets_processed > 18))
-            || (entry->ndpi_proto == NDPI_PROTOCOL_HTTP && entry->num_packets_processed >= 5) ) {
+    if ( (entry->ndpi_proto != NDPI_PROTOCOL_FTP_CONTROL)
+            && ((entry->ndpi_proto != NDPI_PROTOCOL_UNKNOWN && entry->ndpi_proto != NDPI_PROTOCOL_HTTP)
+                || ((iph->protocol == IPPROTO_UDP) && (entry->num_packets_processed > 10))
+                || ((iph->protocol == IPPROTO_TCP) && (entry->num_packets_processed > 18))
+                || (entry->ndpi_proto == NDPI_PROTOCOL_HTTP && entry->num_packets_processed >= 5)) ) {
         entry->protocol_detected = 1;   /* We have made a decision */
         if (unlikely( debug ))
             pr_info( "[NDPI][NDPI2] set protocol_detected=1" );

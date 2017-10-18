@@ -49,24 +49,24 @@ void ndpi_search_dazhihui_tcp(struct ndpi_detection_module_struct *ndpi_struct, 
   if(packet->payload_packet_len >= (16)
   	//&&(get_u_int64_t(packet->payload, 0) == htonl( 0xfdfdfdfd30303030)
   	//|| get_u_int64_t(packet->payload, 8) == htonl( 0x3034383609010700))
-  	&&(((packet ->payload[0]==0x36||packet ->payload[0]==0x31)
-  		&&packet ->payload[1]==0x10
-  		&&(packet ->payload[3]==0x00||packet ->payload[3]==0x02)
-  		&&packet ->payload[4]==0x00
-  		&&packet ->payload[5]==0x00)
-  	    ||(packet->payload[0]==0x2a
-  	    	&&packet->payload[1]==0x10
-		&&packet->payload[2]==0xd6
-		&&packet->payload[12]==0x22)
-  	    ||(packet->payload[0]==0x48
-  	    	&&packet->payload[1]==0x04
-  	    	&&packet->payload[2]==0x00)
-  	    ||(packet->payload[0]==0x3e
-  	    	&&packet->payload[1]==0x10
-  	    	&&packet->payload[8]==0x53)
-  	    	&&packet->payload[9]==0x48
-  	    	&&packet->payload[10]==0x80)
-  ){			
+          &&((((packet ->payload[0]==0x36||packet ->payload[0]==0x31)
+                      &&packet ->payload[1]==0x10
+                      &&(packet ->payload[3]==0x00||packet ->payload[3]==0x02)
+                      &&packet ->payload[4]==0x00
+                      &&packet ->payload[5]==0x00)
+                  ||(packet->payload[0]==0x2a
+                      &&packet->payload[1]==0x10
+                      &&packet->payload[2]==0xd6
+                      &&packet->payload[12]==0x22)
+                  ||(packet->payload[0]==0x48
+                      &&packet->payload[1]==0x04
+                      &&packet->payload[2]==0x00)
+                  ||(packet->payload[0]==0x3e
+                      &&packet->payload[1]==0x10
+                      &&packet->payload[8]==0x53))
+              &&packet->payload[9]==0x48
+              &&packet->payload[10]==0x80)
+    ){			
   		NDPI_LOG(NDPI_PROTOCOL_DAZHIHUI365, ndpi_struct, NDPI_LOG_DEBUG,"found dazhihui365------tcp[0[36|31]:%x]tcp[3[00]:%x]tcp[5[00]:%x] \n",packet->payload[0],packet->payload[3],packet->payload[5]);
 		ndpi_int_dazhihui_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);		
 		return;	
