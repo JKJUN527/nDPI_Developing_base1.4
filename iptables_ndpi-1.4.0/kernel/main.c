@@ -293,7 +293,7 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 	bool verdict = DEFAULT_VERDICT;
 
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
-	pr_info( "[NDPI] Begifn ndpi_process_packet(%lu)  nfctinfo:%u\n", (long unsigned int) key, _skb->nfctinfo );
+	pr_info( "[NDPI] Begin function ndpi_process_packet(%lu)  nfctinfo:%u\n", (long unsigned int) key, _skb->nfctinfo );
 	ndpi_print_bitmask( info, "--------1) START------------" );
 	pr_info( "[NDPI] spin_lock_bh#1\n" );
 #endif

@@ -1041,7 +1041,7 @@ static void ndpi_init_protocol_defaults(struct ndpi_detection_module_struct *ndp
 			  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_TFTP, "TFTP",
 			  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0) /* TCP */,
-			  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
+			  ndpi_build_default_ports(ports_b, 69, 0, 0, 0, 0) /* UDP */);
   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_LDAP, "LDAP",
 			  ndpi_build_default_ports(ports_a, 389, 0, 0, 0, 0) /* TCP */,
 			  ndpi_build_default_ports(ports_b, 389, 0, 0, 0, 0) /* UDP */);
@@ -2392,6 +2392,7 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
     ndpi_struct->callback_buffer[a].ndpi_selection_bitmask = NDPI_SELECTION_BITMASK_PROTOCOL_V4_V6_UDP_WITH_PAYLOAD;
 
     NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_UNKNOWN);
+    NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_TFTP);
 
     NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].excluded_protocol_bitmask, NDPI_PROTOCOL_TFTP);
     a++;
@@ -5410,7 +5411,7 @@ extern int ndpi_hash_add(ndpi_hash_t *t, u_int8_t const *key, int len, int proto
     hash = t->hash_fn(key, len) % t->hash_size;
 #ifdef DEBUG
     if (-1 != t->table[hash])
-        printf("ndpi_main.c: ndpi_hash_add has conflict. hash_size: %d\n", t->hash_size);
+        printf("ndpi_main.c: ndpi_hash_add has a conflict. hash_size: %d\n", t->hash_size);
 #endif
     t->table[hash] = protocol;
     return protocol;

@@ -239,14 +239,17 @@ static void ndpi_check_ftp_data(struct ndpi_detection_module_struct *ndpi_struct
     struct ndpi_packet_struct *packet = &flow->packet;
     int pro;
     int ipsize = sizeof(u_int32_t);
-
-    /* it must is tcp stream */
-    if (!packet->tcp) return;
-
+    int offset;
     /* client ip, client port, server ip, server port, tcp/udp */
     u_int8_t key_buff[2*sizeof(u_int32_t) + 2*2 + 1] = {0};     /* set zero */
 
-    int offset = ipsize+2;
+    /* it must be tcp stream */
+    if (!packet->tcp) return;
+    /* TODO ftp_data: support ipv6 */
+    /* Don't support ipv6 now */
+    if (!packet->iph) return;
+
+    offset = ipsize+2;
     memcpy(key_buff+offset, &packet->iph->saddr, ipsize);       /* server ip */
     offset += ipsize;
     memcpy(key_buff+offset, &packet->tcp->source, 2);           /* server port */

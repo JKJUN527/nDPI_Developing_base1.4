@@ -110,8 +110,11 @@ static int ndpi_ftp_control_check_response(const u_int8_t *payload, size_t paylo
     return 0;
 }
 
-static void ftp_add_server_port_to_hash(struct ndpi_detection_module_struct *ndpi, u_int8_t const *_data, int len)
+static void ftp_add_server_port_to_hash(struct ndpi_detection_module_struct *ndpi,
+        struct ndpi_flow_struct *flow,
+        u_int8_t const *_data, int len)
 {
+    struct ndpi_packet_struct *packet = &flow->packet;
     int ipsize = sizeof(u_int32_t);
     u_int8_t *data = (u_int8_t*)_data;
     u_int8_t save = data[len-1];
@@ -123,6 +126,11 @@ static void ftp_add_server_port_to_hash(struct ndpi_detection_module_struct *ndp
 
     char const *p;
     int offset;
+
+    /* TODO ftp_data: support ipv6 */
+    /* Don't support ipv6 now */
+    if (!packet->iph) return;
+
     data[len-1] = '\0';
     p = memfind(data, len, "(", 1);
     if (!p || (6 != sscanf(p, "(%d,%d,%d,%d,%d,%d)", ip, ip+1, ip+2, ip+3, port, port+1))) {
@@ -228,7 +236,7 @@ extern void ndpi_search_ftp_control(struct ndpi_detection_module_struct *ndpi_st
 
         if (payload_len > 20 && !memcmp(packet->payload, "227 ", 4)) {
             /* parse server-port to hash table */
-            ftp_add_server_port_to_hash(ndpi_struct, packet->payload, payload_len);
+            ftp_add_server_port_to_hash(ndpi_struct, flow, packet->payload, payload_len);
             NDPI_LOG(NDPI_PROTOCOL_FTP_CONTROL, ndpi_struct, NDPI_LOG_DEBUG, "Found FTP_CONTROL via PORT command.\n");
             ndpi_int_ftp_control_add_connection(ndpi_struct, flow);
             return;

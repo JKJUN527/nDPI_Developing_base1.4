@@ -172,6 +172,7 @@ void ndpi_search_funshion_udp(struct ndpi_detection_module_struct*ndpi_struct, s
 		}
 		if(packet->payload_packet_len >=24
 		   //&&get_u_int16_t(packet->payload, 2)==htons(0x9d59)
+           && (0 != packet->payload[4])
 		   &&packet->payload[4]==packet->payload[6]
 		   &&packet->payload[4]==packet->payload[8]
 		   &&packet->payload[4]==packet->payload[14]

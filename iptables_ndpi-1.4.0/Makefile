@@ -60,7 +60,8 @@ test_pre:
 	iptables -I FORWARD 1 -j JK
 
 test: install
-	iptables -A FORWARD -m ndpi --protos FTP_DATA -j REJECT
+	iptables -A INPUT -m ndpi --protos TFTP -j LOG
+	iptables -A OUTPUT -m ndpi --protos TFTP -j LOG
 	watch -n 0.5 'iptables -S -v'
 	#iptables -A JK -p udp --sport 12345 -j REJECT
 m:

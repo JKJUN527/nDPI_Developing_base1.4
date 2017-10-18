@@ -41,11 +41,6 @@ static void ndpi_int_ftp_add_connection(struct ndpi_detection_module_struct *ndp
  *
  * this functions is not used to accept, just to not reject
  */
-#if !defined(WIN32)
-static inline
-#else
-__forceinline static
-#endif
 u_int8_t ndpi_int_check_possible_ftp_command(const struct ndpi_packet_struct *packet)
 {
   if (packet->payload_packet_len < 3)
