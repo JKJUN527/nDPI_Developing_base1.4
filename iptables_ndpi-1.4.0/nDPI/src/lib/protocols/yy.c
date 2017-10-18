@@ -23,7 +23,7 @@
  */
 
 
-#include "ndpi_protocols.h"i
+#include "ndpi_protocols.h"
 
 #ifdef NDPI_PROTOCOL_YY
 
