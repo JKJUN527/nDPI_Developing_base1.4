@@ -23,11 +23,13 @@
  */
 
 
-#include "ndpi_protocols.h"
+#include "ndpi_protocols.h"i
+
 #ifdef NDPI_PROTOCOL_YY
 
 /*
 jkjun:
+1
           66 00 00 00 04 32 00 00  c8 00 40 00 d6 9f 24 62   f....2.. ..@...$b
 00000010  96 ed d7 c5 77 26 55 61  00 58 a0 29 41 1c a7 31   ....w&Ua .X.)A..1
 00000020  0b 46 4f 4c cd 5f 8e 5f  da 28 2a 3d e0 f6 0c 23   .FOL._._ .(*=...#
@@ -36,6 +38,18 @@ jkjun:
 00000050  00 00 00 13 00 00 00 04  e8 0b 00 c8 00 00 00 05   ........ ........
 00000060  00 6c 6f 67 69 6e                                  .login
     00000000  2c 09 00 00 04 33 00 00  c8 00 40 00 c8 a1 2e c9   ,....3.. ..@.....
+2
+00000000  53 00 00 00 04 11 00 00  c8 00 40 00 c7 d7 7b 85   S....... ..@...{.
+00000010  0f cc c8 95 07 da f2 ae  fe 2e dd 80 fb 32 29 b0   ........ .....2).
+00000020  fa 36 f6 03 09 68 2e ff  71 6a 59 c6 1c 76 3f b9   .6...h.. qjY..v?.
+00000030  4d 30 1d 9c 99 e3 d7 b5  da 33 3d 75 d6 9c 12 9b   M0...... .3=u....
+00000040  98 3a 86 10 1e 9c 2b 19  0a 8c 05 3d 01 00 03 00   .:....+. ...=....
+00000050  00 00 00                                           ...
+    00000000  50 00 00 00 04 15 00 00  c8 00 40 00 4c 10 07 72   P....... ..@.L..r
+    00000010  46 8d 5a a3 18 1b f4 8a  fe bb be 54 47 7a 42 9b   F.Z..... ...TGzB.
+    00000020  57 9f 0a 58 8f 01 c6 b5  e9 61 67 38 cf ce d5 6a   W..X.... .ag8...j
+    00000030  81 7a cd 71 c8 d7 bb 7a  82 1b ce ec b9 80 19 6d   .z.q...z .......m
+    00000040  d0 e9 ee bf 46 d0 b3 ca  ae 70 ab 3f 00 00 00 00   ....F... .p.?....
 */
 
 static void ndpi_int_yy_add_connection(struct ndpi_detection_module_struct *ndpi_struct, 
@@ -61,16 +75,26 @@ void ndpi_search_yy_tcp(struct ndpi_detection_module_struct
 	if(packet->payload_packet_len >= (6 * 16 + 6) ){
 		if(memcmp(&packet->payload[0],STR0YY,NDPI_STATICSTRING_LEN(STR0YY))==0
 			&&memcmp(&packet->payload[6*16],STR1YY,NDPI_STATICSTRING_LEN(STR1YY))==0){
-				flow->yy_stage = 1;
+				flow->yy_stage = 1;	
+				NDPI_LOG(NDPI_PROTOCOL_YY, ndpi_struct, NDPI_LOG_DEBUG,"yy_stage:%u",flow->yy_stage)
 				return;
 			}
 		if(flow->yy_stage==1
-			&&get_u_int32_t(packet->payload, 4)==htons(0x04330000)
-			&&get_u_int32_t(packet->payload, 8)==htons(0xc8004000)){
+			&&get_u_int32_t(packet->payload, 4)==htonl(0x04330000)
+			&&get_u_int32_t(packet->payload, 8)==htonl(0xc8004000)){
 				NDPI_LOG(NDPI_PROTOCOL_YY, ndpi_struct, NDPI_LOG_DEBUG,"found yy------1 \n");
 				ndpi_int_yy_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
 				return;				
 			}
+	}
+	if(packet->payload_packet_len >=(16)
+	  &&packet->payload_packet_len == packet->payload[0]
+	  &&packet->payload[4]==0x04
+	  &&get_u_int32_t(packet->payload,8)==htonl(0xc8004000)	
+	){
+				NDPI_LOG(NDPI_PROTOCOL_YY, ndpi_struct, NDPI_LOG_DEBUG,"found yy------2 \n");
+				ndpi_int_yy_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
+				return;				
 	}
 	NDPI_LOG(NDPI_PROTOCOL_YY, ndpi_struct, NDPI_LOG_DEBUG, "exclude yy.\n");
   	NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_YY);

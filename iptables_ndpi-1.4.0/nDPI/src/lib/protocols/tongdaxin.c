@@ -26,11 +26,12 @@ if(packet->payload_packet_len >(16*8)
 				NDPI_LOG(NDPI_PROTOCOL_TONGDAXIN, ndpi_struct, NDPI_LOG_DEBUG,"found tongdaxin------tcp[0->0c]:%x]tcp[1->01|02]:%x]tcp[8*16->5e]:%x]\n",packet->payload[0],packet->payload[1],packet->payload[8*16]);
 				ndpi_int_tongdaxin_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);		
 				return;	
-			}else{
-				NDPI_LOG(NDPI_PROTOCOL_TONGDAXIN, ndpi_struct, NDPI_LOG_DEBUG, "exclude tongdaxin \n");
-  				NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_TONGDAXIN);
-				return;
 			}
+			//else{
+			//	NDPI_LOG(NDPI_PROTOCOL_TONGDAXIN, ndpi_struct, NDPI_LOG_DEBUG, "exclude tongdaxin \n");
+  			//	NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_TONGDAXIN);
+			//	return;
+			//}
 		}else if(packet->payload_packet_len >(32)){
 			if((packet ->payload[0]==0x0c&&packet ->payload[2]==0x18&&packet ->payload[4]==0x00&&packet ->payload[5]==0x01)
 	  	    	||(packet->payload[0]==0xb1&&packet->payload[1]==0xcb&&packet->payload[2]==0x74)

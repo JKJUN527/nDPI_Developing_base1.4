@@ -135,10 +135,10 @@ int insertIP2BTree(struct BinaryTree* root, u_int32_t ip)
 		printf("!!!!!!!!!!Too large ip counter, skip remain all!!!!!!!!!!\n");
 		return -1;
 	}
-        t = (struct BinaryTree*)malloc(sizeof(struct BinaryTree));
-        t->number = ip;
-        t->left =0;
-        t->right =0;
+    t = (struct BinaryTree*)malloc(sizeof(struct BinaryTree));
+    t->number = ip;
+    t->left =0;
+    t->right =0;
 	#ifdef DUMP_IPS
 	printf("\t node %u=>",ntohl(temp->number));
 	dumpIP(ntohl(temp->number));
@@ -296,11 +296,12 @@ struct in_addr *load_all_ip_file(char *path, u_int32_t *total)
 	int i;
 	u_int64_t i_ip;
 	struct BinaryTree btree;
-	//struct in_addr all_ip[MAX_USER_COUNT]={0};
-	struct in_addr *all_ip = ndpi_malloc(sizeof(struct in_addr) * max_user_count);
 	u_int64_t at[2] = {0};
-	memset(all_ip, 0, sizeof(struct in_addr) * max_user_count);
-	memset(&btree, 0, sizeof(struct BinaryTree));
+	//struct in_addr all_ip[MAX_USER_COUNT]={0};
+	struct in_addr *all_ip;
+	char buf[48] = {0};
+	printf("Loading ip file from %s ...",path);
+	
 	(*total) = 0;
 	// printf("*total:%d\n", *total);
 	fd = fopen(path, "r");
@@ -310,6 +311,12 @@ struct in_addr *load_all_ip_file(char *path, u_int32_t *total)
 		return NULL;
 	}
 	// printf("cnt:%u\n", cnt);
+	
+	printf("all ip size %s\n", formatBytes(sizeof(struct in_addr) * max_user_count, buf));
+	all_ip = ndpi_malloc(sizeof(struct in_addr) * max_user_count);
+	
+	memset(all_ip, 0, sizeof(struct in_addr) * max_user_count);
+	memset(&btree, 0, sizeof(struct BinaryTree));
 	while (fd)
 	{
 		char buffer[512], *line;
@@ -395,8 +402,8 @@ struct in_addr *load_all_ip_file(char *path, u_int32_t *total)
 	}
 	/*load all_ip from tree*/
 	cnt = 0;	
-	*total = btree2InAddr(&btree, all_ip, 0);	
-	printf("Load ip file over, total:%d\n", *total);
+	*total = btree2InAddr(&btree, all_ip, 0);
+	printf("over, total:%d\n", *total);
 	return all_ip;
 }
 
@@ -473,7 +480,7 @@ u_int32_t hash_int(u_int32_t i) //url_num的hash值
 /*hash end*/
 
 /*
-find the position of key in arr
+find the index of key in arr by binary search
 @arr: int arr
 @total: the length for arr
 @key: the int key you want to find postion
@@ -484,16 +491,17 @@ int find_index_by_value(int arr[], int total, int key)
 	//        二分查找，用于找到ip的代号,如果找到了，返回在数组中的位置，即代号，否则返回-1。
 	int low = 0;
 	int high = total - 1;
+	int midIdx, midVal;
 	while (low <= high)
 	{
-		int mid = (low + high) / 2;
-		int midVal = arr[mid];
+		midIdx = (low + high) / 2;
+		midVal = arr[midIdx];
 		if (midVal < key)
-			low = mid + 1;
+			low = midIdx + 1;
 		else if (midVal > key)
-			high = mid - 1;
+			high = midIdx - 1;
 		else
-			return mid;
+			return midIdx;
 	}
 	return -1;
 }
@@ -568,6 +576,7 @@ HashEle_t *setUrlIntoHashtableById(HashEle_t *hashtable, u_int32_t url_hash_idx)
 	u_int32_t hash_idx;
 	HashEle_t *hash_ele;
 	HashEle_t *hash_tmp;
+	int i;
 	// get hash index
 	if (url_hash_idx == 0x7FFFFFFF || url_hash_idx == 0)
 		return NULL;
@@ -604,6 +613,15 @@ HashEle_t *setUrlIntoHashtableById(HashEle_t *hashtable, u_int32_t url_hash_idx)
 					free(hash_ele->url);
 					hash_ele->url = NULL;
 				}
+				/*clear old data*/
+				if (hash_ele->ip_infos){
+					for (i = 0; i < all_ip_cnt; i++){
+						if (hash_ele->ip_infos[i]){
+							free(hash_ele->ip_infos[i]);
+							hash_ele->ip_infos[i] = NULL;
+						}
+					}
+				}
 				// memset(hash_ele->ip_infos, 0, sizeof(ip_info_t)*all_ip_cnt);
 				pthread_mutex_unlock( &hash_ele->mutex );
 				break;
@@ -638,10 +656,11 @@ last:
 			else{
 				// printf("mutex success %p\n", &hash_ele->mutex);
 			}
-			hash_ele->ip_infos = (ip_info_t *)malloc(sizeof(ip_info_t)*all_ip_cnt);
+			printf("[URL] malloc ip_infos in set\n");
+			hash_ele->ip_infos = (ip_info_t **)malloc(sizeof(ip_info_t *)*all_ip_cnt);
 			if (hash_ele->ip_infos == NULL )
 			{	printf("malloc fail\n");return NULL;};
-			memset(hash_ele->ip_infos, 0, sizeof(ip_info_t)*all_ip_cnt);
+			memset(hash_ele->ip_infos, 0, sizeof(ip_info_t *)*all_ip_cnt);
 			hash_tmp->sub_ele = hash_ele;
 		} /* end if*/
 	} /* end if */
@@ -672,7 +691,7 @@ HashEle_t *setUrlIntoHashtable(HashEle_t *hashtable, const char *in_url) //     
 	return hash_ele;
 }
 
-u_int8_t initIPArr(ip_info_t *infos)
+u_int8_t initIPArr(ip_info_t **infos)
 {
 	//TODO: if has pointer in ip_info, need init ip arr infos by global ip arr
 	return 0;
@@ -714,8 +733,14 @@ u_int8_t initUrlHashtable(HashEle_t *head, u_int32_t hash_size)
 	HashEle_t *tmp;
 	HashEle_t *p = head; //记录头结点，头结点为不存数据
 	HashEle_t *t = head;
-	char buf[48] = {0};
+	char buf[48] = {0}, buf2[48] = {0}, buf3[48] = {};
 	int ret ;
+	printf("will malloc hashtable\n\thashele cnt: %d totoal size: %s, every HashEle_t size:%s, every ip_info_t:%s\n",
+			hash_size,
+			formatBytes( sizeof(HashEle_t)*hash_size, buf),
+			formatBytes( sizeof(HashEle_t), buf2),
+			formatBytes( sizeof(ip_info_t), buf3)
+	);
 	for (i = 0; i < hash_size; i++)
 	{
 		if ((i % 100) == 0 && i != 0)
@@ -737,18 +762,19 @@ u_int8_t initUrlHashtable(HashEle_t *head, u_int32_t hash_size)
                 else{
 		     // printf("mutex success %p\n", &tmp->mutex);
                 }
-
-		tmp->ip_infos = (ip_info_t *)malloc(sizeof(ip_info_t)*all_ip_cnt);
+		/*
+		tmp->ip_infos = (ip_info_t **)malloc(sizeof(ip_info_t *)*all_ip_cnt);
 		// printf("ip_infos %p\n", tmp->ip_infos);
 		if (tmp->ip_infos == NULL)
 			return -2;
-	    memset(tmp->ip_infos, 0, sizeof(ip_info_t)*all_ip_cnt);
+	    memset(tmp->ip_infos, 0, sizeof(ip_info_t *)*all_ip_cnt);
+		*/
 		tmp->num = i;
-		initIPArr(tmp->ip_infos); //初始化url_node中的ip记录
+		// initIPArr(tmp->ip_infos); //初始化url_node中的ip记录
 		p->next = tmp;
 		p = tmp;
 	}
-	printf("\tmalloc hashtable success, size: %s\n", formatBytes( sizeof(HashEle_t)*hash_size + sizeof(ip_info_t)*all_ip_cnt*hash_size, buf));
+	printf("\tSuccess!\n");
 	return 0;
 }
 
@@ -1006,8 +1032,8 @@ int8_t initFlowmeterStruct(HashEle_t **out_hashtable, app_info_t **_app_struct)
 		printf("Init hashtable head lock fail, exit\n");
 		exit(1);
 	}
-	(*out_hashtable)->ip_infos = (ip_info_t *)malloc(sizeof(ip_info_t)*all_ip_cnt);
-	memset((*out_hashtable)->ip_infos, 0, sizeof(ip_info_t)*all_ip_cnt);
+	(*out_hashtable)->ip_infos = (ip_info_t **)malloc(sizeof(ip_info_t *)*all_ip_cnt);
+	memset((*out_hashtable)->ip_infos, 0, sizeof(ip_info_t *)*all_ip_cnt);
 	if (initUrlHashtable(*out_hashtable, HASHTABLE_SIZE) != 0)
 	{
 		printf("\tinitUrlHashtable fail\n");
@@ -1039,19 +1065,49 @@ int8_t initFlowmeterStruct(HashEle_t **out_hashtable, app_info_t **_app_struct)
 void updateAppData(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow *flow, app_info_t *_app_struct, u_int64_t appid, u_int64_t ip_index)
 {
 
-		if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(_app_struct->app_bitmask, appid) == 0) NDPI_ADD_PROTOCOL_TO_BITMASK(_app_struct->app_bitmask, appid);
-		_app_struct->tick = _app_struct->ip_infos[appid].tick  = time(NULL);
-		_app_struct->ip_infos[appid].localIP = ntohl(all_ip[ip_index].s_addr);
-		_app_struct->ip_infos[appid].fiveSecBytes += flow->bytes; //5s bytes will add to 10min every 10min bytes and set to 0
-		// dumpIPInfoLit(&_app_struct->ip_infos[index]);
+		if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(_app_struct->app_bitmask, appid) == 0){
+			/* TODO malloc appid struct*/
+			if (!_app_struct->ip_infos[appid]){ 
+				_app_struct->ip_infos[appid] = (ip_info_lit_t *)malloc(sizeof(ip_info_lit_t));
+				if (!_app_struct->ip_infos[appid]){
+					BUG("[APP] Fail when malloc for ip_info_lit %s %s %",__FILE__, __FUNCTION__, __LINE__);
+					return ;
+				}
+				memset(_app_struct->ip_infos[appid], 0, sizeof(ip_info_lit_t));
+			}
+			NDPI_ADD_PROTOCOL_TO_BITMASK(_app_struct->app_bitmask, appid);
+		}
+		_app_struct->tick = _app_struct->ip_infos[appid]->tick  = time(NULL);
+		_app_struct->ip_infos[appid]->localIP = ntohl(all_ip[ip_index].s_addr);
+		_app_struct->ip_infos[appid]->fiveSecBytes += flow->bytes; //5s bytes will add to 10min every 10min bytes and set to 0
+		// dumpIPInfoLit(_app_struct->ip_infos[index]);
 }
 
 void updateUrlData(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow *flow, HashEle_t *hash_ele, int64_t index)
 {
-		hash_ele->tick = hash_ele->ip_infos[index].tick  = time(NULL);
-		hash_ele->ip_infos[index].localIP = ntohl(all_ip[index].s_addr);
-		hash_ele->ip_infos[index].fiveSecBytes += flow->bytes    ; //5s bytes will add to 10min every 10min bytes and set to 0
-		hash_ele->ip_infos[index].fiveSecCount += 1; 
+		/*TODO: malloc if not exists*/
+		if (!hash_ele->ip_infos){
+			printf("[URL] malloc ip_infos\n");
+			hash_ele->ip_infos = (ip_info_t **)malloc(sizeof(ip_info_t *)*all_ip_cnt);
+			// printf("ip_infos %p\n", tmp->ip_infos);
+			if (hash_ele->ip_infos == NULL){
+				BUG("[URL] Fail when malloc for ip_infos %s %s %",__FILE__, __FUNCTION__, __LINE__);
+				return;
+			}
+	    	memset(hash_ele->ip_infos, 0, sizeof(ip_info_t *)*all_ip_cnt);
+		}
+		if (!hash_ele->ip_infos[index]){
+			hash_ele->ip_infos[index] = (ip_info_t *) malloc(sizeof(ip_info_t));
+			if (!hash_ele->ip_infos[index]){
+				BUG("[URL] Fail when malloc for ip_info_t %s %s %",__FILE__, __FUNCTION__, __LINE__);
+				return ;
+			}
+			memset(hash_ele->ip_infos[index], 0 ,sizeof(ip_info_t));
+		}
+		hash_ele->tick = hash_ele->ip_infos[index]->tick  = time(NULL);
+		hash_ele->ip_infos[index]->localIP = ntohl(all_ip[index].s_addr);
+		hash_ele->ip_infos[index]->fiveSecBytes += flow->bytes ; //5s bytes will add to 10min every 10min bytes and set to 0
+		hash_ele->ip_infos[index]->fiveSecCount += 1; 
 		// printf("url in update: %s\n",hash_ele->url);
 		// dumpHashEle(hash_ele, 0, 0, 0, 0);
 }
@@ -1150,42 +1206,46 @@ void accuUrlData(HashEle_t *hash_ele, u_int32_t num, u_int32_t sub_num, u_int32_
 		printf("[URL] time tick:%u - now:%u = %d\n",hash_ele->tick, time(NULL), time(NULL) - hash_ele->tick);
 	}
 	#endif
-	if ( hash_ele == NULL || !isHotInfo2(&(hash_ele->tick), HOT_DELTA_LONG_PARA))
+	if ( hash_ele == NULL || !isHotInfo2(&(hash_ele->tick), 2 * HOT_DELTA_LONG_PARA))
 		return;
 	for(;i < all_ip_cnt; i++){
+		 if (!hash_ele->ip_infos[i]) continue;
 		/*rt data*/
-		// if (isHotInfo((time_t*) &hash_ele->ip_infos[i]))
+		// if (isHotInfo((time_t*)hash_ele->ip_infos[i]))
 		//	printf("%s is hot\n", hash_ele->url);
 		//else
-		//	printf("%s is not hot tick:%u now:%u\n", hash_ele->url, hash_ele->ip_infos[i].tick, time(NULL));
-		if ( !isHotInfo2(&(hash_ele->ip_infos[i].tick), HOT_DELTA_LONG_PARA)) /*this para is 2, when it is 1 it will be reset to 0*/
+		//	printf("%s is not hot tick:%u now:%u\n", hash_ele->url, hash_ele->ip_infos[i]->tick, time(NULL));
+		if (!isHotInfo2(&(hash_ele->ip_infos[i]->tick), HOT_DELTA_LONG_PARA)) /*this para is 2, when it is 1 it will be reset to 0*/
 		{
-			// hash_ele->ip_infos[i].tenMinBytes = hash_ele->ip_infos[i].fiveSecBytes = hash_ele->ip_infos[i].tenMinCount = hash_ele->ip_infos[i].fiveSecCount = 0;
+			// hash_ele->ip_infos[i]->tenMinBytes = hash_ele->ip_infos[i]->fiveSecBytes = hash_ele->ip_infos[i]->tenMinCount = hash_ele->ip_infos[i]->fiveSecCount = 0;
+			/* TODO: free if any*/
+			free(hash_ele->ip_infos[i]);
+			hash_ele->ip_infos[i] = NULL;
 			continue;
 		}else{
 			// printf("[URL] common data, will detect\n");
 		}
-		if (rt_flag && isHotInfo((time_t*) &hash_ele->ip_infos[i].tick) && hash_ele->ip_infos[i].fiveSecBytes)
+		if (rt_flag && isHotInfo(&(hash_ele->ip_infos[i]->tick)) && hash_ele->ip_infos[i]->fiveSecBytes)
 		{
 			// printf("[URL] logging url 5s !\n");	
 			/*U: www.baidu.com,ip,fiveSecBytes,fiveSecCount*/
-			LOG_FM_RT("T:%11ld U: %s,%u,%u,%u\n", timeFix, hash_ele->url, ntohl(all_ip[i].s_addr), hash_ele->ip_infos[i].fiveSecBytes, hash_ele->ip_infos[i].fiveSecCount);
+			LOG_FM_RT("T:%11ld U: %s,%u,%u,%u\n", timeFix, hash_ele->url, ntohl(all_ip[i].s_addr), hash_ele->ip_infos[i]->fiveSecBytes, hash_ele->ip_infos[i]->fiveSecCount);
 		}
 		/*accu 5s data*/
-		if (hash_ele->ip_infos[i].fiveSecBytes)
+		if (hash_ele->ip_infos[i]->fiveSecBytes)
 		{
-			hash_ele->ip_infos[i].tenMinBytes += hash_ele->ip_infos[i].fiveSecBytes ;
-			hash_ele->ip_infos[i].fiveSecBytes = 0;
-			hash_ele->ip_infos[i].tenMinCount += hash_ele->ip_infos[i].fiveSecCount ;
-			hash_ele->ip_infos[i].fiveSecCount = 0;
+			hash_ele->ip_infos[i]->tenMinBytes += hash_ele->ip_infos[i]->fiveSecBytes ;
+			hash_ele->ip_infos[i]->fiveSecBytes = 0;
+			hash_ele->ip_infos[i]->tenMinCount += hash_ele->ip_infos[i]->fiveSecCount ;
+			hash_ele->ip_infos[i]->fiveSecCount = 0;
 		}
 		/*U: www.baidu.com,ip,fiveSecBytes,fiveSecCount*/
-		if (ten_min_flag && hash_ele->ip_infos[i].tenMinBytes){
+		if (ten_min_flag && hash_ele->ip_infos[i]->tenMinBytes){
 			// printf("[URL] logging url 10min!\n");
 
-			LOG_FM("U: %s,%u,%u,%u\n", hash_ele->url, ntohl(all_ip[i].s_addr), hash_ele->ip_infos[i].tenMinBytes, hash_ele->ip_infos[i].tenMinCount);  
-			hash_ele->ip_infos[i].tenMinBytes = 0;	
-			hash_ele->ip_infos[i].tenMinCount = 0;	
+			LOG_FM("U: %s,%u,%u,%u\n", hash_ele->url, ntohl(all_ip[i].s_addr), hash_ele->ip_infos[i]->tenMinBytes, hash_ele->ip_infos[i]->tenMinCount);  
+			hash_ele->ip_infos[i]->tenMinBytes = 0;	
+			hash_ele->ip_infos[i]->tenMinCount = 0;	
 		}
 	}
 	// printf("[URL] accu over\n");
@@ -1222,50 +1282,64 @@ void accuAppData(app_info_t *_app_struct, u_int32_t ten_min_flag, u_int32_t rt_f
 		// printf("[APP] dump---------------\n");
 		// dumpAppStruct(&_app_struct[i_user]);
 		for(; appid < NDPI_MAX_SUPPORTED_PROTOCOLS ;appid++){
-			if (temp_ip == 0 && _app_struct[i_user].ip_infos[appid].localIP != 0) {
-
-				temp_ip = _app_struct[i_user].ip_infos[appid].localIP;
-				snprintf(ip_buf,sizeof(ip_buf),"%u",temp_ip);
-				// printf("setting localIP:%u temp_ip:%u s_addr:%u ntohl(s_addr):%u\n", _app_struct[i_user].ip_infos[appid].localIP, temp_ip ,all_ip[i_user].s_addr ,ntohl(all_ip[i_user].s_addr));
-			}
+			
 			if(ISHTTP(appid) || appid == 0)
 				continue;
-			if(NDPI_COMPARE_PROTOCOL_TO_BITMASK(/*bitmask*/_app_struct[i_user].app_bitmask, appid) == 0 || (_app_struct[i_user].ip_infos[appid].fiveSecBytes == 0 && _app_struct[i_user].ip_infos[appid].tenMinBytes == 0 )){
+			/*dont have this appid*/
+			if(NDPI_COMPARE_PROTOCOL_TO_BITMASK(/*bitmask*/_app_struct[i_user].app_bitmask, appid) == 0 ){
+				continue; 
+			}
+			/*this appid bytes is 0*/
+			if(_app_struct[i_user].ip_infos[appid]->fiveSecBytes == 0 && _app_struct[i_user].ip_infos[appid]->tenMinBytes == 0 ){
+				/* TODO: if too long, 1.remove appid from bitmask  2.free data*/
+				if (!isHotInfo2(&(_app_struct[i_user].ip_infos[appid]->tick), 2 * HOT_DELTA_LONG_PARA)){
+					NDPI_DEL_PROTOCOL_FROM_BITMASK(_app_struct[i_user].app_bitmask, appid);
+					free(_app_struct[i_user].ip_infos[appid]);
+					_app_struct[i_user].ip_infos[appid] = NULL;
+				}
 				continue; 
 			}
 			/*else{
-				printf("\t5s bytes:%u\n", _app_struct[i_user].ip_infos[appid].fiveSecBytes);
+				printf("\t5s bytes:%u\n", _app_struct[i_user].ip_infos[appid]->fiveSecBytes);
 			}*/
-			// if (isHotInfo(&_app_struct[i_user].ip_infos[appid].tick)){
-			if (_app_struct[i_user].ip_infos[appid].fiveSecBytes){
+			
+			if (temp_ip == 0 && _app_struct[i_user].ip_infos[appid]->localIP != 0) {
+			
+							temp_ip = _app_struct[i_user].ip_infos[appid]->localIP;
+							snprintf(ip_buf,sizeof(ip_buf),"%u",temp_ip);
+							// printf("setting localIP:%u temp_ip:%u s_addr:%u ntohl(s_addr):%u\n", _app_struct[i_user].ip_infos[appid]->localIP, temp_ip ,all_ip[i_user].s_addr ,ntohl(all_ip[i_user].s_addr));
+			}
+			
+			// if (isHotInfo(_app_struct[i_user].ip_infos[appid]->tick)){
+			if (_app_struct[i_user].ip_infos[appid]->fiveSecBytes){
 				if (rt_flag){
 					// printf("#2 rt_flag in accuAppData!\n");
 					json_object * json_one_app_obj;
 					json_one_app_obj = json_object_new_object();
 
-					bytes = _app_struct[i_user].ip_infos[appid].fiveSecBytes;
+					bytes = _app_struct[i_user].ip_infos[appid]->fiveSecBytes;
 					memset(id_buf,0, sizeof(id_buf));
 					snprintf(id_buf,sizeof(id_buf),"%u",appid);
-					// printf("\t5s bytes:%lu bytes:%lu\n", _app_struct[i_user].ip_infos[appid].fiveSecBytes, bytes);	
+					// printf("\t5s bytes:%lu bytes:%lu\n", _app_struct[i_user].ip_infos[appid]->fiveSecBytes, bytes);	
 					json_object_object_add(json_one_app_obj,  id_buf, json_object_new_int64(bytes)); 
 					json_object_array_add(jobj_one_ip_app_infos, json_one_app_obj);
 				}
 				
 	   			/*accu 5s*/
-				_app_struct[i_user].ip_infos[appid].tenMinBytes += _app_struct[i_user].ip_infos[appid].fiveSecBytes ;
-				_app_struct[i_user].ip_infos[appid].fiveSecBytes = 0;
+				_app_struct[i_user].ip_infos[appid]->tenMinBytes += _app_struct[i_user].ip_infos[appid]->fiveSecBytes ;
+				_app_struct[i_user].ip_infos[appid]->fiveSecBytes = 0;
 			}
 			 if (ten_min_flag)
-				// printf("should 10min app data; 5sbytes:%u 10minbytes:%u\n",_app_struct[i_user].ip_infos[appid].fiveSecBytes,_app_struct[i_user].ip_infos[appid].tenMinBytes);
-			if (ten_min_flag &&  temp_ip && _app_struct[i_user].ip_infos[appid].tenMinBytes){
+				// printf("should 10min app data; 5sbytes:%u 10minbytes:%u\n",_app_struct[i_user].ip_infos[appid]->fiveSecBytes,_app_struct[i_user].ip_infos[appid]->tenMinBytes);
+			if (ten_min_flag &&  temp_ip && _app_struct[i_user].ip_infos[appid]->tenMinBytes){
 				/*ten min data: A: appid,ip,tenMinBytes*/
 				#if 0
 				printf("[APP] logging app 10min!\n");
-				printf("A: %u,%u,%u\n", appid, ntohl(all_ip[i_user].s_addr), _app_struct[i_user].ip_infos[appid].tenMinBytes);  
+				printf("A: %u,%u,%u\n", appid, ntohl(all_ip[i_user].s_addr), _app_struct[i_user].ip_infos[appid]->tenMinBytes);  
 				#endif
-				LOG_FM("A: %u,%u,%u\n", appid, ntohl(all_ip[i_user].s_addr), _app_struct[i_user].ip_infos[appid].tenMinBytes); 
+				LOG_FM("A: %u,%u,%u\n", appid, ntohl(all_ip[i_user].s_addr), _app_struct[i_user].ip_infos[appid]->tenMinBytes); 
 				NDPI_DEL_PROTOCOL_FROM_BITMASK( _app_struct[i_user].app_bitmask, appid); 
-				_app_struct[i_user].ip_infos[appid].tenMinBytes = 0;
+				_app_struct[i_user].ip_infos[appid]->tenMinBytes = 0;
 			}
 		}/*for appid*/
 		if (rt_flag){
@@ -1275,7 +1349,7 @@ void accuAppData(app_info_t *_app_struct, u_int32_t ten_min_flag, u_int32_t rt_f
 						printf("EMpty id_buf!! temp_ip:%u\n",temp_ip);
 					// printf("#3.success rt_flag in accuAppData!\n");	
 					json_object_object_add(jObj,ip_buf,jobj_one_ip_app_infos);
-					// printf("(ip_buf:%s<->ip:%u(0x%x))buf:%s\n",ip_buf,_app_struct->ip_infos[i_user].localIP,_app_struct->ip_infos[i_user].localIP,json_object_to_json_string(jObj));
+					// printf("(ip_buf:%s<->ip:%u(0x%x))buf:%s\n",ip_buf,_app_struct->ip_infos[i_user]->localIP,_app_struct->ip_infos[i_user]->localIP,json_object_to_json_string(jObj));
 					#if 0
 					printf("[APP] logging app 5s!\n");
 					printf("T:%11ld A: %s\n", timeFix,json_object_to_json_string(jObj));
@@ -1391,7 +1465,8 @@ void dumpAppStruct(app_info_t *app_struct){
 	u_int32_t i = 0;
 	for(; i < NDPI_MAX_SUPPORTED_PROTOCOLS; i++){
 		test = i;
-		dumpIPInfoLit(&app_struct->ip_infos[i]);
+		if (app_struct->ip_infos[i])
+			dumpIPInfoLit(app_struct->ip_infos[i]);
 	}
 }
 
@@ -1405,8 +1480,8 @@ void dumpHashEle(HashEle_t *hash_ele, u_int32_t num, u_int32_t sub_num,  u_int32
 	}
 	printf("\t url:%s-------------\n", hash_ele->url);
 	for (; i< all_ip_cnt; i++){
-
-		dumpIPInfo(&hash_ele->ip_infos[i]);
+		if (hash_ele->ip_infos[i])
+			dumpIPInfo(hash_ele->ip_infos[i]);
 	}
 }
 

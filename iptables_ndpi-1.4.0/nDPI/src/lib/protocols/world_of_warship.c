@@ -94,19 +94,19 @@ NDPI_LOG(NDPI_PROTOCOL_GAME_WORLD_OF_WARSHIP, ndpi_struct, NDPI_LOG_DEBUG,"searc
 		&&packet->payload[2]==0x00
 		&&packet->payload[14]==0x02
 		&&packet->payload[15]==0x00){
-		NDPI_LOG(NDPI_PROTOCOL_GAME_WORLD_OF_WARSHIP, ndpi_struct, NDPI_LOG_DEBUG,"STAGE:%u\n",flow->worldofwarship_stage);
 		flow->worldofwarship_stage++;
+		NDPI_LOG(NDPI_PROTOCOL_GAME_WORLD_OF_WARSHIP, ndpi_struct, NDPI_LOG_DEBUG,"STAGE:%u\n",flow->worldofwarship_stage);
 		return;
 	}
 	
 	if((packet->payload_packet_len ==32 ||packet->payload_packet_len ==24 )
 	   && flow->worldofwarship_stage >= 1){
-		NDPI_LOG(NDPI_PROTOCOL_GAME_WORLD_OF_WARSHIP, ndpi_struct, NDPI_LOG_DEBUG,"STAGE:%u\n",flow->worldofwarship_stage);
 		flow->worldofwarship_stage++;
+		NDPI_LOG(NDPI_PROTOCOL_GAME_WORLD_OF_WARSHIP, ndpi_struct, NDPI_LOG_DEBUG,"STAGE:%u\n",flow->worldofwarship_stage);
 		return;
 	}
 
-	if(flow->worldofwarship_stage >= 3
+	if(flow->worldofwarship_stage >= 2
 	   &&flow->worldofwarship_count<=5){
 		NDPI_LOG(NDPI_PROTOCOL_GAME_WORLD_OF_WARSHIP, ndpi_struct, NDPI_LOG_DEBUG,"found worldofwarship udp \n");
 		ndpi_int_worldofwarship_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
