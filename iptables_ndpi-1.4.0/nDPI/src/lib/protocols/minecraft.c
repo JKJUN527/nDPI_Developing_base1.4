@@ -49,16 +49,17 @@ static int is_minecraft(u_int8_t const *pkt, int len, char *compressed)
 {
     u_int32_t orglen = len;
     u_int16_t nbyte = len;
-    _D("%02x%02x%02x\n", pkt[0], pkt[1], pkt[2]);
     int length = parse_varint(pkt, &nbyte);
+    int pktid, pktidlen;
+    _D("%02x%02x%02x\n", pkt[0], pkt[1], pkt[2]);
     if (length < 0) return 0;
     pkt += nbyte;
     len -= nbyte;
     if (len <= 0) return 0;
 
     nbyte = len;
-    int pktid = parse_varint(pkt, &nbyte);
-    int pktidlen = nbyte;
+    pktid = parse_varint(pkt, &nbyte);
+    pktidlen = nbyte;
     if (pktid < 0) return 0;
     pkt += nbyte;
     len -= nbyte;
@@ -86,15 +87,16 @@ static int is_minecraft(u_int8_t const *pkt, int len, char *compressed)
 
 extern void ndpi_search_minecraft(struct ndpi_detection_module_struct *ndpi, struct ndpi_flow_struct *flow)
 {
-    _D("Call ndpi_search_minecraft\n");
-#define LOG(...)    NDPI_LOG(NDPI_PROTOCOL_MINECRAFT, ndpi, NDPI_LOG_DEBUG, __VA_ARGS__)
     struct ndpi_packet_struct *packet = &flow->packet;
-    if (!packet->tcp) goto not_found;
-
     u_int8_t const *data = packet->payload;
     int len = packet->payload_packet_len;
+    char compressed;
+    _D("Call ndpi_search_minecraft\n");
+#define LOG(...)    NDPI_LOG(NDPI_PROTOCOL_MINECRAFT, ndpi, NDPI_LOG_DEBUG, __VA_ARGS__)
+    if (!packet->tcp) goto not_found;
+
     /* IMPORTANT flow->minecraft_compressed 必须在 flow 初始化时被赋值为0 */
-    char compressed = flow->minecraft_compressed;
+    compressed = flow->minecraft_compressed;
 
     /* 初始的 minecraft_compressed 是没有压缩的，那么在初始化这个流的时候需要赋值0 */
     if (is_minecraft(data, len, &compressed)) {

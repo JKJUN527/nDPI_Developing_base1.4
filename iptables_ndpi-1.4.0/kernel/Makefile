@@ -129,7 +129,7 @@ NDPI_LIB_OBJS= \
 	$(NDPI_LIB_PROTOCOLS)/qqwuxia.o \
 	$(NDPI_LIB_PROTOCOLS)/csgo.o \
 	$(NDPI_LIB_PROTOCOLS)/minecraft.o \
-	$(NDPI_LIB_PROTOCOLS)/kugou-music.o \
+	$(NDPI_LIB_PROTOCOLS)/kugou_music.o \
 	$(NDPI_LIB_PROTOCOLS)/yy.o
 
 #	$(NDPI_LIB_PROTOCOLS)/skype.o \

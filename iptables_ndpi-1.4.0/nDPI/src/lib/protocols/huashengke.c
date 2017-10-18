@@ -126,9 +126,9 @@ static int huashengke_search_tcp_3(struct ndpi_detection_module_struct *ndpi, st
 
 extern void ndpi_search_huashengke(struct ndpi_detection_module_struct *ndpi, struct ndpi_flow_struct *flow)
 {
-    NDPI_LOG(NDPI_PROTOCOL_HUASHENGKE, ndpi, NDPI_LOG_DEBUG, "Call ndpi_search_huashengke.\n");
     struct ndpi_packet_struct *pkt = &flow->packet;
     int found = 0;
+    NDPI_LOG(NDPI_PROTOCOL_HUASHENGKE, ndpi, NDPI_LOG_DEBUG, "Call ndpi_search_huashengke.\n");
     if (pkt->tcp) {
         found = huashengke_search_tcp_3(ndpi, flow);
         _D("for huashengke_search_tcp_3 found: %d\n", found);

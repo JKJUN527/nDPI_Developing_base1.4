@@ -126,7 +126,7 @@ libndpi_la_SOURCES = \
 			protocols/qqwuxia.c \
 			protocols/csgo.c \
 			protocols/minecraft.c \
-			protocols/kugou-music.c \
+			protocols/kugou_music.c \
 			protocols/yy.c
 			
 #protocols/skype.c \

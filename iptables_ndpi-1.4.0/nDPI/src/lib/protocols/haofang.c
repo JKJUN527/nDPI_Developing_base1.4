@@ -50,9 +50,9 @@ __forceinline static
 												  *ndpi_struct, struct ndpi_flow_struct *flow)
 {
 	struct ndpi_packet_struct *packet = &flow->packet;
-	NDPI_LOG(NDPI_PROTOCOL_HAOFANG, ndpi_struct, NDPI_LOG_DEBUG, "search for haofang port.\n");
 	u_int16_t sport = ntohs(packet->tcp->source);
 	u_int16_t dport = ntohs(packet->tcp->dest);
+	NDPI_LOG(NDPI_PROTOCOL_HAOFANG, ndpi_struct, NDPI_LOG_DEBUG, "search for haofang port.\n");
 	  
 	if(	 (sport == 1201) 
 	  || (dport == 1201)

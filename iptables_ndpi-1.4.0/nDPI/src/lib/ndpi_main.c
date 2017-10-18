@@ -1441,6 +1441,9 @@ struct ndpi_detection_module_struct *ndpi_init_detection_module(u_int32_t ticks_
   spin_lock_init(&ndpi_str->skypeCacheLock);
 #endif
 
+  /* table size is a prime number. use the default hash function */
+  ndpi_str->meta2protocol = ndpi_hash_create(67, NULL);
+
   ndpi_init_protocol_defaults(ndpi_str);
   return ndpi_str;
 }
@@ -1467,6 +1470,7 @@ void ndpi_exit_detection_module(struct ndpi_detection_module_struct
 #ifndef __KERNEL__
     pthread_mutex_destroy(&ndpi_struct->skypeCacheLock);
 #endif
+    ndpi_hash_destory(&ndpi_struct->meta2protocol);
     ndpi_free(ndpi_struct);
   }
 }
@@ -1896,6 +1900,7 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
 
     NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_UNKNOWN);
     NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_FTP_CONTROL);
+    NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_FTP_DATA);
     NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].excluded_protocol_bitmask, NDPI_PROTOCOL_FTP_CONTROL);
     a++;
   }
@@ -4169,14 +4174,16 @@ void ndpi_parse_packet_line_info(struct ndpi_detection_module_struct *ndpi_struc
     /* parse over. */
     if (!packet->host_line.ptr) {
         ndpi_ip_addr_t ip;
+        const char *ipstr;
+        int len;
         /* client to server */
         if (flow->l4.tcp.http_setup_dir == 1) {
             ndpi_packet_dst_ip_get(packet, &ip);
         } else {
             ndpi_packet_src_ip_get(packet, &ip);
         }
-        const char *ipstr = ndpi_get_ip_string(ndpi_struct, &ip);
-        int len = ndpi_min(strlen(ipstr), 255);
+        ipstr = ndpi_get_ip_string(ndpi_struct, &ip);
+        len = ndpi_min(strlen(ipstr), 255);
         strncpy(flow->host_server_name, ipstr, len);
         flow->host_server_name[len] = '\0';
         packet->host_line.ptr = flow->host_server_name;
@@ -4473,8 +4480,7 @@ u_int8_t ndpi_detection_build_key(const u_int8_t * l3, u_int16_t l3_len, const u
 					   flags);
 }
 
-void ndpi_int_add_connection(struct ndpi_detection_module_struct *ndpi_struct,
-			     struct ndpi_flow_struct *flow,
+void ndpi_int_add_connection(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow,
 			     u_int16_t detected_protocol, ndpi_protocol_type_t protocol_type)
 {
   struct ndpi_id_struct *src = flow->src;
@@ -5321,39 +5327,40 @@ int gettimeofday(struct timeval * tp, struct timezone * tzp) {
  }
 #endif
 /*jkjun**/
-//find string in string, return the first start location or -1 if can not find  
-int StringFind(const char *pSrc, const char *pDst)  
-{  
-    int i, j;  
-    for (i=0; pSrc[i]!='\0'; i++)  
-    {  
-        if(pSrc[i]!=pDst[0])  
-            continue;         
-        j = 0;  
-        while(pDst[j]!='\0' && pSrc[i+j]!='\0')  
-        {  
-            j++;  
-            if(pDst[j]!=pSrc[i+j])  
-            break;  
-        }  
-        if(pDst[j]=='\0')  
-            return i;  
-    }  
-    return -1;  
+//find string in string, return the first start location or -1 if can not find
+int StringFind(const char *pSrc, const char *pDst)
+{
+    int i, j;
+    for (i=0; pSrc[i]!='\0'; i++)
+    {
+        if(pSrc[i]!=pDst[0])
+            continue;
+        j = 0;
+        while(pDst[j]!='\0' && pSrc[i+j]!='\0')
+        {
+            j++;
+            if(pDst[j]!=pSrc[i+j])
+            break;
+        }
+        if(pDst[j]=='\0')
+            return i;
+    }
+    return -1;
 }
 /**
-* memfind, find pattern from memory, same as strstr().
-* @return: NULL not found
-*         !NULL the position of pat starting.
-* Author: leetking <li_Tking@163.com>
-*/
+ * memfind, find pattern from memory. It is same as strstr().
+ * @return: NULL not found
+ *         !NULL the position of pat starting.
+ * Author: leetking <li_Tking@163.com>
+ */
 extern void *memfind(const void *_mem, ssize_t memlen, const void *_pat, ssize_t patlen)
 {
-    if (!_mem || !_pat || memlen < 0 || patlen < 0) return NULL;
-
     u_int8_t *mem = (u_int8_t*)_mem;
     u_int8_t *pat = (u_int8_t*)_pat;
     ssize_t i;
+
+    if (!_mem || !_pat || memlen < 0 || patlen < 0) return NULL;
+
     for (i = 0; i+patlen-1 < memlen; i++) {
         ssize_t j;
         for (j = 0; j < patlen; j++)
@@ -5363,4 +5370,77 @@ extern void *memfind(const void *_mem, ssize_t memlen, const void *_pat, ssize_t
     }
 
     return NULL;
+}
+
+static u_int32_t ndpi_default_hash_fn(u_int8_t const *key, int len)
+{
+    u_int32_t hash = 0;
+    u_int8_t const *end;
+    if (!key) return hash;
+    for (end = key+len; key < end; key++)
+         hash = 31*hash + *key;
+    return hash;
+}
+/**
+ * create a hash table with tablesize, specify a hash_fn optionally
+ */
+extern ndpi_hash_t *ndpi_hash_create(int tablesize, u_int32_t (*hash_fn)(u_int8_t const *key, int len))
+{
+    ndpi_hash_t *ret;
+    if (tablesize <= 0)
+        tablesize = 67;
+    ret = ndpi_malloc(sizeof(*ret) + sizeof(int)*tablesize);
+    if (!ret) return NULL;
+    /* set -1 */
+    memset(ret->table, 0xff, sizeof(int)*tablesize);
+    ret->hash_size = tablesize;
+    ret->hash_fn = hash_fn? hash_fn: ndpi_default_hash_fn;
+
+    return ret;
+}
+/**
+ * add protocol with key to hash table
+ * NOTE It don't solve conflict, just overwrite.
+ */
+extern int ndpi_hash_add(ndpi_hash_t *t, u_int8_t const *key, int len, int protocol)
+{
+    u_int32_t hash;
+    /* -1 imply that key is not found */
+    if (!t) return -1;
+    hash = t->hash_fn(key, len) % t->hash_size;
+#ifdef DEBUG
+    if (-1 != t->table[hash])
+        printf("ndpi_main.c: ndpi_hash_add has conflict. hash_size: %d\n", t->hash_size);
+#endif
+    t->table[hash] = protocol;
+    return protocol;
+}
+
+extern int ndpi_hash_search(ndpi_hash_t *t, u_int8_t const *key, int len)
+{
+    u_int32_t hash;
+    /* -1 imply that key is not found */
+    if (!t) return -1;
+    hash = t->hash_fn(key, len) % t->hash_size;
+    return t->table[hash];
+}
+
+extern int ndpi_hash_remove(ndpi_hash_t *t, u_int8_t const *key, int len)
+{
+    u_int32_t hash;
+    int ret;
+    /* -1 imply that key is not found */
+    if (!t) return -1;
+    hash = t->hash_fn(key, len) % t->hash_size;
+    ret = t->table[hash];
+    t->table[hash] = -1;
+    return ret;
+}
+
+extern void ndpi_hash_destory(ndpi_hash_t **table)
+{
+    if (!table || !*table) return;
+
+    ndpi_free(*table);
+    *table = NULL;
 }
