@@ -1443,6 +1443,11 @@ struct ndpi_detection_module_struct *ndpi_init_detection_module(u_int32_t ticks_
 
   /* table size is a prime number. use the default hash function */
   ndpi_str->meta2protocol = ndpi_hash_create(67, NULL);
+  if (!ndpi_str->meta2protocol) {
+      ndpi_debug_printf(0, NULL, NDPI_LOG_DEBUG, "ndpi_init_detection_module initial meta2protocol failed\n");
+      ndpi_free(ndpi_str);
+      return NULL;
+  }
 
   ndpi_init_protocol_defaults(ndpi_str);
   return ndpi_str;
