@@ -237,7 +237,7 @@ static int ndpi_match_file_header(struct ndpi_detection_module_struct *ndpi_stru
 static void ndpi_check_ftp_data(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {
     struct ndpi_packet_struct *packet = &flow->packet;
-    int pro;
+    int found_pro;
     int ipsize = sizeof(u_int32_t);
     int offset;
     /* client ip, client port, server ip, server port, tcp/udp */
@@ -259,8 +259,8 @@ static void ndpi_check_ftp_data(struct ndpi_detection_module_struct *ndpi_struct
 
     /* find and remove this record, if it exists. */
     /* NOTE maybe need to add lock and change `remove' to `search' then invoke `remove' */
-    pro = ndpi_hash_remove(ndpi_struct->meta2protocol, key_buff, offset);
-    if (-1 != pro) {
+    found_pro = ndpi_hash_remove(ndpi_struct->meta2protocol, key_buff, offset, NDPI_PROTOCOL_FTP_DATA);
+    if (found_pro) {
         NDPI_LOG(NDPI_PROTOCOL_FTP_DATA, ndpi_struct, NDPI_LOG_DEBUG, "Found FTP_DATA via server-port record ...\n");
         ndpi_int_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_FTP_DATA, NDPI_REAL_PROTOCOL);
         return;

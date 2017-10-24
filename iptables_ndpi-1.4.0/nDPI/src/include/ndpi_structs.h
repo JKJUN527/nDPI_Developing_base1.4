@@ -66,11 +66,16 @@ struct ndpi_ipv6hdr {
 };
 #endif							/* NDPI_DETECTION_SUPPORT_IPV6 */
 
+struct pro_node {
+    int pro;                    /* just store protocol */
+    struct pro_node *next;
+};
+
 /* hash table */
 typedef struct ndpi_hash_t {
     int hash_size;
     u_int32_t (*hash_fn)(u_int8_t const *key, int len);
-    int table[1];                 /* just store protocol */
+    struct pro_node * table[1];
 } ndpi_hash_t;
 
 typedef union {

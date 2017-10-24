@@ -1442,7 +1442,7 @@ struct ndpi_detection_module_struct *ndpi_init_detection_module(u_int32_t ticks_
 #endif
 
   /* table size is a prime number. use the default hash function */
-  ndpi_str->meta2protocol = ndpi_hash_create(67, NULL);
+  ndpi_str->meta2protocol = ndpi_hash_create(173, NULL);
   if (!ndpi_str->meta2protocol) {
       ndpi_debug_printf(0, NULL, NDPI_LOG_DEBUG, "ndpi_init_detection_module initial meta2protocol failed\n");
       ndpi_free(ndpi_str);
@@ -4189,7 +4189,7 @@ void ndpi_parse_packet_line_info(struct ndpi_detection_module_struct *ndpi_struc
             ndpi_packet_src_ip_get(packet, &ip);
         }
         ipstr = ndpi_get_ip_string(ndpi_struct, &ip);
-        len = ndpi_min(strlen(ipstr), 255);
+        len = ndpi_min(strlen(ipstr), NDPI_IP_STRING_SIZE);
         strncpy(flow->host_server_name, ipstr, len);
         flow->host_server_name[len] = '\0';
         packet->host_line.ptr = flow->host_server_name;
@@ -5390,15 +5390,16 @@ static u_int32_t ndpi_default_hash_fn(u_int8_t const *key, int len)
 /**
  * create a hash table with tablesize, specify a hash_fn optionally
  */
-extern ndpi_hash_t *ndpi_hash_create(int tablesize, u_int32_t (*hash_fn)(u_int8_t const *key, int len))
+extern ndpi_hash_t *ndpi_hash_create(int tablesize,
+        u_int32_t (*hash_fn)(u_int8_t const *key, int len))
 {
     ndpi_hash_t *ret;
     if (tablesize <= 0)
         tablesize = 67;
-    ret = ndpi_malloc(sizeof(*ret) + sizeof(int)*tablesize);
+    ret = ndpi_malloc(sizeof(*ret) + sizeof(struct pro_node*) * tablesize);
     if (!ret) return NULL;
-    /* set -1 */
-    memset(ret->table, 0xff, sizeof(int)*tablesize);
+    /* set NULL */
+    memset(ret->table, 0, sizeof(struct pro_node*) * tablesize);
     ret->hash_size = tablesize;
     ret->hash_fn = hash_fn? hash_fn: ndpi_default_hash_fn;
 
@@ -5406,47 +5407,97 @@ extern ndpi_hash_t *ndpi_hash_create(int tablesize, u_int32_t (*hash_fn)(u_int8_
 }
 /**
  * add protocol with key to hash table
- * NOTE It don't solve conflict, just overwrite.
+ * O(1)
  */
 extern int ndpi_hash_add(ndpi_hash_t *t, u_int8_t const *key, int len, int protocol)
 {
     u_int32_t hash;
+    struct pro_node *new, **node;
     /* -1 imply that key is not found */
     if (!t) return -1;
     hash = t->hash_fn(key, len) % t->hash_size;
-#ifdef DEBUG
-    if (-1 != t->table[hash])
-        printf("ndpi_main.c: ndpi_hash_add has a conflict. hash_size: %d\n", t->hash_size);
+    node = &t->table[hash];
+    new = ndpi_malloc(sizeof(*new));
+    if (!new) return -1;
+
+//#define LOCAL_DEBUG_HASH
+#if (defined(LOCAL_DEBUG_HASH) && defined(__KERNEL__))
+    if (*node) {
+        printk("ndpi_hash_add %016x: same hash value, add to a link, table size: %d\n",
+                hash, t->hash_size);
+    }
 #endif
-    t->table[hash] = protocol;
+    new->pro = protocol;
+    new->next = *node;
+    *node = new;
+
     return protocol;
 }
 
-extern int ndpi_hash_search(ndpi_hash_t *t, u_int8_t const *key, int len)
+/**
+ * serach key-protocol pair whether it in the table
+ * if length of colliding list is `len', then time is O(len)
+ * return: 0: not found
+ *        !0: found
+ */
+extern int ndpi_hash_search(ndpi_hash_t *t, u_int8_t const *key, int len, int protocol)
 {
     u_int32_t hash;
-    /* -1 imply that key is not found */
-    if (!t) return -1;
+    struct pro_node *node;
+    if (!t) return 0;
     hash = t->hash_fn(key, len) % t->hash_size;
-    return t->table[hash];
-}
+    for (node = t->table[hash]; node; node = node->next) {
+        if (protocol == node->pro)
+            return 1;
+    }
 
-extern int ndpi_hash_remove(ndpi_hash_t *t, u_int8_t const *key, int len)
+    return 0;
+}
+/**
+ * Same as ndpi_hash_search(), but if found key-protocol pair, then remove it from the table.
+ * if length of colliding list is `len', then time is O(len)
+ * return: 0: not found
+ *        !0: found and removed key-protocol pair
+ */
+extern int ndpi_hash_remove(ndpi_hash_t *t, u_int8_t const *key, int len, int protocol)
 {
     u_int32_t hash;
-    int ret;
-    /* -1 imply that key is not found */
+    struct pro_node **node, *next;
     if (!t) return -1;
+
     hash = t->hash_fn(key, len) % t->hash_size;
-    ret = t->table[hash];
-    t->table[hash] = -1;
-    return ret;
+
+#if (defined(LOCAL_DEBUG_HASH) && defined(__KERNEL__))
+    if (t->table[hash] && !t->table[hash]->next) {
+        printk("ndpi_hash_remove: remove from the link with only one node.\n");
+    }
+#endif
+    node = &t->table[hash];
+    while (*node && (*node)->pro != protocol)
+        node = &(*node)->next;
+
+    if (!*node) return 0;
+    next = (*node)->next;
+    ndpi_free(*node);
+    *node = next;
+
+    return 1;
 }
 
 extern void ndpi_hash_destory(ndpi_hash_t **table)
 {
+    int i;
     if (!table || !*table) return;
+
+    for (i = 0; i < (*table)->hash_size; i++) {
+        struct pro_node *next, *node;
+        for (node = (*table)->table[i]; node; node = next) {
+            next = node->next;
+            ndpi_free(node);
+        }
+    }
 
     ndpi_free(*table);
     *table = NULL;
 }
+#undef LOCAL_DEBUG_HASH
