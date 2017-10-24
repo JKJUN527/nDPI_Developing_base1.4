@@ -259,9 +259,9 @@ extern "C" {
 
   /* functions of operating hash table */
   extern ndpi_hash_t *ndpi_hash_create(int tablesize, u_int32_t (*hash_fn)(u_int8_t const *key, int len));
-  extern int ndpi_hash_search(ndpi_hash_t *t, u_int8_t const *key, int len);
+  extern int ndpi_hash_search(ndpi_hash_t *t, u_int8_t const *key, int len, int protocol);
   extern int ndpi_hash_add(ndpi_hash_t *t, u_int8_t const *key, int len, int protocol);
-  extern int ndpi_hash_remove(ndpi_hash_t *t, u_int8_t const *key, int len);
+  extern int ndpi_hash_remove(ndpi_hash_t *t, u_int8_t const *key, int len, int protocol);
   extern void ndpi_hash_destory(ndpi_hash_t **table);
 
 #ifdef __cplusplus

@@ -41,7 +41,7 @@ static int tftp_detected_data(struct ndpi_detection_module_struct *ndpi,
     int ipsize = sizeof(u_int32_t);
     u_int8_t key_buff[2*sizeof(u_int32_t) + 2*2 +1] = {0};  /* set zero */
     int offset = ipsize+2;
-    int pro;
+    int found_pro;
     /* TODO tftp: support ipv6 */
     /* I'm sorry for that it cant support ipv4 now */
     if (!packet->iph) return 0;
@@ -53,9 +53,9 @@ static int tftp_detected_data(struct ndpi_detection_module_struct *ndpi,
     key_buff[offset] = IPPROTO_UDP;
     offset += 1;
 
-    pro = ndpi_hash_remove(ndpi->meta2protocol, key_buff, offset);
+    found_pro = ndpi_hash_remove(ndpi->meta2protocol, key_buff, offset, NDPI_PROTOCOL_TFTP);
 
-    return (-1 != pro);
+    return found_pro;
 }
 
 void ndpi_search_tftp(struct ndpi_detection_module_struct *ndpi_struct,

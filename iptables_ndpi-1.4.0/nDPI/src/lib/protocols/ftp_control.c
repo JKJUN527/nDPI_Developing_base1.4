@@ -24,6 +24,22 @@
 #include "ndpi_protocols.h"
 #include "ndpi_utils.h"
 
+#ifdef __KERNEL__
+# define PRINT      printk
+#else
+# define PRINT      printf
+#endif /* __KERNEL__ */
+
+//#define LOCAL_DEBUG
+#undef LOCAL_DEBUG
+
+#undef _D
+#ifdef LOCAL_DEBUG
+# define _D(...)    PRINT(__VA_ARGS__)
+#else
+# define _D(...)    ((void)0)
+#endif /* LOCAL_DEBUG */
+
 #ifdef NDPI_PROTOCOL_FTP_CONTROL
 
 static void ndpi_int_ftp_control_add_connection(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
@@ -52,7 +68,7 @@ static int ndpi_ftp_control_check_request(const u_int8_t *payload, size_t payloa
         { "XRCP", 4 }, { "XRMD", 4 }, { "XRSQ", 4 }, { "XSEM", 4 }, { "XSEN", 4 },
         { "HOST", 4 }, { "abor", 4 }, { "acct", 4 }, { "adat", 4 }, { "allo", 4 },
         { "appe", 4 }, { "auth", 4 }, { "ccc",  3 }, { "cdup", 4 }, { "conf", 4 },
-        { "cwd",  3 }, { "dele", 4 }, { "enc" , 4 }, { "eprt", 4 }, { "epsv", 4 },
+        { "cwd",  3 }, { "dele", 4 }, { "enc",  3 }, { "eprt", 4 }, { "epsv", 4 },
         { "feat", 4 }, { "help", 4 }, { "lang", 4 }, { "list", 4 }, { "lprt", 4 },
         { "lpsv", 4 }, { "mdtm", 4 }, { "mic",  3 }, { "mkd",  3 }, { "mlsd", 4 },
         { "mlst", 4 }, { "mode", 4 }, { "nlst", 4 }, { "noop", 4 }, { "opts", 4 },
@@ -138,8 +154,7 @@ static void ftp_add_server_port_to_hash(struct ndpi_detection_module_struct *ndp
         return;
     }
     data[len-1] = save;
-    NDPI_LOG(NDPI_PROTOCOL_FTP_CONTROL, ndpi, NDPI_LOG_DEBUG, "FTP 227 %d,%d,%d,%d %d,%d\n",
-            ip[0], ip[1], ip[2], ip[3], port[0], port[1]);
+    _D("FTP 227 %d,%d,%d,%d %d,%d\n", ip[0], ip[1], ip[2], ip[3], port[0], port[1]);
 
     offset = ipsize+2;
     /* store as networking order */
@@ -162,7 +177,7 @@ extern void ndpi_search_ftp_control(struct ndpi_detection_module_struct *ndpi_st
     struct ndpi_packet_struct *packet = &flow->packet;
     u_int32_t payload_len = packet->payload_packet_len;
 
-    NDPI_LOG(NDPI_PROTOCOL_FTP_CONTROL, ndpi_struct, NDPI_LOG_DEBUG, "FTP_CONTROL detection...\n");
+    _D("FTP_CONTROL detection...\n");
 
     /* Check connection over TCP */
     if(!packet->tcp)
@@ -170,25 +185,18 @@ extern void ndpi_search_ftp_control(struct ndpi_detection_module_struct *ndpi_st
 
     /* Exclude SMTP, which uses similar commands. */
     if (packet->tcp->dest == htons(25) || packet->tcp->source == htons(25)) {
-        NDPI_LOG(NDPI_PROTOCOL_FTP_CONTROL, ndpi_struct, NDPI_LOG_DEBUG, "Exclude FTP_CONTROL.\n");
-        NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_FTP_CONTROL);
-        return;
-    }
-
-    /* Break after 20 packets. */
-    if (flow->packet_counter > 20) {
-        NDPI_LOG(NDPI_PROTOCOL_FTP_CONTROL, ndpi_struct, NDPI_LOG_DEBUG, "Exclude FTP_CONTROL.\n");
+        _D("Exclude FTP_CONTROL.\n");
         NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_FTP_CONTROL);
         return;
     }
 
     /* Check if we so far detected the protocol in the request or not. */
-    NDPI_LOG(NDPI_PROTOCOL_FTP_CONTROL, ndpi_struct, NDPI_LOG_DEBUG, "FTP_CONTROL stage %u:\n", flow->ftp_control_stage);
+    _D("FTP_CONTROL stage %u:\n", flow->ftp_control_stage);
     switch (flow->ftp_control_stage) {
         /* First request */
     case 0:
         if (ndpi_ftp_control_check_request(packet->payload, payload_len)) {
-            NDPI_LOG(NDPI_PROTOCOL_FTP_CONTROL, ndpi_struct, NDPI_LOG_DEBUG, "Possible FTP_CONTROL request detected, we will look further for the response...\n");
+            _D("Possible FTP_CONTROL request detected, we will look further for the response...\n");
 
             /* Encode the direction of the packet in the stage, so we will know when we need to look for the response packet. */
             flow->ftp_control_stage = 1;
@@ -200,26 +208,26 @@ extern void ndpi_search_ftp_control(struct ndpi_detection_module_struct *ndpi_st
     case 1:
         if (ndpi_ftp_control_check_response(packet->payload, payload_len)) {
             flow->ftp_control_stage = 2;
-            NDPI_LOG(NDPI_PROTOCOL_FTP_CONTROL, ndpi_struct, NDPI_LOG_DEBUG, "Found FTP_CONTROL in stage 1.\n");
+            _D("Found FTP_CONTROL in stage 1.\n");
             ndpi_int_ftp_control_add_connection(ndpi_struct, flow);
             return;
         }
 
         /* not ftp_control */
-        NDPI_LOG(NDPI_PROTOCOL_FTP_CONTROL, ndpi_struct, NDPI_LOG_DEBUG, "Exclude FTP_CONTROL in stage 1\n");
+        _D("Exclude FTP_CONTROL in stage 1\n");
         NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_FTP_CONTROL);
         break;
 
         /* Wait for PORT and PASV command */
     case 2:
         if (payload_len > 4 && (!memcmp(packet->payload, "PASV", 4) || !memcmp(packet->payload, "pasv", 4))) {
-            NDPI_LOG(NDPI_PROTOCOL_FTP_CONTROL, ndpi_struct, NDPI_LOG_DEBUG, "Seen FTP_CONTROL PASV command.\n");
+            _D("Seen FTP_CONTROL PASV command.\n");
             flow->ftp_control_stage = 3;        /* goto parsing pasv response */
             return;
         }
 
         if (payload_len > 6 && ((!memcmp(packet->payload, "PORT", 4)) || !memcmp(packet->payload, "port", 4))) {
-            NDPI_LOG(NDPI_PROTOCOL_FTP_CONTROL, ndpi_struct, NDPI_LOG_DEBUG, "Found FTP_CONTROL via PORT command.\n");
+            _D("Found FTP_CONTROL via PORT command.\n");
             ndpi_int_ftp_control_add_connection(ndpi_struct, flow);
             return;
         }
@@ -228,17 +236,12 @@ extern void ndpi_search_ftp_control(struct ndpi_detection_module_struct *ndpi_st
 
         /* Parse PASV response */
     default:
-        if (flow->packet_counter > 10) {
-            NDPI_LOG(NDPI_PROTOCOL_FTP_CONTROL, ndpi_struct, NDPI_LOG_DEBUG, "Exclude FTP_CONTROL after 10 packets.\n");
-            NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_FTP_CONTROL);
-            return;
-        }
-
         if (payload_len > 20 && !memcmp(packet->payload, "227 ", 4)) {
             /* parse server-port to hash table */
             ftp_add_server_port_to_hash(ndpi_struct, flow, packet->payload, payload_len);
-            NDPI_LOG(NDPI_PROTOCOL_FTP_CONTROL, ndpi_struct, NDPI_LOG_DEBUG, "Found FTP_CONTROL via PORT command.\n");
+            _D("Found FTP_CONTROL via PORT command.\n");
             ndpi_int_ftp_control_add_connection(ndpi_struct, flow);
+            flow->ftp_control_stage = 2;
             return;
         }
     }
