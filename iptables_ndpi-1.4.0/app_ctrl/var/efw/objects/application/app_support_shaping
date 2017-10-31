@@ -1,5 +1,5 @@
 # this is a list that ndpi support shaping   #195 # FUNSHION
-1#FTP
+1#FTP控制
 2#POP
 3#SMTP
 4#IMAP
@@ -11,6 +11,7 @@
 28#爱奇艺PPS客户端
 45#TFTP
 30#迅雷
+55#FTP数据
 60#微信
 67#乐视视频客户端
 68#风行视频客户端
