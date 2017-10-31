@@ -15,6 +15,8 @@ void ndpi_search_rip(struct ndpi_detection_module_struct *ndpi_struct,
   if(
   	(packet->payload_packet_len <= 512)
      && (((packet->payload[1] & 0xFF) == 0x01) || ((packet->payload[1] & 0xFF) == 0x02))
+     && (get_u_int16_t(packet->payload, 2)==htons(0x0000))
+     && (get_u_int16_t(packet->payload, 6)==htons(0x0000))
      && (( (payload_command < 6)&&(payload_command>1))
      ) ){
     NDPI_LOG(NDPI_PROTOCOL_RIP, ndpi_struct, NDPI_LOG_DEBUG, "Found rip.\n");
