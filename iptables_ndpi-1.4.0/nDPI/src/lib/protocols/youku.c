@@ -99,11 +99,12 @@ void ndpi_search_youku(struct ndpi_detection_module_struct *ndpi_struct, struct 
 									"search tcp youku \n");
 		ndpi_search_youku_tcp(ndpi_struct, flow);
 	}
-	else if (packet->udp != NULL) {
+	/*else if (packet->udp != NULL) {
 		NDPI_LOG(NDPI_PROTOCOL_YOUKU, ndpi_struct, NDPI_LOG_DEBUG,
 									"search udp youku \n");
 		ndpi_search_youku_udp(ndpi_struct, flow);
 	}
+*/
 }
 
 #endif

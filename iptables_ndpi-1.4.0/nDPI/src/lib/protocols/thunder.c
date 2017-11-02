@@ -70,13 +70,14 @@ __forceinline static
 	}
 	*/
 	NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG, "thunder udp port:%u\n",ntohs(packet->udp->source));
+	NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG, "thunder stage:%u\n", flow->thunder_stage);
 	if(ntohs(packet->udp->source)==12345){
 		NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG, "thunder udp port 12345 detected\n");
 		ndpi_int_thunder_add_connection(ndpi_struct, flow, NDPI_REAL_PROTOCOL);
 		return;
 	}
 	flow->thunder_stage++;
-	if(flow->thunder_stage<=8  //检查前四个包长度，满足前三个包小于50，第四个包大于220
+	if(flow->thunder_stage<=7  //检查前四个包长度，满足前三个包小于50，第四个包大于220
 		&&packet->payload_packet_len<50
 		&&packet->payload_packet_len>=40){
 		flow->thunder_count++;
@@ -126,7 +127,7 @@ __forceinline static
 		}
 
 	}
-	if(flow->thunder_stage>8){
+	if(flow->thunder_stage >=7){
 		
 		NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG,
 					"excluding thunder udp at stage %u\n", flow->thunder_stage);
@@ -213,12 +214,12 @@ __forceinline static
 				NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG,"thunder_count tcp: %u\n", flow->thunder_count);
 				break;
 			}
-	if (get_u_int16_t(packet->payload, 0) == htonl( 0x0400)){
+/*	if (get_u_int16_t(packet->payload, 0) == htonl( 0x0400)){
 		NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG, "THUNDER tcp detected\n");
 		ndpi_int_thunder_add_connection(ndpi_struct, flow, NDPI_REAL_PROTOCOL);
 		return;
 	}
-	
+	*/
 }
 
 	
