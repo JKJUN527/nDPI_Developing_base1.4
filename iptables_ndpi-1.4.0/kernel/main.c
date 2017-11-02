@@ -454,7 +454,13 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 
 		NDPI_CB_RECORD( _skb, entry );
 		spin_unlock_bh( &ndpi_lock );
-		return(false /* PASS */);
+        
+        /* FTP_CONTROL never be mark as detected */
+        if (entry->ndpi_proto == NDPI_PROTOCOL_FTP_CONTROL) {
+            return GET_MATCH_ABOVE(info, entry, NDPI_COMPARE_PROTOCOL_TO_BITMASK( info->protocols, entry->ndpi_proto )) ? true : false;
+        } else {
+            return false;
+        }
 	} else
 		entry->last_processed_skb = _skb;
 
@@ -520,11 +526,13 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 		/*
 		 * In this case we have not yet detected the protocol but the user has specified unknown as protocol
 		 */
-		entry->ndpi_proto	= NOT_YET_PROTOCOL;
-		verdict			= GET_MATCH_ABOVE(info, entry, NDPI_COMPARE_PROTOCOL_TO_BITMASK( info->protocols, entry->ndpi_proto )) ? true : false;
+        if (entry->ndpi_proto != NDPI_PROTOCOL_FTP_CONTROL)
+            entry->ndpi_proto = NOT_YET_PROTOCOL;
+		verdict	= GET_MATCH_ABOVE(info, entry, NDPI_COMPARE_PROTOCOL_TO_BITMASK( info->protocols, entry->ndpi_proto )) ? true : false;
 		NDPI_CB_RECORD(_skb,entry);
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
-		pr_info( "[NDPI] line:387 force set proto=NOT_YET_PROTOCOL  skip compare verdict %d [Proto: %s] num_packets_processed:%u\n", verdict, (entry->ndpi_proto == NOT_YET_PROTOCOL)
+		pr_info( "[NDPI] line:%d force set proto=NOT_YET_PROTOCOL  skip compare verdict %d [Proto: %s] num_packets_processed:%u\n",
+                __LINE__, verdict, (entry->ndpi_proto == NOT_YET_PROTOCOL)
 			 ? "NotYet" : ndpi_get_proto_name( ndpi_struct, entry->ndpi_proto ), entry->num_packets_processed);
 #endif
 	}
@@ -802,7 +810,8 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 
 		NDPI_CB_RECORD( _skb, entry );
 		spin_unlock_bh( &ndpi_lock );
-		return(verdict /* PASS */);
+
+        return XT_CONTINUE;
 	} else
 		entry->last_processed_skb = _skb;
 
@@ -860,10 +869,12 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 		/*
 		 * In this case we have not yet detected the protocol but the user has specified unknown as protocol
 		 */
-		entry->ndpi_proto	= NOT_YET_PROTOCOL;
+        if (entry->ndpi_proto != NDPI_PROTOCOL_FTP_CONTROL)
+            entry->ndpi_proto = NOT_YET_PROTOCOL;
 		NDPI_CB_RECORD(_skb,entry);
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
-		pr_info( "[NDPI] line:387 force set proto=NOT_YET_PROTOCOL  skip compare verdict %d [Proto: %s]\n", verdict, (entry->ndpi_proto == NOT_YET_PROTOCOL)
+		pr_info( "[NDPI] line:%d force set proto=NOT_YET_PROTOCOL  skip compare verdict %d [Proto: %s]\n",
+                __LINE__, verdict, (entry->ndpi_proto == NOT_YET_PROTOCOL)
 			 ? "NotYet" : ndpi_get_proto_name( ndpi_struct, entry->ndpi_proto ) );
 #endif
 	}

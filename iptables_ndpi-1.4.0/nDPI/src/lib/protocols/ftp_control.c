@@ -83,8 +83,10 @@ static int ndpi_ftp_control_check_request(const u_int8_t *payload, size_t payloa
 
     int i;
     for (i = 0; i < sizeof(req_op)/sizeof(req_op[0]); i++) {
-        if (payload_len >= req_op[i].len && !memcmp(payload, req_op[i].str, req_op[i].len))
+        if (payload_len >= req_op[i].len && !memcmp(payload, req_op[i].str, req_op[i].len)) {
+            _D("FTP_CONTROL: found %s\n", req_op[i].str);
             return 1;
+        }
     }
     return 0;
 }
@@ -120,8 +122,10 @@ static int ndpi_ftp_control_check_response(const u_int8_t *payload, size_t paylo
 
     int i;
     for (i = 0; i < sizeof(res_code)/sizeof(res_code[0]); i++) {
-        if (payload_len >= res_code[i].len && !memcmp(payload, res_code[i].str, res_code[i].len))
+        if (payload_len >= res_code[i].len && !memcmp(payload, res_code[i].str, res_code[i].len)) {
+            _D("FTP_CONTROL: found %s\n", res_code[i].str);
             return 1;
+        }
     }
     return 0;
 }
