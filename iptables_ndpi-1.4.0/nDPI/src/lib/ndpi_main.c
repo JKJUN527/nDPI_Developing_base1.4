@@ -853,6 +853,8 @@ ndpi_protocol_match host_match[] = {
   { "music.126.net",             "NetEaseMusic", NDPI_PROTOCOL_NETEASEMUSIC},
 
   { "kugou.com",                 "KuGouMusic", NDPI_PROTOCOL_KUGOUMUSIC },
+  { "kugoo.com",                 "KuGouMusic", NDPI_PROTOCOL_KUGOUMUSIC },
+  { "5sing.com",                 "KuGouMusic", NDPI_PROTOCOL_KUGOUMUSIC },
   { "song.room.fanxing.com",     "KuGouMusic", NDPI_PROTOCOL_KUGOUMUSIC },
 
   { NULL, 0 }

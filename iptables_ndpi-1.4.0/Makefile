@@ -61,7 +61,7 @@ test_pre:
 
 test: install
 	iptables -I FORWARD  -j NDPI
-	iptables -A FORWARD  -m ndpi --protos FTP_DATA -j DROP
+	iptables -A FORWARD  -m ndpi --protos KuGouMusic -j REJECT
 	watch -n 0.5 'iptables -S -v'
 	#iptables -A JK -p udp --sport 12345 -j REJECT
 m:

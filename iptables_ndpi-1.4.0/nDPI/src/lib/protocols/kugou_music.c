@@ -44,6 +44,12 @@ static void search_udp(struct ndpi_detection_module_struct *ndpi, struct ndpi_fl
     case 1:
         if (paylen >= 700 && 0x32 == payload[0]
                 && (0x00 == payload[suffix_offset] && 0x04 == payload[suffix_offset+1])) {
+            ndpi_int_add_connection(ndpi, flow, NDPI_PROTOCOL_KUGOUMUSIC, NDPI_REAL_PROTOCOL);
+
+            return;
+        }
+        break;
+#if 0
             flow->kugou_music_udp_seq = payload[seq_offset];
             flow->kugou_music_hash = kugou_hash(payload+hash_offset, paylen-hash_offset);
             flow->kugou_music_stage = 2;
@@ -64,6 +70,7 @@ static void search_udp(struct ndpi_detection_module_struct *ndpi, struct ndpi_fl
             }
         }
         break;
+#endif
     }
     _D("KuGouMusic: end search_udp(): stage: %d\n", flow->kugou_music_stage);
 }
