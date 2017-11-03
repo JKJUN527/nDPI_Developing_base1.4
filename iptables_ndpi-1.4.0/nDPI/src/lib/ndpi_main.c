@@ -735,7 +735,7 @@ ndpi_protocol_match host_match[] = {
   { "fbcdn-",            	"FaceBook", 	        NDPI_PROTOCOL_FACEBOOK },  /* fbcdn-video-a-akamaihd.net */
   { "compass.cn",         	"ZhiNanZhen", 		NDPI_PROTOCOL_ZHINANZHEN },
   { "down.xunlei.com",  	"Thunder", 		NDPI_PROTOCOL_THUNDER },
-  { "xunlei.com",  	        "Thunder", 		NDPI_PROTOCOL_THUNDER },
+  { ".xunlei.com",  	    "Thunder", 		NDPI_PROTOCOL_THUNDER },
   { "sandai.net",  	        "Thunder", 		NDPI_PROTOCOL_THUNDER },
   { "wx.qq.com",  		"WeChat", 		NDPI_PROTOCOL_WECHAT },
   { "weixin.qq.com",  	 	"WeChat", 		NDPI_PROTOCOL_WECHAT },
