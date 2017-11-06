@@ -150,6 +150,17 @@ __forceinline static
 //      struct ndpi_id_struct         *src=ndpi_struct->src;
 //      struct ndpi_id_struct         *dst=ndpi_struct->dst;
 		flow->thunder_stage++;
+    if (get_u_int32_t(packet->payload, 0) == htonl( 0x04000000)
+        &&get_u_int32_t(packet->payload,8) == htonl(0x03000000)
+        &&packet->payload[6]==0x00
+        &&packet->payload[7]==0x00
+       ){
+         NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG, "THUNDER tcp detected\n");
+         ndpi_int_thunder_add_connection(ndpi_struct, flow, NDPI_REAL_PROTOCOL);
+         return;
+     }
+
+
 		switch (flow->thunder_count)
 			{
 			case 0:
