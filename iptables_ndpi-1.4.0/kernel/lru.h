@@ -18,7 +18,7 @@
 
 #define MAX_MATCH_ABOVE_POOL 4
 struct LruCacheEntryValue {
-	u_int32_t	num_packets_processed;
+	u_int32_t	num_packets_processed;      /* this count includes SYN/ACK packets for TCP protocl */
 	u_int8_t	protocol_detected, host_name_checked;
 	/* nDPI */
 	u_int16_t		ndpi_proto;

@@ -95,7 +95,7 @@ typedef struct ndpi_flow {
   u_int8_t detection_completed, protocol;
   struct ndpi_flow_struct *ndpi_flow;
 
-  u_int16_t packets, bytes;
+  u_int16_t packets, bytes;     /* `packets' doesn't include SYN/ACK packets? */
   // result only, not used for flow identification
   u_int32_t detected_protocol;
 
@@ -611,16 +611,18 @@ static unsigned int packet_processing(const u_int64_t time,
 
   flow->detected_protocol = protocol;
 
-  printf("ndpi_flow->packet_counter: %d\n", ndpi_flow->packet_counter);
+  printf("ndpi_flow->packet_counter: %d flow->packets: %d\n", ndpi_flow->packet_counter, flow->packets);
   if (NDPI_PROTOCOL_FTP_CONTROL == flow->detected_protocol) {
       printf("find FTP_CONTROL\n");
-      return 0;
+      //return 0;
   }
 
-  if ((flow->detected_protocol == NDPI_PROTOCOL_HTTP && ndpi_flow->packet_counter >= 5)
-          || (flow->detected_protocol != NDPI_PROTOCOL_UNKNOWN && flow->detected_protocol != NDPI_PROTOCOL_HTTP)
-          || (proto == IPPROTO_UDP && flow->packets > 15)
-          || ((proto == IPPROTO_TCP) && (flow->packets > 10))) {
+  if (flow->detected_protocol != NDPI_PROTOCOL_FTP_CONTROL
+       && (   (flow->detected_protocol == NDPI_PROTOCOL_HTTP && ndpi_flow->packet_counter >= 5)
+           || (proto == IPPROTO_UDP && flow->packets >= 15)
+           || (proto == IPPROTO_TCP && flow->packets >= 10)
+           || (flow->detected_protocol != NDPI_PROTOCOL_UNKNOWN
+               && flow->detected_protocol != NDPI_PROTOCOL_HTTP))) {
       flow->detection_completed = 1;
 
       free_ndpi_flow(flow);

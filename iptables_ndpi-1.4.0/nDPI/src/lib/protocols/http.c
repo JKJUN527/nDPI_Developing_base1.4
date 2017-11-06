@@ -954,7 +954,7 @@ static int kugou_music_http_check(struct ndpi_detection_module_struct *ndpi, str
 {
     struct ndpi_packet_struct *packet = &flow->packet;
     _D("Into http KuGouMusic at check_http_payload().\n");
-    if (0 != flow-> kugou_music_type && 3 != flow->kugou_music_type)
+    if (0 != flow->kugou_music_type && 3 != flow->kugou_music_type)
         return 0;
     if (!packet->http_payload.ptr)
         return 0;
@@ -964,7 +964,7 @@ static int kugou_music_http_check(struct ndpi_detection_module_struct *ndpi, str
     switch (flow->kugou_music_stage) {
     case 0:
         if (packet->http_method.len >= 4 && !strncmp("POST", packet->http_method.ptr, 4)
-                && (packet->http_payload.len >= 66 && ntohs(0x0100) == get_u_int16_t(packet->http_payload.ptr, 0))) {
+                && (packet->http_payload.len >= 50 && ntohs(0x0100) == get_u_int16_t(packet->http_payload.ptr, 0))) {
             flow->kugou_music_stage = 1;
             return 0;
         }
@@ -973,6 +973,7 @@ static int kugou_music_http_check(struct ndpi_detection_module_struct *ndpi, str
     case 1:
         if (packet->http_payload.len >= 48 && (ntohs(0x3200) == get_u_int16_t(packet->http_payload.ptr, 0))) {
             ndpi_int_http_add_connection(ndpi, flow, NDPI_PROTOCOL_KUGOUMUSIC);
+            flow->kugou_music_stage = 0;
             return 1;
         }
         goto kugou_music_http_exclude_tag;

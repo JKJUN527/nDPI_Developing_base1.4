@@ -509,7 +509,7 @@ typedef struct ndpi_flow_struct {
 #endif
 #endif
 
-  u_int16_t packet_counter;			// can be 0-65000
+  u_int16_t packet_counter;			// can be 0-65000, it only count packets with payload?
   u_int16_t packet_direction_counter[2];
   u_int16_t byte_counter[2];
 
