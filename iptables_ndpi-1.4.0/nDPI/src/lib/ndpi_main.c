@@ -44,8 +44,6 @@
 #define printf(fmt,arg...) DO_NOTHING()
 #endif
 
-
-
 #ifdef __KERNEL__
 #include <linux/version.h>
 #define printf printk
@@ -59,9 +57,6 @@
 
 char long_url[HOST_MAX_LEN] = {0};
 /* Enable debug tracings */
-
-
-
 
 typedef struct {
   char *string_to_match, *proto_name;
@@ -839,6 +834,8 @@ ndpi_protocol_match host_match[] = {
 
   { "phsle02.oray.net",         "HuaShengKe",  NDPI_PROTOCOL_HUASHENGKE },
   { "oray.net",                 "HuaShengKe",  NDPI_PROTOCOL_HUASHENGKE },
+  { "oray.com",                 "HuaShengKe",  NDPI_PROTOCOL_HUASHENGKE },
+  { "orayimg.com",              "HuaShengKe",  NDPI_PROTOCOL_HUASHENGKE },
   { "wuxia.qq.com",             "QQWuXia",     NDPI_PROTOCOL_GAME_QQWUXIA },
   { "nz.qq.com",                "NIZhan",      NDPI_PROTOCOL_NIZHAN },
   { "nzclientpop",              "NIZhan",      NDPI_PROTOCOL_NIZHAN },
@@ -3280,17 +3277,19 @@ static int ndpi_init_packet_header(struct ndpi_detection_module_struct *ndpi_str
       /* check for new tcp syn packets, here
        * idea: reset detection state if a connection is unknown
        */
+      unsigned char save_setup_pkt_dir = flow->setup_packet_direction;
       if (flow && flow->packet.tcp->syn != 0
-	  && flow->packet.tcp->ack == 0
-	  && flow->init_finished != 0
-	  && flow->detected_protocol_stack[0] == NDPI_PROTOCOL_UNKNOWN) {
+              && flow->packet.tcp->ack == 0
+              && flow->init_finished != 0
+              && flow->detected_protocol_stack[0] == NDPI_PROTOCOL_UNKNOWN) {
 
-	memset(flow, 0, sizeof(*(flow)));
+          memset(flow, 0, sizeof(*(flow)));
+          /* since it maybe is a tcp retransmission, I must mark flow->init_finished as 1 */
+          flow->init_finished = 1;
+          flow->setup_packet_direction = save_setup_pkt_dir;
 
-
-	NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct,
-		 NDPI_LOG_DEBUG,
-		 "%s:%u: tcp syn packet for unknown protocol, reset detection state\n", __FUNCTION__, __LINE__);
+          NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG,
+                  "%s:%u: tcp syn packet for unknown protocol, reset detection state\n", __FUNCTION__, __LINE__);
 
       }
     } else {
@@ -3339,7 +3338,6 @@ void ndpi_connection_tracking(struct ndpi_detection_module_struct *ndpi_struct,
 
   packet->packet_direction = 0;
 
-
   if (iph != NULL && iph->saddr < iph->daddr)
     packet->packet_direction = 1;
 
@@ -3354,8 +3352,12 @@ void ndpi_connection_tracking(struct ndpi_detection_module_struct *ndpi_struct,
     return;
 
   if (flow->init_finished == 0) {
-    flow->init_finished = 1;
-    flow->setup_packet_direction = packet->packet_direction;
+      flow->init_finished = 1;
+      flow->setup_packet_direction = packet->packet_direction;
+      /* parse whether the packet is from client to server */
+      packet->client2server = 1;
+  } else {
+      packet->client2server = (flow->setup_packet_direction == packet->packet_direction);
   }
 
   if (tcph != NULL) {
@@ -4185,7 +4187,7 @@ void ndpi_parse_packet_line_info(struct ndpi_detection_module_struct *ndpi_struc
         const char *ipstr;
         int len;
         /* client to server */
-        if (flow->l4.tcp.http_setup_dir == 1) {
+        if (packet->client2server) {
             ndpi_packet_dst_ip_get(packet, &ip);
         } else {
             ndpi_packet_src_ip_get(packet, &ip);
