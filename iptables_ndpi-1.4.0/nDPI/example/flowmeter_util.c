@@ -3,7 +3,6 @@ this is for flowmeter functions
 */
 
 #include "flowmeter_util.h"
-
 /*global vars*/
 //conf_row_t *GLOBAL_CONF;
 
@@ -1150,12 +1149,17 @@ void updateFlowData(struct ndpi_detection_module_struct *ndpi_struct, struct ndp
 		{									\
 			/*1. get hash ele by url*/					\
 			HashEle_t *hash_ele = NULL;					\
-			/* printf("will setUrlIntoHashtable\n"); */			\
+			/* printf("will setUrlIntoHashtable\n"); */ 			\
 			if (flow->ndpi_flow == NULL){				\
 				hash_ele =  setUrlIntoHashtableById(_hashtable, flow->url_hash_idx);		\
 			}else{								\
-				if ( flow->ndpi_flow->host_server_name != NULL && strlen(flow->ndpi_flow->host_server_name) > 0) {	\
-					hash_ele = setUrlIntoHashtable(_hashtable, flow->ndpi_flow->host_server_name);	\
+				printf("idx: %d ssl.client_certificate:%s ssl.server_certificate:%s servername:%s\n",flow->detected_protocol,flow->ndpi_flow->protos.ssl.client_certificate,flow->ndpi_flow->protos.ssl.server_certificate,flow->ndpi_flow->host_server_name);		\
+				if ( strlen(flow->ndpi_flow->protos.ssl.client_certificate) || strlen(flow->ndpi_flow->protos.ssl.server_certificate) || strlen(flow->ndpi_flow->host_server_name) > 0) {	\
+					if (ISSSL(flow->detected_protocol)) { \
+						if (strlen(flow->ndpi_flow->protos.ssl.client_certificate)) {printf("ssl client\n"); hash_ele = setUrlIntoHashtable(_hashtable, flow->ndpi_flow->protos.ssl.client_certificate); } \
+						else if (strlen(flow->ndpi_flow->protos.ssl.server_certificate)) { printf("ssl server\n");hash_ele = setUrlIntoHashtable(_hashtable, flow->ndpi_flow->protos.ssl.server_certificate); } \
+						else {printf("unvalid ssl\n");} \
+					 } else	{ printf("http\n");hash_ele = setUrlIntoHashtable(_hashtable, flow->ndpi_flow->host_server_name); } \
 					if (hash_ele != NULL){					\
 						flow->url_hash_idx = hash_ele->url_id;		\
 					}						\

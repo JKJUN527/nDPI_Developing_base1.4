@@ -48,8 +48,9 @@ extern u_int32_t  COUNT_TIMES ;
 
 #define ADD_CONF(x,y) {x,NULL,y}
 #define ADD_CONF_END() {NULL,NULL}
+#define ISSSL(X) ( X == NDPI_PROTOCOL_SSL )
+#define ISHTTP(X) (X == NDPI_PROTOCOL_HTTP || ISSSL(X) )
 
-#define ISHTTP(X) (X == NDPI_PROTOCOL_HTTP)
 // #define BUG(format, args...) printf("BUG:"#format"\n" , args)
 #define BUG(format, args...)  ;
 /*for log*/
