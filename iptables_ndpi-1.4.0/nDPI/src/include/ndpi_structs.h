@@ -176,9 +176,6 @@ struct ndpi_flow_tcp_struct {
 #ifdef NDPI_PROTOCOL_WORLDOFWARCRAFT
   u_int32_t wow_stage:2;
 #endif
-#ifdef NDPI_PROTOCOL_RTP
-  u_int32_t rtp_special_packets_seen:1;
-#endif
 #ifdef NDPI_PROTOCOL_MAIL_POP
   u_int32_t mail_pop_stage:2;
 #endif
@@ -499,17 +496,6 @@ typedef struct ndpi_flow_struct {
   /* protocols which have marked a connection as this connection cannot be protocol XXX, multiple u_int64_t */
   NDPI_PROTOCOL_BITMASK excluded_protocol_bitmask;
 
-#if 0
-#ifdef NDPI_PROTOCOL_RTP
-  u_int32_t rtp_ssid[2];
-  u_int16_t rtp_seqnum[2];			/* current highest sequence number (only goes forwards, is not decreased by retransmissions) */
-  /* tcp and udp */
-  u_int8_t rtp_payload_type[2];
-  u_int32_t rtp_stage1:2;			//0-3
-  u_int32_t rtp_stage2:2;
-#endif
-#endif
-
   u_int16_t packet_counter;			// can be 0-65000, it only count packets with payload?
   u_int16_t packet_direction_counter[2];
   u_int16_t byte_counter[2];
@@ -621,6 +607,10 @@ typedef struct ndpi_flow_struct {
 #endif
 #ifdef NDPI_PROTOCOL_WECHAT_TX
     u_int32_t wechat_tx_authkeyhash;
+#endif
+#ifdef NDPI_PROTOCOL_RTP
+    u_int32_t rtp_ssrc;
+    u_int16_t rtp_seq;
 #endif
 
   /* internal structures to save functions calls */
