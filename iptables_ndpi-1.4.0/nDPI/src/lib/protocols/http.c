@@ -327,7 +327,7 @@ NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "search nizhan login.\
 #ifdef NDPI_PROTOCOL_YIXIN
 static void yixin_parse_packet_useragentline	(struct ndpi_detection_module_struct						
 							*ndpi_struct, struct ndpi_flow_struct *flow)
-	{  
+	{
 	  struct ndpi_packet_struct *packet = &flow->packet;
 	
 	  if(packet->user_agent_line.len >= NDPI_STATICSTRING_LEN("NETEASE-YIXIN")
@@ -964,7 +964,7 @@ static int kugou_music_http_check(struct ndpi_detection_module_struct *ndpi, str
     switch (flow->kugou_music_stage) {
     case 0:
         if (packet->http_method.len >= 4 && !strncmp("POST", packet->http_method.ptr, 4)
-                && (packet->http_payload.len >= 50 && ntohs(0x0100) == get_u_int16_t(packet->http_payload.ptr, 0))) {
+                && (packet->http_payload.len >= 30 && ntohs(0x0100) == get_u_int16_t(packet->http_payload.ptr, 0))) {
             flow->kugou_music_stage = 1;
             return 0;
         }

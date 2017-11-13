@@ -51,9 +51,6 @@ static int ndpi_int_mail_pop_check_for_client_commands(struct ndpi_detection_mod
 														 *ndpi_struct, struct ndpi_flow_struct *flow)
 {
 	struct ndpi_packet_struct *packet = &flow->packet;
-	
-//  struct ndpi_id_struct         *src=ndpi_struct->src;
-//  struct ndpi_id_struct         *dst=ndpi_struct->dst;
 
 	if (packet->payload_packet_len > 4) {
 		if ((packet->payload[0] == 'A' || packet->payload[0] == 'a')
@@ -133,9 +130,6 @@ void ndpi_search_mail_pop_tcp(struct ndpi_detection_module_struct
 								*ndpi_struct, struct ndpi_flow_struct *flow)
 {
 	struct ndpi_packet_struct *packet = &flow->packet;
-	
-//  struct ndpi_id_struct         *src=ndpi_struct->src;
-//  struct ndpi_id_struct         *dst=ndpi_struct->dst;
 
 	u_int8_t a = 0;
 	u_int8_t bit_count = 0;
@@ -197,7 +191,7 @@ void ndpi_search_mail_pop_tcp(struct ndpi_detection_module_struct
 	}
 
 
-  maybe_split_pop:
+maybe_split_pop:
 
 	if (((packet->payload_packet_len > 2 && ntohs(get_u_int16_t(packet->payload, packet->payload_packet_len - 2)) == 0x0d0a)
 		 || flow->l4.tcp.pop_command_bitmask != 0 || flow->l4.tcp.mail_pop_stage != 0) && flow->packet_counter < 12) {
