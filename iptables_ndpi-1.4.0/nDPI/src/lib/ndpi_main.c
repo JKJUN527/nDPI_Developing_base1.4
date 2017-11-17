@@ -813,7 +813,7 @@ ndpi_protocol_match host_match[] = {
   { "worldofwarcraft.com",      "WorldOfWarCraft"      , NDPI_PROTOCOL_WORLDOFWARCRAFT},
   {"lol.qq.com",                "lol"                  , NDPI_PROTOCOL_LOL},
   {"speed.qq.com",              "QQSpeed"              , NDPI_PROTOCOL_GAME_QQSPEED },
-  {"c.pc.qq.com",              "QQSpeed"              , NDPI_PROTOCOL_GAME_QQSPEED },
+  //{"c.pc.qq.com",              "QQSpeed"              , NDPI_PROTOCOL_GAME_QQSPEED },
   {"qqkart/full/commoditylist",              "QQSpeed"              , NDPI_PROTOCOL_GAME_QQSPEED },
   {"dnf.qq.com",                "Dnf"                  , NDPI_PROTOCOL_GAME_DNF },
   {".worldofwarships.cn",       "WorldOfWarShip"       , NDPI_PROTOCOL_GAME_WORLD_OF_WARSHIP },
