@@ -105,7 +105,7 @@ static void ndpi_rtp_search(struct ndpi_detection_module_struct *ndpi, struct nd
         u_int32_t ssrc = get_u_int32_t(payload, SSRC_OFFSET);
         u_int32_t timestamp = ntohl(get_u_int32_t(payload, TIMESTAMP_OFFSET));
         u_int16_t seq = ntohs(get_u_int16_t(payload, SEQ_OFFSET));
-        _D("RTP: ssrc: %08x seq: %d\n", ssrc, seq);
+        _D("RTP: flow: %p ssrc: %08x seq: %d timestamp: %u\n", flow, ssrc, seq, timestamp);
         /* First packet indicating a ssesion */
         if (0 == flow->rtp_ssrc) {
             _D("RTP: Found first packet of A session maybe.\n");
