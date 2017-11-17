@@ -92,8 +92,9 @@ static void ndpi_rtp_search(struct ndpi_detection_module_struct *ndpi, struct nd
     if (payload_len < 2)
         return;
     u_int8_t payload_type = payload[1] & 0x7F;      /* PT */
-    const int SEQ_GAP = 3;
+    const int SEQ_GAP = 4;
     const int SEQ_OFFSET = 2;
+    const int TIMESTAMP_OFFSET = 4;
     const int SSRC_OFFSET = 8;
 
     /* Check whether this is an RTP flow */
@@ -102,20 +103,22 @@ static void ndpi_rtp_search(struct ndpi_detection_module_struct *ndpi, struct nd
             && isValidMSRTPType(payload_type)) {  /* http://www.iana.org/assignments/rtp-parameters/rtp-parameters.xhtml */
 
         u_int32_t ssrc = get_u_int32_t(payload, SSRC_OFFSET);
-        int seq = ntohs(get_u_int16_t(payload, SEQ_OFFSET));
+        u_int32_t timestamp = ntohl(get_u_int32_t(payload, TIMESTAMP_OFFSET));
+        u_int16_t seq = ntohs(get_u_int16_t(payload, SEQ_OFFSET));
         _D("RTP: ssrc: %08x seq: %d\n", ssrc, seq);
         /* First packet indicating a ssesion */
         if (0 == flow->rtp_ssrc) {
             _D("RTP: Found first packet of A session maybe.\n");
             flow->rtp_ssrc = ssrc;
             flow->rtp_seq  = seq;
+            flow->rtp_timestamp = timestamp;
         } else if (flow->rtp_ssrc == ssrc) {
-            /* "seq - flow->rtp != 0" exclude KuWoMusic protocol */
-            if ((0 != seq - flow->rtp_seq) && (ABS(seq - (int)flow->rtp_seq) <= SEQ_GAP)) {
+            /* "seq > flow->rtp" exclude KuWoMusic protocol */
+            if ((seq > flow->rtp_seq) && ((int)seq - flow->rtp_seq <= SEQ_GAP) && timestamp > flow->rtp_timestamp) {
                 _D("RTP: Found RTP!\n");
                 ndpi_int_add_connection(ndpi, flow, NDPI_PROTOCOL_RTP, NDPI_REAL_PROTOCOL);
             } else {
-                _D("RTP: Exclude RTP(ABS(seq - flow.seq) > %d).\n", SEQ_GAP);
+                _D("RTP: Exclude RTP(seq: %d <= %d, timestamp: %d <= %d)\n", seq, flow->rtp_seq, timestamp, flow->rtp_timestamp);
                 NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_RTP);
             }
         } else if (flow->packet_counter >= SEQ_GAP) {
