@@ -308,6 +308,11 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 	pr_info( "[NDPI] add_to_lru#2\n" );
 #endif
 	spin_lock_bh( &ndpi_lock );
+    if (NULL == ct) {
+        pr_info( "[NDPI] NULL == ct after spin_lock_bh() at line: %d\n", __LINE__);
+        spin_unlock_bh( &ndpi_lock );
+        return DEFAULT_VERDICT;
+    }
 	node = add_to_lru_cache( lru_cache, key );
 	// spin_unlock_bh( &ndpi_lock );
 
@@ -681,6 +686,11 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 	pr_info( "[NDPI] add_to_lru#2\n" );
 #endif
 	spin_lock_bh( &ndpi_lock );
+    if (NULL == ct) {
+        pr_info( "[NDPI] NULL == ct after spin_lock_bh() at line: %d\n", __LINE__);
+        spin_unlock_bh( &ndpi_lock );
+        return XT_CONTINUE;
+    }
 	node = add_to_lru_cache( lru_cache, key );
 	// spin_unlock_bh( &ndpi_lock );
 
