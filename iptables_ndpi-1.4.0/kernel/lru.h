@@ -16,6 +16,8 @@
 #define LruKey u_int64_t
 #endif
 
+#define CACHE_SIZE  (32768)
+
 #define MAX_MATCH_ABOVE_POOL 4
 struct LruCacheEntryValue {
 	u_int32_t	num_packets_processed;      /* this count includes SYN/ACK packets for TCP protocl */
@@ -62,7 +64,7 @@ struct LruCacheUnit {
  * #define NUM_LRU_CACHE_UNITS        64
  * #define NUM_LRU_CACHE_UNITS        256 //PT
  */
-#define NUM_LRU_CACHE_UNITS 1024       /* JK */
+#define NUM_LRU_CACHE_UNITS        1024
 
 struct LruCache {
 	struct LruCacheUnit units[NUM_LRU_CACHE_UNITS];

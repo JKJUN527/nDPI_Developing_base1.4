@@ -135,14 +135,8 @@ static int delete_oldest_lru_cache_unit( struct LruCacheUnit *cache_unit )
 			pr_info( "[NDPI ERROR] Internal error (NULL tail)" );
 			return(-1);
 		}
-
-		if ( (cache_unit->list_tail)->lru_list.prev == NULL )
-		{
-			pr_info( "[NDPI ERROR] Internal error (NULL prev)" );
-			return(-1);
-		} else
-			( (cache_unit->list_tail)->lru_list.prev)->lru_list.next = NULL;
-	}
+        cache_unit->list_tail->lru_list.next = NULL;
+    }
 
 	hash_id = node->node.key % cache_unit->hash_size;
 	head	= cache_unit->hash[hash_id];
@@ -267,7 +261,7 @@ static struct LruCacheNode* add_to_lru_cache_unit( struct LruCacheUnit *cache_un
 	u_int8_t		node_already_existing	= 0;
 
 	if ( unlikely( traceLRU ) )
-		pr_info( "[NDPI] %s(key=%lu)", __FUNCTION__, (long unsigned int) key );
+		pr_info( "[NDPI] %s(key=%lu)", __FUNCTION__, (unsigned long int) key );
 
 	/* [1] Add to hash */
 	if ( cache_unit->hash[hash_id] == NULL )
@@ -371,7 +365,7 @@ int init_lru_engine( void )
 		return(-1);
 	}
 
-	init_lru_cache( lru_cache, 32768 );
+	init_lru_cache( lru_cache, CACHE_SIZE);
 	return(0);
 }
 

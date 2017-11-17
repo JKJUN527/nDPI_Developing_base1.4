@@ -2,8 +2,8 @@
 # (C) 2013 - Luca Deri <deri@ntop.org>
 #
 
-ifneq (, $(shell which svnversion))
-SVNDEF := -DSVN_REV="\"$(shell svnversion -n .)\""
+ifneq (, $(shell which git))
+	VER_DEV := $(shell git describe --abbrev=4 --always)
 endif
 
 ifeq (,$(BUILD_KERNEL))
@@ -20,7 +20,8 @@ NDPI_LIB=$(NDPI_HOME)/src/lib
 NDPI_LIB_PROTOCOLS=$(NDPI_LIB)/protocols
 NDPI_INCLUDE=$(NDPI_HOME)/src/include
 
-EXTRA_CFLAGS += -I$(PWD) -I$(PWD)/$(NDPI_INCLUDE) -I$(PWD)/$(NDPI_LIB)/third_party/include $(SVNDEF) #-DNDPI_ENABLE_DEBUG_MESSAGES
+#EXTRA_CFLAGS += -I$(PWD) -I$(PWD)/$(NDPI_INCLUDE) -I$(PWD)/$(NDPI_LIB)/third_party/include $(SVNDEF) #-DNDPI_ENABLE_DEBUG_MESSAGES
+EXTRA_CFLAGS += -I$(PWD) -I$(PWD)/$(NDPI_INCLUDE) -I$(PWD)/$(NDPI_LIB)/third_party/include -DVER_DEV=\"$(VER_DEV)\"
 
 NDPI_LIB_OBJS= \
 	$(NDPI_LIB)/third_party/src/ahocorasick.o \
@@ -136,7 +137,7 @@ NDPI_LIB_OBJS= \
 SRC=lru.c lru.h ndpi.c ndpi.h main.c
 OBJS=main.o ndpi.o lru.o
 
-obj-m := xt_ndpi.o 
+obj-m := xt_ndpi.o
 xt_ndpi-y := $(OBJS) $(NDPI_LIB_OBJS)
 #ccflags-y += -I$(NDPI_HOME)/src/lib -I$(NDPI_HOME)/src/protocols
 
