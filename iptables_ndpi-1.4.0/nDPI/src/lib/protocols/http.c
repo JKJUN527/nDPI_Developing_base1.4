@@ -326,16 +326,16 @@ static void check_nizhan_payload(struct ndpi_detection_module_struct *ndpi_struc
 
 #ifdef NDPI_PROTOCOL_YIXIN
 static void yixin_parse_packet_useragentline	(struct ndpi_detection_module_struct						
-                *ndpi_struct, struct ndpi_flow_struct *flow)
-{  
-        struct ndpi_packet_struct *packet = &flow->packet;
-
-        if(packet->user_agent_line.len >= NDPI_STATICSTRING_LEN("NETEASE-YIXIN")
-                        && memcmp(packet->user_agent_line.ptr, "NETEASE-YIXIN", NDPI_STATICSTRING_LEN("NETEASE-YIXIN")) == 0) {
-                NDPI_LOG(NDPI_PROTOCOL_YIXIN, ndpi_struct, NDPI_LOG_DEBUG, "yixin: User Agent: NETEASE-YIXIN\n");
-                ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_YIXIN);
-        }
-}
+							*ndpi_struct, struct ndpi_flow_struct *flow)
+	{
+	  struct ndpi_packet_struct *packet = &flow->packet;
+	
+	  if(packet->user_agent_line.len >= NDPI_STATICSTRING_LEN("NETEASE-YIXIN")
+	  	&& memcmp(packet->user_agent_line.ptr, "NETEASE-YIXIN", NDPI_STATICSTRING_LEN("NETEASE-YIXIN")) == 0) {
+		NDPI_LOG(NDPI_PROTOCOL_YIXIN, ndpi_struct, NDPI_LOG_DEBUG, "yixin: User Agent: NETEASE-YIXIN\n");
+		ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_YIXIN);
+	  }
+	}
 #endif
 #ifdef NDPI_PROTOCOL_FETION
 static void fetion_parse_packet_useragentline	(struct ndpi_detection_module_struct						
@@ -958,43 +958,43 @@ static void check_accept_line(struct ndpi_detection_module_struct
  */
 static int kugou_music_http_check(struct ndpi_detection_module_struct *ndpi, struct ndpi_flow_struct *flow)
 {
-        struct ndpi_packet_struct *packet = &flow->packet;
-        _D("Into http KuGouMusic at check_http_payload().\n");
-        if (0 != flow->kugou_music_type && 3 != flow->kugou_music_type)
-                return 0;
-        if (!packet->http_payload.ptr)
-                return 0;
-        _D("KuGouMusic: stage: %d | %02x%02x\n", flow->kugou_music_stage,
-                        packet->http_payload.ptr[0], packet->http_payload.ptr[1]);
-        flow->kugou_music_type = 3;
-        switch (flow->kugou_music_stage) {
-                case 0:
-                        if (packet->http_method.len >= 4 && !strncmp("POST", packet->http_method.ptr, 4)
-                                        && (packet->http_payload.len >= 50 && ntohs(0x0100) == get_u_int16_t(packet->http_payload.ptr, 0))) {
-                                flow->kugou_music_stage = 1;
-                                return 0;
-                        }
-                        goto kugou_music_http_exclude_tag;
-                        break;
-                case 1:
-                        if (packet->http_payload.len >= 48 && (ntohs(0x3200) == get_u_int16_t(packet->http_payload.ptr, 0))) {
-                                ndpi_int_http_add_connection(ndpi, flow, NDPI_PROTOCOL_KUGOUMUSIC);
-                                flow->kugou_music_stage = 0;
-                                return 1;
-                        }
-                        goto kugou_music_http_exclude_tag;
-                        break;
-
-                default:
-                        break;
-        }
-
+    struct ndpi_packet_struct *packet = &flow->packet;
+    _D("Into http KuGouMusic at check_http_payload().\n");
+    if (0 != flow->kugou_music_type && 3 != flow->kugou_music_type)
         return 0;
+    if (!packet->http_payload.ptr)
+        return 0;
+    _D("KuGouMusic: stage: %d | %02x%02x\n", flow->kugou_music_stage,
+            packet->http_payload.ptr[0], packet->http_payload.ptr[1]);
+    flow->kugou_music_type = 3;
+    switch (flow->kugou_music_stage) {
+        case 0:
+            if (packet->http_method.len >= 4 && !strncmp("POST", packet->http_method.ptr, 4)
+                    && (packet->http_payload.len >= 50 && ntohs(0x0100) == get_u_int16_t(packet->http_payload.ptr, 0))) {
+                flow->kugou_music_stage = 1;
+                return 0;
+            }
+            goto kugou_music_http_exclude_tag;
+            break;
+        case 1:
+            if (packet->http_payload.len >= 48 && (ntohs(0x3200) == get_u_int16_t(packet->http_payload.ptr, 0))) {
+                ndpi_int_http_add_connection(ndpi, flow, NDPI_PROTOCOL_KUGOUMUSIC);
+                flow->kugou_music_stage = 0;
+                return 1;
+            }
+            goto kugou_music_http_exclude_tag;
+            break;
+
+        default:
+            break;
+    }
+
+    return 0;
 
 kugou_music_http_exclude_tag:
-        NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_KUGOUMUSIC);
-        _D("exclude KuGouMusic.\n");
-        return 2;
+    NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_KUGOUMUSIC);
+    _D("exclude KuGouMusic.\n");
+    return 2;
 }
 #endif /* NDPI_PROTOCOL_KUGOUMUSIC */
 
