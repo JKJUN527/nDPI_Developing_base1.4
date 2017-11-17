@@ -464,7 +464,7 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
         if (entry->ndpi_proto == NDPI_PROTOCOL_FTP_CONTROL) {
             return GET_MATCH_ABOVE(info, entry, NDPI_COMPARE_PROTOCOL_TO_BITMASK( info->protocols, entry->ndpi_proto )) ? true : false;
         } else {
-            return XT_CONTINUE;
+            return false;
         }
 	} else
 		entry->last_processed_skb = _skb;
