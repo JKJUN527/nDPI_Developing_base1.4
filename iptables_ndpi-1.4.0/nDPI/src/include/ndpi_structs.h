@@ -610,7 +610,8 @@ typedef struct ndpi_flow_struct {
 #endif
 #ifdef NDPI_PROTOCOL_RTP
     u_int32_t rtp_ssrc;
-    u_int16_t rtp_seq;
+    u_int32_t rtp_timestamp;    /* time stamp */
+    u_int16_t rtp_seq;          /* sequence */
 #endif
 
   /* internal structures to save functions calls */

@@ -61,7 +61,7 @@ test_pre:
 
 test: install
 	iptables -I FORWARD  -j NDPI
-	iptables -A FORWARD  -m ndpi --protos POP -j DROP
+	iptables -A FORWARD  -m ndpi --protos RTP -j RETURN
 	watch -n 0.5 'iptables -S -v'
 	#iptables -A JK -p udp --sport 12345 -j REJECT
 m:

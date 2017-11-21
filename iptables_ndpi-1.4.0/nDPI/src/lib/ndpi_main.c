@@ -813,6 +813,8 @@ ndpi_protocol_match host_match[] = {
   { "worldofwarcraft.com",      "WorldOfWarCraft"      , NDPI_PROTOCOL_WORLDOFWARCRAFT},
   {"lol.qq.com",                "lol"                  , NDPI_PROTOCOL_LOL},
   {"speed.qq.com",              "QQSpeed"              , NDPI_PROTOCOL_GAME_QQSPEED },
+  //{"c.pc.qq.com",              "QQSpeed"              , NDPI_PROTOCOL_GAME_QQSPEED },
+  {"qqkart/full/commoditylist",              "QQSpeed"              , NDPI_PROTOCOL_GAME_QQSPEED },
   {"dnf.qq.com",                "Dnf"                  , NDPI_PROTOCOL_GAME_DNF },
   {".worldofwarships.cn",       "WorldOfWarShip"       , NDPI_PROTOCOL_GAME_WORLD_OF_WARSHIP },
   {"pan.baidu.com",                "BaiDuPan"          , NDPI_PROTOCOL_BAIDUPAN },
@@ -853,6 +855,8 @@ ndpi_protocol_match host_match[] = {
   { "kugoo.com",                 "KuGouMusic", NDPI_PROTOCOL_KUGOUMUSIC },
   { "5sing.com",                 "KuGouMusic", NDPI_PROTOCOL_KUGOUMUSIC },
   { "song.room.fanxing.com",     "KuGouMusic", NDPI_PROTOCOL_KUGOUMUSIC },
+  { "dota2.com.cn",     "Dota2", NDPI_PROTOCOL_GAME_DOTA2 },
+  { "cm01-lax.cm.steampowered.com",     "Dota2", NDPI_PROTOCOL_GAME_DOTA2 },
 
   { NULL, 0 }
 };

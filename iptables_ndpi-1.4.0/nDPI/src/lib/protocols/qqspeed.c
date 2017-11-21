@@ -51,6 +51,7 @@ qqspeed
     00000000  d8 5d 00 14 00 01 17 56  00 00 00 00 7d 47 c8 13   .].....V ....}G..
     00000010  4b d9 00 00                                        K...
 3:登陆流量\TCP
+ 00 00 len   
  00 00 01 0a 35 0f ff ff  00 00 00 5c 25 a6 1a 81   ....5... ...\%...
 00000010  01 78 00 01 59 8d 0a 0a  00 70 99 3f 4b 70 5f 1f   .x..Y... .p.?Kp_.
 00000020  97 69 95 f5 55 3b 89 21  5e 8d cf 6a d3 a9 a1 a2   .i..U;.! ^..j....
@@ -73,24 +74,32 @@ void ndpi_search_qqspeed_tcp(struct ndpi_detection_module_struct *ndpi_struct, s
 {
 	struct ndpi_packet_struct *packet = &flow->packet;
 	NDPI_LOG(NDPI_PROTOCOL_GAME_QQSPEED, ndpi_struct, NDPI_LOG_DEBUG,"comming 1 \n");
+	NDPI_LOG(NDPI_PROTOCOL_GAME_QQSPEED, ndpi_struct, NDPI_LOG_DEBUG,"len:%x \n",packet->payload_packet_len);
 	if(packet->payload_packet_len>=16){
 		if(get_u_int16_t(packet->payload, 0)==htons(0x0000)
-			&&(get_u_int16_t(packet->payload, 6)==htons(0xffff)//客户端请求
-			   ||get_u_int16_t(packet->payload, 6)==htons(0x02ee))//服务端响应
+			&&ntohs(get_u_int16_t(packet->payload, 2))==packet->payload_packet_len
+			&&get_u_int16_t(packet->payload, 6)==htons(0xffff)//客户端请求
+			 //  ||get_u_int16_t(packet->payload, 6)==htons(0x02ee))//服务端响应
 			//&&(packet->payload[4]==0x35)
-			&&(get_u_int32_t(packet->payload, 12)==htonl(0x25a61a81)
-			   ||get_u_int32_t(packet->payload, 12)==htonl(0x6fb362d3))
+			&&get_u_int16_t(packet->payload, 8)==htons(0x0000)
+			  // ||get_u_int32_t(packet->payload, 12)==htonl(0x6fb362d3))
 		){//登录后特征
-			flow->qqspeed_stage++;
-			if(flow->qqspeed_stage==2){
+		//	flow->qqspeed_stage++;
+		//	if(flow->qqspeed_stage==2){
 			    NDPI_LOG(NDPI_PROTOCOL_GAME_QQSPEED, ndpi_struct, NDPI_LOG_DEBUG,"found qqspeed-----tcp1 \n");
 			    ndpi_int_qqspeed_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
-			}
+		//	}
 			return;	
-		}else if((get_u_int32_t(packet->payload, 0)==htonl(0xd85c00d2)
+		}/*else if((get_u_int32_t(packet->payload, 0)==htonl(0xd85c00d2)
 				||get_u_int32_t(packet->payload, 0)==htonl(0xd85d0014))
 			&&get_u_int32_t(packet->payload, 4)==htonl(0x00011756)
-		){
+		){*/
+        else if(packet->payload[0]==0xd8
+                &&packet->payload[1]==0x5c
+                &&packet->payload[2]==0x00
+                &&packet->payload[3]==packet->payload_packet_len
+                &&get_u_int16_t(packet->payload,4)==htons(0x0001)
+        ){
 		NDPI_LOG(NDPI_PROTOCOL_GAME_QQSPEED, ndpi_struct, NDPI_LOG_DEBUG,"found qqspeed-----tcp2 \n");
 		ndpi_int_qqspeed_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
 		return;
