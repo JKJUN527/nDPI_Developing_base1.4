@@ -814,7 +814,7 @@ ndpi_protocol_match host_match[] = {
   {"lol.qq.com",                "lol"                  , NDPI_PROTOCOL_LOL},
   {"speed.qq.com",              "QQSpeed"              , NDPI_PROTOCOL_GAME_QQSPEED },
   //{"c.pc.qq.com",              "QQSpeed"              , NDPI_PROTOCOL_GAME_QQSPEED },
-  {"qqkart/full/commoditylist",              "QQSpeed"              , NDPI_PROTOCOL_GAME_QQSPEED },
+  //{"qqkart/full/commoditylist",              "QQSpeed"              , NDPI_PROTOCOL_GAME_QQSPEED },
   {"dnf.qq.com",                "Dnf"                  , NDPI_PROTOCOL_GAME_DNF },
   {".worldofwarships.cn",       "WorldOfWarShip"       , NDPI_PROTOCOL_GAME_WORLD_OF_WARSHIP },
   {"pan.baidu.com",                "BaiDuPan"          , NDPI_PROTOCOL_BAIDUPAN },
@@ -857,6 +857,8 @@ ndpi_protocol_match host_match[] = {
   { "song.room.fanxing.com",     "KuGouMusic", NDPI_PROTOCOL_KUGOUMUSIC },
   { "dota2.com.cn",     "Dota2", NDPI_PROTOCOL_GAME_DOTA2 },
   { "cm01-lax.cm.steampowered.com",     "Dota2", NDPI_PROTOCOL_GAME_DOTA2 },
+  
+  { ".tgp.qq.com",     "WeGame", NDPI_PROTOCOL_GAME_WEGAME },
 
   { NULL, 0 }
 };
@@ -1302,6 +1304,9 @@ static void ndpi_init_protocol_defaults(struct ndpi_detection_module_struct *ndp
         		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0), /* TCP */
         		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0)  /* UDP */);
    ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_YY, "yy",
+        		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0),  /* TCP */
+        		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
+   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_GAME_WEGAME, "wegame",
         		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0),  /* TCP */
         		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
 /**20161207 start stock*/
@@ -2942,6 +2947,21 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
 
     NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_YY);
     NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].excluded_protocol_bitmask, NDPI_PROTOCOL_YY);
+
+    a++;
+  }
+#endif
+#ifdef NDPI_PROTOCOL_GAME_WEGAME
+  if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_GAME_WEGAME) != 0) {
+    ndpi_struct->callback_buffer[a].func = ndpi_search_wegame;
+
+    ndpi_struct->callback_buffer[a].ndpi_selection_bitmask =
+      NDPI_SELECTION_BITMASK_PROTOCOL_V4_V6_TCP_WITH_PAYLOAD;
+
+    NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_UNKNOWN);
+
+    NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_GAME_WEGAME);
+    NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].excluded_protocol_bitmask, NDPI_PROTOCOL_GAME_WEGAME);
 
     a++;
   }

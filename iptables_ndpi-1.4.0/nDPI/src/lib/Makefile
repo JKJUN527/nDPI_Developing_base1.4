@@ -118,7 +118,7 @@ am_libndpi_la_OBJECTS = libndpi_la-ahocorasick.lo libndpi_la-node.lo \
 	libndpi_la-qqmusic.lo libndpi_la-qiannyh.lo \
 	libndpi_la-qqwuxia.lo libndpi_la-csgo.lo \
 	libndpi_la-minecraft.lo libndpi_la-kugou_music.lo \
-	libndpi_la-yy.lo
+	libndpi_la-yy.lo libndpi_la-wegame.lo
 libndpi_la_OBJECTS = $(am_libndpi_la_OBJECTS)
 libndpi_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -142,12 +142,12 @@ HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
-ACLOCAL = ${SHELL} /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI/missing --run aclocal-1.11
-AMTAR = ${SHELL} /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI/missing --run tar
+ACLOCAL = ${SHELL} /root/localgitndpi/iptables_ndpi-1.4.0/nDPI/missing --run aclocal-1.11
+AMTAR = ${SHELL} /root/localgitndpi/iptables_ndpi-1.4.0/nDPI/missing --run tar
 AR = ar
-AUTOCONF = ${SHELL} /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI/missing --run autoconf
-AUTOHEADER = ${SHELL} /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI/missing --run autoheader
-AUTOMAKE = ${SHELL} /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI/missing --run automake-1.11
+AUTOCONF = ${SHELL} /root/localgitndpi/iptables_ndpi-1.4.0/nDPI/missing --run autoconf
+AUTOHEADER = ${SHELL} /root/localgitndpi/iptables_ndpi-1.4.0/nDPI/missing --run autoheader
+AUTOMAKE = ${SHELL} /root/localgitndpi/iptables_ndpi-1.4.0/nDPI/missing --run automake-1.11
 AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
@@ -179,7 +179,7 @@ LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LIPO = 
 LN_S = ln -s
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI/missing --run makeinfo
+MAKEINFO = ${SHELL} /root/localgitndpi/iptables_ndpi-1.4.0/nDPI/missing --run makeinfo
 MKDIR_P = /bin/mkdir -p
 NM = /usr/bin/nm -B
 NMEDIT = 
@@ -200,10 +200,10 @@ SET_MAKE =
 SHELL = /bin/sh
 STRIP = strip
 VERSION = 1.4.0
-abs_builddir = /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI/src/lib
-abs_srcdir = /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI/src/lib
-abs_top_builddir = /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI
-abs_top_srcdir = /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI
+abs_builddir = /root/localgitndpi/iptables_ndpi-1.4.0/nDPI/src/lib
+abs_srcdir = /root/localgitndpi/iptables_ndpi-1.4.0/nDPI/src/lib
+abs_top_builddir = /root/localgitndpi/iptables_ndpi-1.4.0/nDPI
+abs_top_srcdir = /root/localgitndpi/iptables_ndpi-1.4.0/nDPI
 ac_ct_CC = gcc
 ac_ct_DUMPBIN = 
 am__include = include
@@ -231,7 +231,7 @@ host_vendor = unknown
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /root/iptables-ndpi/iptables_ndpi-1.4.0/nDPI/install-sh
+install_sh = ${SHELL} /root/localgitndpi/iptables_ndpi-1.4.0/nDPI/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -378,7 +378,8 @@ libndpi_la_SOURCES = \
 			protocols/csgo.c \
 			protocols/minecraft.c \
 			protocols/kugou_music.c \
-			protocols/yy.c
+			protocols/yy.c \
+			protocols/wegame.c
 
 all: all-am
 
@@ -551,6 +552,7 @@ include ./$(DEPDIR)/libndpi_la-tvuplayer.Plo
 include ./$(DEPDIR)/libndpi_la-veohtv.Plo
 include ./$(DEPDIR)/libndpi_la-webqq.Plo
 include ./$(DEPDIR)/libndpi_la-wechat.Plo
+include ./$(DEPDIR)/libndpi_la-wegame.Plo
 include ./$(DEPDIR)/libndpi_la-wendao.Plo
 include ./$(DEPDIR)/libndpi_la-world_of_warcraft.Plo
 include ./$(DEPDIR)/libndpi_la-world_of_warship.Plo
@@ -1332,12 +1334,20 @@ libndpi_la-kugou_music.lo: protocols/kugou_music.c
 #	source='protocols/kugou_music.c' object='libndpi_la-kugou_music.lo' libtool=yes \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libndpi_la-kugou_music.lo `test -f 'protocols/kugou_music.c' || echo '$(srcdir)/'`protocols/kugou_music.c
+
 libndpi_la-yy.lo: protocols/yy.c
 	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libndpi_la-yy.lo -MD -MP -MF $(DEPDIR)/libndpi_la-yy.Tpo -c -o libndpi_la-yy.lo `test -f 'protocols/yy.c' || echo '$(srcdir)/'`protocols/yy.c
 	$(am__mv) $(DEPDIR)/libndpi_la-yy.Tpo $(DEPDIR)/libndpi_la-yy.Plo
 #	source='protocols/yy.c' object='libndpi_la-yy.lo' libtool=yes \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libndpi_la-yy.lo `test -f 'protocols/yy.c' || echo '$(srcdir)/'`protocols/yy.c
+
+libndpi_la-wegame.lo: protocols/wegame.c
+	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libndpi_la-wegame.lo -MD -MP -MF $(DEPDIR)/libndpi_la-wegame.Tpo -c -o libndpi_la-wegame.lo `test -f 'protocols/wegame.c' || echo '$(srcdir)/'`protocols/wegame.c
+	$(am__mv) $(DEPDIR)/libndpi_la-wegame.Tpo $(DEPDIR)/libndpi_la-wegame.Plo
+#	source='protocols/wegame.c' object='libndpi_la-wegame.lo' libtool=yes \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libndpi_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libndpi_la-wegame.lo `test -f 'protocols/wegame.c' || echo '$(srcdir)/'`protocols/wegame.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

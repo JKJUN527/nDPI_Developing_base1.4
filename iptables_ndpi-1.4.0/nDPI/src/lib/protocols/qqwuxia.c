@@ -26,6 +26,8 @@ void ndpi_search_qqwuxia_tcp(struct ndpi_detection_module_struct *ndpi_struct, s
 	struct ndpi_packet_struct *packet = &flow->packet;
 	if(packet->payload_packet_len >=16
 		&&get_u_int16_t(packet->payload, 0) == htons(0x550e)
+		&&get_u_int16_t(packet->payload, 2) == htons(0x0604)
+		//&&packet->payload[7]==packet->payload_packet_len+0x10
 		&&get_u_int16_t(packet->payload,4) == htonl(0x0000)
 		&&get_u_int16_t(packet->payload, 8) == htons(0x0000)
 	 ){

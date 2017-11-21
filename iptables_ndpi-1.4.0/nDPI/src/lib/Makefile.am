@@ -127,7 +127,8 @@ libndpi_la_SOURCES = \
 			protocols/csgo.c \
 			protocols/minecraft.c \
 			protocols/kugou_music.c \
-			protocols/yy.c
+			protocols/yy.c \
+			protocols/wegame.c
 			
 #protocols/skype.c \
 # NTOP protocols are at the end
