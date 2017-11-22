@@ -142,28 +142,29 @@ static void thunder_check_http_payload(struct ndpi_detection_module_struct *ndpi
         //		ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_THUNDER);
         //	return;
         //}
-        //http download feature
-
+        //http download feature 
+        NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG, "thunder:4: %s, 6:%s\n",packet->line[4].ptr, packet->line[6].ptr);
         if(packet->payload_packet_len > 17 && ndpi_mem_cmp(packet->payload, "GET", 3) == 0 &&packet->parsed_lines > 5){
                 ndpi_parse_packet_line_info(ndpi_struct, flow);
                 NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "thunder: I COME IN 1\n");
-                //NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "line[1]:%s\n",packet->line[1].ptr);
-                //NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "line[2]:%s\n",packet->line[2].ptr);
-                //NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "line[3]:%s\n",packet->line[3].ptr);
-                //NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "line[4]:%s\n",packet->line[4].ptr);
-                //NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "line[5]:%s\n",packet->line[5].ptr);
-                if (packet->line[1].len == 23
-                                && ndpi_mem_cmp(packet->line[1].ptr, "Cache-Control: no-cache", 23) == 0
-                                && packet->line[2].len == 22
-                                && ndpi_mem_cmp(packet->line[2].ptr, "Connection: keep-alive", 22) == 0
-                                && packet->line[3].len > 6
-                                && ndpi_mem_cmp(packet->line[3].ptr, "Host: ", 6) == 0
+                NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "line[1]:%.*s len:%u\n",packet->line[1].len,packet->line[1].ptr,packet->line[1].len);
+                NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "line[2]:%.*s len:%u\n",packet->line[2].len,packet->line[2].ptr,packet->line[2].len);
+                NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "line[3]:%.*s len:%u\n",packet->line[3].len,packet->line[3].ptr,packet->line[3].len);
+                NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "line[4]:%.*s len:%u\n",packet->line[4].len,packet->line[4].ptr,packet->line[4].len);
+                NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "line[5]:%.*s len:%u\n",packet->line[6].len,packet->line[6].ptr,packet->line[6].len);
+                if (packet->line[2].len == 23
+                                && ndpi_mem_cmp(packet->line[2].ptr, "Cache-Control: no-cache", 23) == 0
+                                && packet->line[3].len == 22
+                                && ndpi_mem_cmp(packet->line[3].ptr, "Connection: Keep-Alive", 22) == 0
+                                && packet->line[4].len > 6
+                                && ndpi_mem_cmp(packet->line[4].ptr, "Host: ", 6) == 0
                                 //&& packet->line[4].len > 13
                                 //&& ndpi_mem_cmp(packet->line[4].ptr, "Range: bytes=", 13) == 0 
-                                && ( (packet->line[4].len > 11 && ndpi_mem_cmp(packet->line[4].ptr, "User-Agent:", 11) == 0)
-                                        ||(packet->line[4].len > 13 && ndpi_mem_cmp(packet->line[4].ptr, "Range: bytes=", 13) == 0)
-                                        ||(packet->line[4].len > 9 && ndpi_mem_cmp(packet->line[4].ptr, "Referer: ", 9) == 0)	
+                                && ( (packet->line[6].len > 11 && ndpi_mem_cmp(packet->line[6].ptr, "User-Agent:", 11) == 0)
+                                        ||(packet->line[6].len > 13 && ndpi_mem_cmp(packet->line[6].ptr, "Range: bytes=", 13) == 0)
+                                        ||(packet->line[6].len > 9 && ndpi_mem_cmp(packet->line[6].ptr, "Referer: ", 9) == 0)	
                                    )){
+                               // &&packet->line[6].len > 13 && ndpi_mem_cmp(packet->line[6].ptr, "Range: bytes=", 13) == 0    ){
                         NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG,
                                         "thunder HTTP download detected,(new one).\n");
                         ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_THUNDER);

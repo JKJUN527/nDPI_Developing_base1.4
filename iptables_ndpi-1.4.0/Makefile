@@ -61,8 +61,7 @@ test_pre:
 
 test: install
 	iptables -I FORWARD  -j NDPI
-#	iptables -A FORWARD  -m ndpi --protos WEGAME -j DROP 
-	iptables -A FORWARD  -m ndpi --protos thunder -j DROP 
+	iptables -A FORWARD  -m ndpi --protos cf -j DROP 
 	watch -n 0.5 'iptables -S -v'
 	#iptables -A JK -p udp --sport 12345 -j REJECT
 m:

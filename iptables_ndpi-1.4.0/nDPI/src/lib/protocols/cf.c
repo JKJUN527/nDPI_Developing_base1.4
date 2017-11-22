@@ -43,10 +43,11 @@ __forceinline static
 	struct ndpi_packet_struct *packet = &flow->packet;
 	NDPI_LOG(NDPI_PROTOCOL_GAME_CF, ndpi_struct, NDPI_LOG_DEBUG,"search game_cf\n");
 	//48 0d 03 fd 00 00 00 0c
-	if(packet->payload_packet_len >= 18
+	if(packet->payload_packet_len == 1460
 	&& get_u_int32_t(packet->payload, 0)==htonl(0xf1a00601)
 	&& get_u_int16_t(packet->payload, 4)==htons(0x0000)
-	&& get_u_int32_t(packet->payload, 8)==htonl(0x460c0001)
+    && packet->payload[9]==0x0c
+	&& get_u_int16_t(packet->payload, 10)==htons(0x0001)
 	&& get_u_int16_t(packet->payload, 16)==htons(0x0070)	
 	){	
 		NDPI_LOG(NDPI_PROTOCOL_GAME_CF, ndpi_struct, NDPI_LOG_DEBUG,"found game_cf------1 \n");
