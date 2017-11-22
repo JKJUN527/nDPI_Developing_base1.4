@@ -1,7 +1,7 @@
 Name:iptables_ndpi		
 Version:1.4.0	
 Vendor:capsheaf
-Release:35
+Release:37.1
 Summary:iptables ndpi mod based on 1.4
 Group:flowmeter
 Url:https://github.com/ntop/nDPI
@@ -204,6 +204,15 @@ echo "Seperating xt_ndpi from iptables .."
 %doc
 
 %changelog
+* Wed Nov 21 2017 jiajun
+- release:37.1
+- 修复qq飞车、dota2、添加wegame游戏管理控制、修复系统崩溃
+* Thu Nov 9 2017 jiajun
+- release:37
+- 修复ftp控制问题、酷狗音乐、战舰世界、将ssl流量归类为网络流量
+* Tue Oct 30 2017 jiajun
+- release:36
+- 修改ftp_data支持流控，内部测试beta版
 * Tue Oct 10 2017 jiajun
 - release:35
 - 修改app_ctrl\修复qq飞车--回归测试之前出现的bug，目前稳定
