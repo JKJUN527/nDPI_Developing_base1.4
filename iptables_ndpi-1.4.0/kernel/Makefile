@@ -3,7 +3,7 @@
 #
 
 ifneq (, $(shell which git))
-	VER_DEV := $(shell git describe --abbrev=4 --always)
+	VER_DEV := $(shell git describe --abbrev=6 --always)
 endif
 
 ifeq (,$(BUILD_KERNEL))
