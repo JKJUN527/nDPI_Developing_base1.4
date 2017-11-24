@@ -1449,7 +1449,7 @@ struct ndpi_detection_module_struct *ndpi_init_detection_module(u_int32_t ticks_
   spin_lock_init(&ndpi_str->skypeCacheLock);
 #endif
 
-  /* table size is a prime number; capaticy is 8 times table size; use the default hash function */
+  /* table size is a prime number; capaticy is 8 times of table size; use the default hash function */
   ndpi_str->meta2protocol = ndpi_hash_create(173, 173*8, NULL);
   if (!ndpi_str->meta2protocol) {
       ndpi_debug_printf(0, NULL, NDPI_LOG_DEBUG, "ndpi_init_detection_module initial `meta2protocol' failed\n");
