@@ -258,7 +258,7 @@ extern "C" {
   void ndpi_set_automa(struct ndpi_detection_module_struct *ndpi_struct, void* automa);
 
   /* functions of operating hash table */
-  extern ndpi_hash_t *ndpi_hash_create(int tablesize, u_int32_t (*hash_fn)(u_int8_t const *key, int len));
+  extern ndpi_hash_t *ndpi_hash_create(int tablesize, int capacity, u_int32_t (*hash_fn)(u_int8_t const *key, int len));
   extern int ndpi_hash_search(ndpi_hash_t *t, u_int8_t const *key, int len, int protocol);
   extern int ndpi_hash_add(ndpi_hash_t *t, u_int8_t const *key, int len, int protocol);
   extern int ndpi_hash_remove(ndpi_hash_t *t, u_int8_t const *key, int len, int protocol);

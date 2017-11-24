@@ -68,14 +68,19 @@ struct ndpi_ipv6hdr {
 
 struct pro_node {
     int pro;                    /* just store protocol */
-    struct pro_node *next;
+    u_int32_t hash;             /* hash value of this key */
+    struct pro_node *next;      /* link of collision */
+    struct pro_node *lru_next;  /* next of lru list */
+    struct pro_node *lru_prev;  /* previousness of lru list */
 };
 
 /* hash table */
 typedef struct ndpi_hash_t {
-    int hash_size;
+    int table_size;
+    int capacity_rest;                /* the capacity rest of hash table */
+    struct pro_node *head, *tail;     /* maintain a lru list */
     u_int32_t (*hash_fn)(u_int8_t const *key, int len);
-    struct pro_node * table[1];
+    struct pro_node *table[1];
 } ndpi_hash_t;
 
 typedef union {

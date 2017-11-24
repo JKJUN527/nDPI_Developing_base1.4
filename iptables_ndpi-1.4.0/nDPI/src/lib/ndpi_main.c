@@ -1449,10 +1449,10 @@ struct ndpi_detection_module_struct *ndpi_init_detection_module(u_int32_t ticks_
   spin_lock_init(&ndpi_str->skypeCacheLock);
 #endif
 
-  /* table size is a prime number. use the default hash function */
-  ndpi_str->meta2protocol = ndpi_hash_create(173, NULL);
+  /* table size is a prime number; capaticy is 8 times table size; use the default hash function */
+  ndpi_str->meta2protocol = ndpi_hash_create(173, 173*8, NULL);
   if (!ndpi_str->meta2protocol) {
-      ndpi_debug_printf(0, NULL, NDPI_LOG_DEBUG, "ndpi_init_detection_module initial meta2protocol failed\n");
+      ndpi_debug_printf(0, NULL, NDPI_LOG_DEBUG, "ndpi_init_detection_module initial `meta2protocol' failed\n");
       ndpi_free(ndpi_str);
       return NULL;
   }
@@ -5415,21 +5415,79 @@ static u_int32_t ndpi_default_hash_fn(u_int8_t const *key, int len)
          hash = 31*hash + *key;
     return hash;
 }
+static struct pro_node *ndpi_hash_node_new(ndpi_hash_t *t)
+{
+    if (t->capacity_rest > 0 && (t->tail == t->head->lru_next)) {
+        struct pro_node *new = ndpi_malloc(sizeof(*new));
+        if (!new) return NULL;
+        new->lru_next     = t->tail;
+        t->head->lru_next = new;
+        new->lru_prev     = t->head;
+        t->tail->lru_prev = new;
+        t->head = new;
+        t->capacity_rest--;
+        return new;
+    }
+
+    /* remove the oldest node from lru list */
+    if (t->head->lru_next == t->tail) {
+        struct pro_node *node = t->tail->lru_next;
+        t->tail = t->tail->lru_next;
+
+        /* remove node from hash table */
+        struct pro_node **link = &t->table[node->hash % t->table_size];
+        while (*link && (*link != node))
+            link = &(*link)->next;
+        if (!*link) return NULL;    /* assert(*link != NULL), but it happend, error? */
+        *link = node->next;
+    }
+
+    t->head = t->head->lru_next;
+    return t->head;
+}
+static void ndpi_hash_node_free(ndpi_hash_t *t, struct pro_node *node)
+{
+    /* remove it */
+    if (t->head == node) {
+        t->head = node->lru_prev;
+    }
+    struct pro_node *prev = node->lru_prev;
+    struct pro_node *next = node->lru_next;
+    prev->lru_next = next;
+    next->lru_prev = prev;
+
+    /* append to tail */
+    struct pro_node *tprev = t->tail->lru_prev;
+    node->lru_next    = t->tail;
+    t->tail->lru_prev = node;
+    node->lru_prev    = tprev;
+    tprev->lru_next   = node;
+}
 /**
- * create a hash table with tablesize, specify a hash_fn optionally
+ * create a hash table with `tablesize' and `capacity', specify a hash_fn optionally
  */
-extern ndpi_hash_t *ndpi_hash_create(int tablesize,
+extern ndpi_hash_t *ndpi_hash_create(int tablesize, int capacity,
         u_int32_t (*hash_fn)(u_int8_t const *key, int len))
 {
     ndpi_hash_t *ret;
     if (tablesize <= 0)
         tablesize = 67;
+    if (capacity < tablesize)
+        capacity = tablesize;
     ret = ndpi_malloc(sizeof(*ret) + sizeof(struct pro_node*) * tablesize);
     if (!ret) return NULL;
+    ret->table_size = tablesize;
+    ret->capacity_rest = capacity;
+    struct pro_node *new = ndpi_malloc(sizeof(*new));   /* the dumb node for double link list */
+    if (!new) {
+        ndpi_free(ret);
+        return NULL;
+    }
+    new->lru_prev = new->lru_next = new;
+    ret->head = ret->tail = new;
+    ret->hash_fn  = hash_fn? hash_fn: ndpi_default_hash_fn;
     /* set NULL */
     memset(ret->table, 0, sizeof(struct pro_node*) * tablesize);
-    ret->hash_size = tablesize;
-    ret->hash_fn = hash_fn? hash_fn: ndpi_default_hash_fn;
 
     return ret;
 }
@@ -5443,19 +5501,20 @@ extern int ndpi_hash_add(ndpi_hash_t *t, u_int8_t const *key, int len, int proto
     struct pro_node *new, **node;
     /* -1 imply that key is not found */
     if (!t) return -1;
-    hash = t->hash_fn(key, len) % t->hash_size;
-    node = &t->table[hash];
-    new = ndpi_malloc(sizeof(*new));
+    hash = t->hash_fn(key, len);
+    node = &t->table[hash % t->table_size];
+    new = ndpi_hash_node_new(t);
     if (!new) return -1;
 
 //#define LOCAL_DEBUG_HASH
 #if (defined(LOCAL_DEBUG_HASH) && defined(__KERNEL__))
     if (*node) {
         printk("ndpi_hash_add %016x: same hash value, add to a link, table size: %d\n",
-                hash, t->hash_size);
+                hash, t->table_size);
     }
 #endif
-    new->pro = protocol;
+    new->pro  = protocol;
+    new->hash = hash;
     new->next = *node;
     *node = new;
 
@@ -5473,9 +5532,9 @@ extern int ndpi_hash_search(ndpi_hash_t *t, u_int8_t const *key, int len, int pr
     u_int32_t hash;
     struct pro_node *node;
     if (!t) return 0;
-    hash = t->hash_fn(key, len) % t->hash_size;
-    for (node = t->table[hash]; node; node = node->next) {
-        if (protocol == node->pro)
+    hash = t->hash_fn(key, len);
+    for (node = t->table[hash % t->table_size]; node; node = node->next) {
+        if (hash == node->hash && protocol == node->pro)
             return 1;
     }
 
@@ -5489,43 +5548,43 @@ extern int ndpi_hash_search(ndpi_hash_t *t, u_int8_t const *key, int len, int pr
  */
 extern int ndpi_hash_remove(ndpi_hash_t *t, u_int8_t const *key, int len, int protocol)
 {
-    u_int32_t hash;
+    u_int32_t hash, idx;
     struct pro_node **node, *next;
-    if (!t) return -1;
+    if (!t) return 0;
 
-    hash = t->hash_fn(key, len) % t->hash_size;
+    hash = t->hash_fn(key, len);
+    idx  = hash % t->table_size;
 
 #if (defined(LOCAL_DEBUG_HASH) && defined(__KERNEL__))
-    if (t->table[hash] && !t->table[hash]->next) {
+    if (t->table[idx] && !t->table[idx]->next) {
         printk("ndpi_hash_remove: remove from the link with only one node.\n");
     }
 #endif
-    node = &t->table[hash];
-    while (*node && (*node)->pro != protocol)
+    node = &t->table[idx];
+    while (*node && !((*node)->hash == hash && (*node)->pro == protocol))
         node = &(*node)->next;
 
     if (!*node) return 0;
     next = (*node)->next;
-    ndpi_free(*node);
+    ndpi_hash_node_free(t, *node);
     *node = next;
 
     return 1;
 }
 
-extern void ndpi_hash_destory(ndpi_hash_t **table)
+extern void ndpi_hash_destory(ndpi_hash_t **t)
 {
-    int i;
-    if (!table || !*table) return;
+    if (!t|| !*t) return;
 
-    for (i = 0; i < (*table)->hash_size; i++) {
-        struct pro_node *next, *node;
-        for (node = (*table)->table[i]; node; node = next) {
-            next = node->next;
-            ndpi_free(node);
-        }
+    /* remove all nodes by lru list */
+    struct pro_node *node, *next;
+    for (node = (*t)->tail->lru_next; (*t)->tail != node; node = next) {
+        next = node->lru_next;
+        ndpi_free(node);
     }
+    ndpi_free((*t)->tail);
 
-    ndpi_free(*table);
-    *table = NULL;
+    ndpi_free(*t);
+    *t = NULL;
 }
 #undef LOCAL_DEBUG_HASH
