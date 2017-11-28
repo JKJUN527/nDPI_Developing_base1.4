@@ -706,6 +706,7 @@ static void check_custom_headers(struct ndpi_detection_module_struct *ndpi_struc
                 /*jkjun end*/
 
 #ifdef NDPI_PROTOCOL_JINWANWEI
+                {   /* just a block */
                 char static const *jinwanwei_strs[] = {
                         "GET /client_login.php?user_name=",
                         "GET /checkGroupType.php?userName=",
@@ -726,9 +727,10 @@ static void check_custom_headers(struct ndpi_detection_module_struct *ndpi_struc
                                 return;
                         }
                 }
+                }
 #endif /* NDPI_PROTOCOL_JINWANWEI */
 #ifdef NDPI_PROTOCOL_QQ_TX
-                NDPI_LOG(NDPI_PROTOCOL_QQ_TX, ndpi_struct, NDPI_LOG_DEBUG, "Into QQ transfer file.\n");
+                {   /* just a block */
                 static char const *qqtx_strs[] = {
                         "GET /ftn_handler",
                         "POST /ftn_handler",
@@ -736,6 +738,7 @@ static void check_custom_headers(struct ndpi_detection_module_struct *ndpi_struc
                         NULL,
                 };
                 const char **qqtx_ptr;
+                NDPI_LOG(NDPI_PROTOCOL_QQ_TX, ndpi_struct, NDPI_LOG_DEBUG, "Into QQ transfer file.\n");
                 for (qqtx_ptr = qqtx_strs; *qqtx_ptr != NULL; qqtx_ptr++) {
                         const char *str = *qqtx_ptr;
                         int len = strlen(str);
@@ -744,6 +747,7 @@ static void check_custom_headers(struct ndpi_detection_module_struct *ndpi_struc
                                 NDPI_LOG(NDPI_PROTOCOL_QQ_TX, ndpi_struct, NDPI_LOG_DEBUG, "QQ_TX: Found via %s\n", str);
                                 return;
                         }
+                }
                 }
 #endif /* NDPI_PROTOCOL_QQ_TX */
 #ifdef NDPI_PROTOCOL_WECHAT_TX
@@ -756,8 +760,9 @@ static void check_custom_headers(struct ndpi_detection_module_struct *ndpi_struc
                 }
 #endif /* NDPI_PROTOCOL_WECHAT_TX */
 #ifdef NDPI_PROTOCOL_QQMUSIC
-                _D("Into QQ music.\n");
+                {   /* just a block */
                 int qqmusic_len = packet->line[a].len;
+                _D("Into QQ music.\n");
                 _D("QQ music: line[%d]: (%d) %.*s\n", a, qqmusic_len, qqmusic_len, packet->line[a].ptr);
                 if (qqmusic_len >= 21 && !strncmp("GET /qqmusic/fcgi-bin", packet->line[a].ptr, 21)) {
                         ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_QQMUSIC);
@@ -810,6 +815,7 @@ static void check_custom_headers(struct ndpi_detection_module_struct *ndpi_struc
                         _D("QQ music: Found!\n");
                         return;
                 }
+                }
 #endif /* NDPI_PROTOCOL_QQMUSIC */
 #ifdef NDPI_PROTOCOL_GAME_DOTA2
                 if (packet->line[a].len >= NDPI_STATICSTRING_LEN("GET /client/dota2_launcher")
@@ -818,7 +824,7 @@ static void check_custom_headers(struct ndpi_detection_module_struct *ndpi_struc
                         NDPI_LOG(NDPI_PROTOCOL_GAME_DNF, ndpi_struct, NDPI_LOG_DEBUG, "dota client / found.\n");
                         ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_GAME_DOTA2);
                         return;
-                } 
+                }
 #endif
         }
 }

@@ -53,13 +53,12 @@ void ndpi_search_dota2(struct ndpi_detection_module_struct *ndpi_struct, struct 
                 }
         }
         if(packet->tcp !=NULL && packet->payload_packet_len >=222) {
-               
+                int i;
                 NDPI_LOG(NDPI_PROTOCOL_GAME_DOTA2, ndpi_struct, NDPI_LOG_DEBUG, "search for tcp dota2.\n");
-                int i=0;
-                for(i;i<6;i++){
+                for(i = 0; i < 6; i++){
                 
 //                NDPI_LOG(NDPI_PROTOCOL_GAME_DOTA2, ndpi_struct, NDPI_LOG_DEBUG, "payload start is :%x.\n",packet->payload[16*(7+i)-3]);
-                   if(memcmp(&packet->payload[16*(7+i)+6],STR0DOTA2,NDPI_STATICSTRING_LEN(STR0DOTA2))==0){
+                   if(memcmp(&packet->payload[16*(7+i)+6],STR0DOTA2,NDPI_STATICSTRING_LEN(STR0DOTA2)) == 0) {
                         NDPI_LOG(NDPI_PROTOCOL_GAME_DOTA2, ndpi_struct, NDPI_LOG_DEBUG, "found dota2.\n");
                         ndpi_int_dota2_add_connection(ndpi_struct, flow);
                         return;
