@@ -461,11 +461,7 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 		spin_unlock_bh( &ndpi_lock );
         
         /* FTP_CONTROL never be mark as detected */
-        if (entry->ndpi_proto == NDPI_PROTOCOL_FTP_CONTROL) {
-            return GET_MATCH_ABOVE(info, entry, NDPI_COMPARE_PROTOCOL_TO_BITMASK( info->protocols, entry->ndpi_proto )) ? true : false;
-        } else {
-            return false;
-        }
+        return GET_MATCH_ABOVE(info, entry, NDPI_COMPARE_PROTOCOL_TO_BITMASK( info->protocols, entry->ndpi_proto )) ? true : false;
 	} else
 		entry->last_processed_skb = _skb;
 
@@ -531,7 +527,7 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 		/*
 		 * In this case we have not yet detected the protocol but the user has specified unknown as protocol
 		 */
-        if (entry->ndpi_proto != NDPI_PROTOCOL_FTP_CONTROL)
+        if (entry->ndpi_proto == NDPI_PROTOCOL_UNKNOWN)
             entry->ndpi_proto = NOT_YET_PROTOCOL;
 		verdict	= GET_MATCH_ABOVE(info, entry, NDPI_COMPARE_PROTOCOL_TO_BITMASK( info->protocols, entry->ndpi_proto )) ? true : false;
 		NDPI_CB_RECORD(_skb,entry);
@@ -879,7 +875,7 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 		/*
 		 * In this case we have not yet detected the protocol but the user has specified unknown as protocol
 		 */
-        if (entry->ndpi_proto != NDPI_PROTOCOL_FTP_CONTROL)
+        if (entry->ndpi_proto == NDPI_PROTOCOL_UNKNOWN)
             entry->ndpi_proto = NOT_YET_PROTOCOL;
 		NDPI_CB_RECORD(_skb,entry);
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
