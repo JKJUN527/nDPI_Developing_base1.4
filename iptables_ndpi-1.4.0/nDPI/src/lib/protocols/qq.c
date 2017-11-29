@@ -325,7 +325,7 @@ static void ndpi_search_qq_udp(struct ndpi_detection_module_struct *ndpi_struct,
       return;
     }
     if (packet->payload_packet_len > 2 && (packet->payload[0] == 0x02 || packet->payload[0] == 0x04)) {
-      u_int16_t pat = ntohs(get_u_int16_t(packet->payload, 1));
+      //u_int16_t pat = ntohs(get_u_int16_t(packet->payload, 1));
       for (index = 0; index < no_of_patterns; index++) {
 	  	//skip version check
 	if (/*pat == p8000_patt_02[index] &&*/ packet->payload[packet->payload_packet_len - 1] == 0x03) {

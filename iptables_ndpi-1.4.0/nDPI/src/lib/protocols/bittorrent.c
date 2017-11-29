@@ -143,7 +143,7 @@ static u_int8_t ndpi_int_search_bittorrent_tcp_zero(struct ndpi_detection_module
             }
             //jkjun
             if (//memcmp(&packet->payload[1], "BitTorrent protocol", 1) == 0
-                    get_u_int64_t(packet->payload,1)=htonl(0x426974546f727265)) {
+                    get_u_int64_t(packet->payload,1) == htonl(0x426974546f727265)) {
                 NDPI_LOG_BITTORRENT(NDPI_PROTOCOL_BITTORRENT,
                         ndpi_struct, NDPI_LOG_TRACE, "BT: plain BitTorrent protocol detected\n");
                 ndpi_add_connection_as_bittorrent(ndpi_struct, flow,

@@ -364,14 +364,16 @@ static int find_mark_subprotocol(struct ndpi_detection_module_struct *ndpi,
 static void ssl_mark_and_payload_search_for_other_protocols(struct ndpi_detection_module_struct *ndpi_struct,
         struct ndpi_flow_struct *flow)
 {
+    int rc;
     struct ndpi_packet_struct *packet = &flow->packet;
+
     NDPI_LOG(NDPI_PROTOCOL_SSL, ndpi_struct, NDPI_LOG_DEBUG, "found ssl connection.\n");
 
     /* if has detected, return */
     if(packet->detected_protocol_stack[0] != NDPI_PROTOCOL_UNKNOWN)
         return;
 
-    int rc = sslDetectProtocolFromCertificate(ndpi_struct, flow);
+    rc = sslDetectProtocolFromCertificate(ndpi_struct, flow);
     if (rc > 0 || (flow->l4.tcp.ssl_stage != 3 && flow->l4.tcp.ssl_stage != 2 - packet->packet_direction) ) {       //返回值大于零，即表示已经在match中匹配到相应协议，直接返回
         return;
     }

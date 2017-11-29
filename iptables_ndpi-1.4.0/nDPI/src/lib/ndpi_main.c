@@ -3291,8 +3291,9 @@ static int ndpi_init_packet_header(struct ndpi_detection_module_struct *ndpi_str
     flow->packet.tcp = (struct ndpi_tcphdr *) l4ptr;
 
     if (flow->packet.l4_packet_len >=flow->packet.tcp->doff * 4) {
-      flow->packet.payload_packet_len =
-	flow->packet.l4_packet_len -flow->packet.tcp->doff * 4;
+      unsigned char save_setup_pkt_dir;
+
+      flow->packet.payload_packet_len = flow->packet.l4_packet_len -flow->packet.tcp->doff * 4;
       flow->packet.actual_payload_len =flow->packet.payload_packet_len;
       flow->packet.payload = ((u_int8_t *)flow->packet.tcp) + (flow->packet.tcp->doff * 4);
 	  NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, "[NDPI][NDPI2] apply tcp payload:%s\n",flow->packet.payload);
@@ -3301,7 +3302,7 @@ static int ndpi_init_packet_header(struct ndpi_detection_module_struct *ndpi_str
       /* check for new tcp syn packets, here
        * idea: reset detection state if a connection is unknown
        */
-      unsigned char save_setup_pkt_dir = flow->setup_packet_direction;
+      save_setup_pkt_dir = flow->setup_packet_direction;
       if (flow && flow->packet.tcp->syn != 0
               && flow->packet.tcp->ack == 0
               && flow->init_finished != 0
@@ -3631,6 +3632,7 @@ void print_payload(struct ndpi_detection_module_struct *ndpi_struct,
                 NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, " | ");
                 for(;j<=(i-1)%16;j++){
                     int ch = packet->payload[i-16+j];
+                    (void)ch;       /* restrain "warning: unused variable 'h'" */
                     NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, "%c", isprint(ch)? packet->payload[i-16+j]: '.');
                 }
                 NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, "\n");
@@ -5169,7 +5171,6 @@ void HandleLongUrl(struct ndpi_detection_module_struct *ndpi_struct,struct ndpi_
 
 int ndpi_match_string_subprotocol(struct ndpi_detection_module_struct *ndpi_struct,	struct ndpi_flow_struct *flow,char *string_to_match, u_int string_to_match_len){
 	int proto=0;
-	struct ndpi_packet_struct *packet = &flow->packet;
 	#ifdef DEBUG
 		printf("[NDPI] will HandleLongUrl \n");
 	#endif
@@ -5431,11 +5432,14 @@ static struct pro_node *ndpi_hash_node_new(ndpi_hash_t *t)
 
     /* remove the oldest node from lru list */
     if (t->head->lru_next == t->tail) {
-        struct pro_node *node = t->tail->lru_next;
+        struct pro_node *node;
+        struct pro_node **link;
+
+        node = t->tail->lru_next;
         t->tail = t->tail->lru_next;
 
         /* remove node from hash table */
-        struct pro_node **link = &t->table[node->hash % t->table_size];
+        link = &t->table[node->hash % t->table_size];
         while (*link && (*link != node))
             link = &(*link)->next;
         if (!*link) return NULL;    /* assert(*link != NULL), but it happend, error? */
@@ -5447,17 +5451,20 @@ static struct pro_node *ndpi_hash_node_new(ndpi_hash_t *t)
 }
 static void ndpi_hash_node_free(ndpi_hash_t *t, struct pro_node *node)
 {
+    struct pro_node *prev;
+    struct pro_node *next;
+    struct pro_node *tprev;
     /* remove it */
     if (t->head == node) {
         t->head = node->lru_prev;
     }
-    struct pro_node *prev = node->lru_prev;
-    struct pro_node *next = node->lru_next;
+    prev = node->lru_prev;
+    next = node->lru_next;
     prev->lru_next = next;
     next->lru_prev = prev;
 
     /* append to tail */
-    struct pro_node *tprev = t->tail->lru_prev;
+    tprev = t->tail->lru_prev;
     node->lru_next    = t->tail;
     t->tail->lru_prev = node;
     node->lru_prev    = tprev;
@@ -5469,6 +5476,7 @@ static void ndpi_hash_node_free(ndpi_hash_t *t, struct pro_node *node)
 extern ndpi_hash_t *ndpi_hash_create(int tablesize, int capacity,
         u_int32_t (*hash_fn)(u_int8_t const *key, int len))
 {
+    struct pro_node *new;
     ndpi_hash_t *ret;
     if (tablesize <= 0)
         tablesize = 67;
@@ -5478,7 +5486,7 @@ extern ndpi_hash_t *ndpi_hash_create(int tablesize, int capacity,
     if (!ret) return NULL;
     ret->table_size = tablesize;
     ret->capacity_rest = capacity;
-    struct pro_node *new = ndpi_malloc(sizeof(*new));   /* the dumb node for double link list */
+    new = ndpi_malloc(sizeof(*new));   /* the dumb node for double link list */
     if (!new) {
         ndpi_free(ret);
         return NULL;
@@ -5574,10 +5582,10 @@ extern int ndpi_hash_remove(ndpi_hash_t *t, u_int8_t const *key, int len, int pr
 
 extern void ndpi_hash_destory(ndpi_hash_t **t)
 {
+    struct pro_node *node, *next;
     if (!t|| !*t) return;
 
     /* remove all nodes by lru list */
-    struct pro_node *node, *next;
     for (node = (*t)->tail->lru_next; (*t)->tail != node; node = next) {
         next = node->lru_next;
         ndpi_free(node);

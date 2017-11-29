@@ -89,13 +89,15 @@ static u_int8_t isValidMSRTPType(u_int8_t payloadType) {
 static void ndpi_rtp_search(struct ndpi_detection_module_struct *ndpi, struct ndpi_flow_struct *flow,
         const u_int8_t * payload, const u_int16_t payload_len)
 {
-    if (payload_len < 2)
-        return;
-    u_int8_t payload_type = payload[1] & 0x7F;      /* PT */
     const int SEQ_GAP = 4;
     const int SEQ_OFFSET = 2;
     const int TIMESTAMP_OFFSET = 4;
     const int SSRC_OFFSET = 8;
+    u_int8_t payload_type;
+
+    if (payload_len < 2)
+        return;
+    payload_type = payload[1] & 0x7F;      /* PT */
 
     /* Check whether this is an RTP flow */
     if((payload_len >= 12)

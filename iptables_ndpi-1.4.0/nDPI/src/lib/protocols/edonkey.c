@@ -65,6 +65,7 @@ __forceinline static
 	return 0;
 }
 
+#if 0           /* NOTE defined but not used, if you need it, uncomment it please. */
 static void ndpi_int_edonkey_tcp(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {
 	struct ndpi_packet_struct *packet = &flow->packet;
@@ -155,6 +156,7 @@ static void ndpi_int_edonkey_tcp(struct ndpi_detection_module_struct *ndpi_struc
 
 	return;
 }
+#endif
 
 /*-----From nDPI-1.8 Start------*/
 
