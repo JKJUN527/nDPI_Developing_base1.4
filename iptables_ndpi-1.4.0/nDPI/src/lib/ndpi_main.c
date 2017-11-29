@@ -838,6 +838,7 @@ ndpi_protocol_match host_match[] = {
   { "phsle02.oray.net",         "HuaShengKe",  NDPI_PROTOCOL_HUASHENGKE },
   { "oray.net",                 "HuaShengKe",  NDPI_PROTOCOL_HUASHENGKE },
   { "oray.com",                 "HuaShengKe",  NDPI_PROTOCOL_HUASHENGKE },
+  { "oray.cn",                  "HuaShengKe",  NDPI_PROTOCOL_HUASHENGKE },
   { "orayimg.com",              "HuaShengKe",  NDPI_PROTOCOL_HUASHENGKE },
   { "wuxia.qq.com",             "QQWuXia",     NDPI_PROTOCOL_GAME_QQWUXIA },
   { "nz.qq.com",                "NIZhan",      NDPI_PROTOCOL_NIZHAN },
