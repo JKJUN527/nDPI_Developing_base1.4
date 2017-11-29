@@ -846,7 +846,7 @@ ndpi_protocol_match host_match[] = {
 
   { "x19mclobt.nie.netease",     "Minecraft",   NDPI_PROTOCOL_MINECRAFT},
   { "wspeed.qq.com",             "QQMusic",     NDPI_PROTOCOL_QQMUSIC},
-  { "y.qq.com",                  "QQMusic",     NDPI_PROTOCOL_QQMUSIC},
+  { ".y.qq.com",                  "QQMusic",     NDPI_PROTOCOL_QQMUSIC},
   { "qqmusic.qq.com",            "QQMusic",     NDPI_PROTOCOL_QQMUSIC},
   { "music.qq.com",              "QQMusic",     NDPI_PROTOCOL_QQMUSIC},
 

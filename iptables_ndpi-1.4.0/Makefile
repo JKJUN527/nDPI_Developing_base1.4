@@ -61,7 +61,8 @@ test_pre:
 
 test: install
 	iptables -I FORWARD  -j NDPI
-	iptables -A FORWARD  -m ndpi --protos thunder,bittorrent -j DROP 
+	iptables -A FORWARD -o eth0 -i eth1 -m ndpi --protos qqlive -j DROP 
+	#iptables -A FORWARD  -m ndpi --protos zhaoshangzhengquan -j DROP 
 	watch -n 0.5 'iptables -S -v'
 	#iptables -A JK -p udp --sport 12345 -j REJECT
 m:
