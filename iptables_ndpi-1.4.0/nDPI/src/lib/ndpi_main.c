@@ -772,6 +772,7 @@ ndpi_protocol_match host_match[] = {
   { "ourgame.com", "LianZhong", NDPI_PROTOCOL_LIANZHONG}, /*login page*/
   { "lianzhong.com", "LianZhong", NDPI_PROTOCOL_LIANZHONG}, /*login page*/
   { "auth.tiancity.com/popkart/login", "PopKart", NDPI_PROTOCOL_POPKART}, /*login*/
+  { "livelog.nexon.com", "PopKart", NDPI_PROTOCOL_POPKART}, /*login*/
   { "xyq.163.com"           , "MengHuanXiYou"   , NDPI_PROTOCOL_MENGHUANXIYOU}, 
   { "xyq.gdl.netease.com"   , "MengHuanXiYou"   , NDPI_PROTOCOL_MENGHUANXIYOU}, 
   { "xyq.gdl02.netease.com" , "MengHuanXiYou"   , NDPI_PROTOCOL_MENGHUANXIYOU}, 
