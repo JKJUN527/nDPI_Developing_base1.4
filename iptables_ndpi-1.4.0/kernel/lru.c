@@ -96,6 +96,7 @@ void free_lru_cache_unit( struct LruCacheUnit *cache_unit )
 	}
 
 	kfree( cache_unit->hash );
+    cache_unit->hash = NULL;
 }
 
 
@@ -167,6 +168,7 @@ static int delete_oldest_lru_cache_unit( struct LruCacheUnit *cache_unit )
 	// spin_lock_bh( &ndpi_lock );
 	free_LruCacheEntryValue( &node->node.value );
 	kfree( node );
+    node = NULL;
 	// spin_unlock_bh( &ndpi_lock );
 	cache_unit->current_size--;
 	return(0);
@@ -196,9 +198,9 @@ void delete_node_from_lru_list( struct LruCacheUnit *cache_unit, struct LruCache
 		if ( new_tail == NULL )
 			pr_info( "[NDPI ERROR] Internal error (NULL new_tail)" );
 		else
-			new_tail->lru_list.next = NULL;
+            new_tail->lru_list.next = NULL;
 
-		cache_unit->list_tail = new_tail;
+        cache_unit->list_tail = new_tail;
 	}
 }
 
@@ -378,6 +380,7 @@ void term_lru_engine( void )
 	{
 		free_lru_cache( lru_cache );
 		kfree( lru_cache );
+        lru_cache = NULL;
 	}
 }
 

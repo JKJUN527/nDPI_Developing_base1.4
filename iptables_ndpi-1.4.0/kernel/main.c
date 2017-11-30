@@ -214,7 +214,6 @@ static int set_lru_ct_entry( struct LruCacheEntryValue *entry, struct nf_conn *c
 	pr_info( "[NDPI] will kmalloc entry %s()\n", __FUNCTION__ );
 #endif
 	/*PT test lock*/
-	// spin_lock_bh( &ndpi_lock );
 
 	if(!entry->src)   entry->src  = kmalloc( ndpi_proto_size, GFP_ATOMIC );
 	if(!entry->dst)   entry->dst  = kmalloc( ndpi_proto_size, GFP_ATOMIC );
@@ -240,7 +239,6 @@ static int set_lru_ct_entry( struct LruCacheEntryValue *entry, struct nf_conn *c
 		entry->dport	= ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.all;
 		entry->proto	= ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.l3num;
 
-		// spin_unlock_bh( &ndpi_lock );
 		return(0);
 	} else{
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
@@ -249,7 +247,6 @@ static int set_lru_ct_entry( struct LruCacheEntryValue *entry, struct nf_conn *c
 		kfree(entry->src);  entry->src = NULL;
 		kfree(entry->dst);  entry->dst = NULL;
 		kfree(entry->flow); entry->flow = NULL;
-		// spin_unlock_bh( &ndpi_lock );
 		return(-1);
 	}
 }
@@ -278,15 +275,15 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 				 const struct xt_ndpi_protocols *info,
 				 struct nf_conn *ct )
 {
-	LruKey				key = (LruKey) ct;
-	struct LruCacheEntryValue	*entry;
-	struct LruCacheNode		*node;
-	u_int64_t			time;
-	struct timeval			tv;
-	const struct iphdr		*iph;
-	u_int16_t			ip_len;
-	u_int8_t			*ip;
-	struct sk_buff			*copied_skb;
+	LruKey                    key = (LruKey) ct;
+	struct LruCacheEntryValue *entry;
+	struct LruCacheNode       *node;
+	u_int64_t                 time;
+	struct timeval			  tv;
+	const struct iphdr        *iph;
+	u_int16_t                 ip_len;
+	u_int8_t                  *ip;
+	struct sk_buff            *copied_skb;
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 	char buff[256];
 #endif
@@ -295,7 +292,6 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 	pr_info( "[NDPI] Begin function ndpi_process_packet(%lu)  nfctinfo:%u\n", (long unsigned int) key, _skb->nfctinfo );
 	ndpi_print_bitmask( info, "--------1) START------------" );
-	pr_info( "[NDPI] spin_lock_bh#1\n" );
 #endif
 
 
@@ -307,14 +303,10 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 	pr_info( "[NDPI] add_to_lru#2\n" );
 #endif
-	spin_lock_bh( &ndpi_lock );
     if (NULL == ct) {
-        pr_info( "[NDPI] NULL == ct after spin_lock_bh() at line: %d\n", __LINE__);
-        spin_unlock_bh( &ndpi_lock );
         return DEFAULT_VERDICT;
     }
 	node = add_to_lru_cache( lru_cache, key );
-	// spin_unlock_bh( &ndpi_lock );
 
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 	pr_info( "[NDPI] add_to_lru over#2\n" );
@@ -326,9 +318,7 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 		pr_info( "[NDPI] add_to_lru_cache() returned NULL\n" );
 #endif
-
-		spin_unlock_bh( &ndpi_lock );
-		return(verdict);
+		return verdict;
 	} else
 		entry = &node->node.value;
 
@@ -357,7 +347,6 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 			pr_info( "[NDPI] Returning default verdict (%d)\n", 1 );
 #endif
-			spin_unlock_bh( &ndpi_lock );
 			return(verdict);
 		}
 	} else {
@@ -441,7 +430,7 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 #endif
 		dumpLruCacheEntryValue( entry, verdict );
 		NDPI_CB_RECORD( _skb, entry );
-		spin_unlock_bh( &ndpi_lock );
+
 		return(verdict);
 	}
 
@@ -458,10 +447,11 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 
 
 		NDPI_CB_RECORD( _skb, entry );
-		spin_unlock_bh( &ndpi_lock );
-        
+
         /* FTP_CONTROL never be mark as detected */
-        return GET_MATCH_ABOVE(info, entry, NDPI_COMPARE_PROTOCOL_TO_BITMASK( info->protocols, entry->ndpi_proto )) ? true : false;
+        int ret = GET_MATCH_ABOVE(info, entry, NDPI_COMPARE_PROTOCOL_TO_BITMASK( info->protocols, entry->ndpi_proto )) ? true : false;
+        
+        return ret;
 	} else
 		entry->last_processed_skb = _skb;
 
@@ -476,8 +466,7 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 	{
 		if (unlikely( debug ))
 			pr_info( "[NDPI] skb_copy() failed.\n" );
-		spin_unlock_bh( &ndpi_lock );
-		return(verdict);
+		return verdict;
 	}
 
 	iph	= ip_hdr( copied_skb );
@@ -490,10 +479,7 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 
 	entry->num_packets_processed++;
 
-	/*PT test lock*/
-	// spin_lock_bh( &ndpi_lock);
 	entry->ndpi_proto = ndpi_detection_process_packet( ndpi_struct, entry->flow, ip, ip_len, time, entry->src, entry->dst );
-	// spin_unlock_bh( &ndpi_lock );
 
     if (entry->ndpi_proto != NDPI_PROTOCOL_FTP_CONTROL   /* always check ftp_control */
             && (   (entry->ndpi_proto == NDPI_PROTOCOL_HTTP && entry->flow->packet_counter >= 5)  /* give up after some counts */
@@ -519,9 +505,7 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 			 ? "NotYet" : ndpi_get_proto_name( ndpi_struct, entry->ndpi_proto ) );
 
 #endif
-		// spin_lock_bh( &ndpi_lock );
 		free_LruCacheEntryValue( entry ); /* Free nDPI memory */
-		// spin_unlock_bh( &ndpi_lock );
 
 	} else {
 		/*
@@ -550,8 +534,7 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 	pr_info( "-----------1) END-----------\n" );
 #endif
-	spin_unlock_bh( &ndpi_lock );
-	return(verdict);
+	return verdict;
 }
 
 
@@ -570,25 +553,25 @@ static bool ndpi_match( const struct sk_buff *skb, struct xt_action_param *par )
 	if (unlikely( debug ))
 		pr_info( "[NDPI] ndpi_match fragoff:%d thoff:%u hooknum:%u family:%u hotdrop:%d\n", par->fragoff, par->thoff, par->hooknum, par->family, *par->hotdrop );
 	ct = nf_ct_get( skb, &ctinfo );
-	if ( (ct == NULL) || (skb == NULL) )
-	{
+	if ( (ct == NULL) || (skb == NULL) ) {
 		if (unlikely( debug ))
 			pr_info( "[NDPI] ignoring NULL untracked sk_buff.\n" );
-		return(false); /* PASS */
+		return false; /* PASS */
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION( 3, 0, 0 )
-	} else if ( nf_ct_is_untracked( skb ) )
-	{
+	} else if ( nf_ct_is_untracked( skb ) ) {
 #else
-	} else if ( nf_ct_is_untracked( ct ) )
-	{
+	} else if ( nf_ct_is_untracked( ct ) ) {
 #endif
 		if (unlikely( debug ))
 			pr_info( "[NDPI] ignoring untracked sk_buff.\n" );
-		return(false); /* PASS */
+		return false; /* PASS */
 	}
 
 	/* process the packet */
+    spin_lock_bh(&ndpi_lock);
 	verdict = ndpi_process_packet( skb, info, ct );
+    spin_unlock_bh(&ndpi_lock);
 
 	if (unlikely( debug ) &&  verdict == true)
 		pr_info( "[NDPI] Dropping ...\n" );
@@ -658,15 +641,15 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 				    struct nf_conn *ct )
 {
 
-	LruKey				key = (LruKey) ct;
-	struct LruCacheEntryValue	*entry;
-	struct LruCacheNode		*node;
-	u_int64_t			time;
-	struct timeval			tv;
-	const struct iphdr		*iph;
-	u_int16_t			ip_len;
-	u_int8_t			*ip;
-	struct sk_buff			*copied_skb;
+    LruKey              key = (LruKey) ct;
+    struct LruCacheEntryValue   *entry;
+    struct LruCacheNode     *node;
+    u_int64_t           time;
+    struct timeval          tv;
+    const struct iphdr      *iph;
+    u_int16_t           ip_len;
+    u_int8_t            *ip;
+    struct sk_buff          *copied_skb;
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 	char buff[256];
 #endif
@@ -681,14 +664,10 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 	pr_info( "[NDPI] add_to_lru#2\n" );
 #endif
-	spin_lock_bh( &ndpi_lock );
     if (NULL == ct) {
-        pr_info( "[NDPI] NULL == ct after spin_lock_bh() at line: %d\n", __LINE__);
-        spin_unlock_bh( &ndpi_lock );
         return XT_CONTINUE;
     }
 	node = add_to_lru_cache( lru_cache, key );
-	// spin_unlock_bh( &ndpi_lock );
 
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 	pr_info( "[NDPI] add_to_lru over#2\n" );
@@ -701,7 +680,6 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 		pr_info( "[NDPI] add_to_lru_cache() returned NULL\n" );
 #endif
 
-		spin_unlock_bh( &ndpi_lock );
 		return(verdict);
 	} else
 		entry = &node->node.value;
@@ -731,7 +709,6 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 			pr_info( "[NDPI] Returning default verdict (%d)\n", 1 );
 #endif
-			spin_unlock_bh( &ndpi_lock );
 			return(verdict);
 		}
 	} else {
@@ -799,7 +776,6 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 	if ( entry->protocol_detected )
 	{
 		NDPI_CB_RECORD( _skb, entry );
-		spin_unlock_bh( &ndpi_lock );
 		return(verdict);
 	}
 
@@ -815,7 +791,6 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 
 
 		NDPI_CB_RECORD( _skb, entry );
-		spin_unlock_bh( &ndpi_lock );
 
         return XT_CONTINUE;
 	} else
@@ -829,7 +804,6 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 	{
 		if (unlikely( debug ))
 			pr_info( "[NDPI] skb_copy() failed.\n" );
-		spin_unlock_bh( &ndpi_lock );
 		return(verdict);
 	}
 
@@ -844,9 +818,7 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 	entry->num_packets_processed++;
 
 	/*PT test lock*/
-	// spin_lock_bh( &ndpi_lock);
 	entry->ndpi_proto = ndpi_detection_process_packet( ndpi_struct, entry->flow, ip, ip_len, time, entry->src, entry->dst );
-	// spin_unlock_bh( &ndpi_lock );
     
     if (entry->ndpi_proto != NDPI_PROTOCOL_FTP_CONTROL   /* always check ftp_control */
             && (   (entry->ndpi_proto == NDPI_PROTOCOL_HTTP && entry->flow->packet_counter >= 5)  /* give up after some counts */
@@ -867,10 +839,7 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 
         NDPI_CB_RECORD( _skb, entry );
 
-        // spin_lock_bh( &ndpi_lock );
         free_LruCacheEntryValue( entry ); /* Free nDPI memory */
-        // spin_unlock_bh( &ndpi_lock );
-
     } else {
 		/*
 		 * In this case we have not yet detected the protocol but the user has specified unknown as protocol
@@ -887,8 +856,7 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 
 	kfree_skb( copied_skb );
 
-	spin_unlock_bh( &ndpi_lock );
-	return(verdict);
+	return verdict;
 }
 
 
@@ -901,19 +869,21 @@ static unsigned int ndpi_tg( struct sk_buff *skb, const struct xt_target_param *
 	enum ip_conntrack_info		ctinfo;
 	info	= par->targinfo;
 	ct	= nf_ct_get( skb, &ctinfo );
-	if ( (ct == NULL) || (skb == NULL) )
-	{
-		return(XT_CONTINUE);
+	if ( (ct == NULL) || (skb == NULL) ) {
+
+		return XT_CONTINUE;
 #if LINUX_VERSION_CODE < KERNEL_VERSION( 3, 0, 0 )
-	} else if ( nf_ct_is_untracked( skb ) )
-	{
+	} else if ( nf_ct_is_untracked( skb ) ) {
 #else
-	} else if ( nf_ct_is_untracked( ct ) )
-	{
+	} else if ( nf_ct_is_untracked( ct ) ) {
 #endif
+        return XT_CONTINUE;
 	}
-	ndpi_process_packet_tg( skb, info, ct ); /*just check and update lrucache*/
-	return(XT_CONTINUE);
+    spin_lock_bh(&ndpi_lock);
+	ndpi_process_packet_tg( skb, info, ct );    /*just check and update lrucache*/
+    spin_unlock_bh(&ndpi_lock);
+
+	return XT_CONTINUE;
 }
 
 
