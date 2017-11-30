@@ -752,7 +752,7 @@ static void openPcapFileOrDevice(void)
 {
   u_int snaplen = 1514;
   int promisc = 1;
-  char errbuf[PCAP_ERRBUF_SIZE];
+  char errbuf[PCAP_ERRBUF_SIZE] = "";
   
   if((_pcap_handle = pcap_open_live(_pcap_file, snaplen, promisc, 500, errbuf)) == NULL) {
     _pcap_handle = pcap_open_offline(_pcap_file, _pcap_error_buffer);

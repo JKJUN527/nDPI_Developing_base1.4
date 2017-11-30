@@ -35,10 +35,11 @@ static int huashengke_search_tcp_2_0(struct ndpi_detection_module_struct *ndpi, 
 {
     /* 服务器回应 xxx 十进制3位的状态 字符串信息 \r\n */
     struct ndpi_packet_struct *pkt = &flow->packet;
+    int pktlen = pkt->payload_packet_len;
     _D("Call huashengke_search_tcp_2_0| %d %s.\n", flow->huashengke_stage, pkt->payload);
     switch (flow->huashengke_stage) {
     case 0:
-        if (pkt->payload_packet_len > 3 && (0 == strncmp(pkt->payload, "220", 3))) {
+        if (pktlen >= 3 && !strncmp(pkt->payload, "220", 3)) {
             flow->huashengke_stage = 1;
             return 2;
         } else {
@@ -46,7 +47,8 @@ static int huashengke_search_tcp_2_0(struct ndpi_detection_module_struct *ndpi, 
             return 0;
         }
     case 1:
-        if (pkt->payload_packet_len > 12 &&  (0 == strncmp(pkt->payload, "auth router6", 12))) {
+        if ( (pktlen >= 11 && !strncmp(pkt->payload, "auth phsrv6", 11))
+                || (pktlen >= 12 && !strncmp(pkt->payload,   "auth router6", 12)) ) {
             flow->huashengke_stage = 2;
             return 2;
         } else {
@@ -54,7 +56,7 @@ static int huashengke_search_tcp_2_0(struct ndpi_detection_module_struct *ndpi, 
             return 0;
         }
     case 2:
-        if (pkt->payload_packet_len > 3 && (0 == strncmp(pkt->payload, "334", 3))) {
+        if (pktlen >= 3 && (0 == strncmp(pkt->payload, "334", 3))) {
             flow->huashengke_stage = 3;
             return 2;
         } else {
@@ -64,7 +66,7 @@ static int huashengke_search_tcp_2_0(struct ndpi_detection_module_struct *ndpi, 
         /* huashengke_stage > 2 */
     default:
         /* password 48 + sep 2 */
-        if ((pkt->payload_packet_len == 50) || (pkt->payload_packet_len > 3 && (!strncmp(pkt->payload, "250", 3)
+        if ((pktlen == 50) || (pktlen > 3 && (!strncmp(pkt->payload, "250", 3)
                         || !strncmp(pkt->payload, "221", 3)
                         || !strncmp(pkt->payload, "stat user", 9)
                         || !strncmp(pkt->payload, "stat domain", 11)

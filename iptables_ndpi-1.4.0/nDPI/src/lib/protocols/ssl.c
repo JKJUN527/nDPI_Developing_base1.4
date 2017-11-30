@@ -311,11 +311,12 @@ int sslDetectProtocolFromCertificate(struct ndpi_detection_module_struct *ndpi_s
     packet->ssl_certificate_num_checks++;
 
     if(rc > 0) {
-      packet->ssl_certificate_detected++;
-      // printf("***** [SSL] %s\n", certificate);
-      if(ndpi_match_string_subprotocol(ndpi_struct, flow, certificate, strlen(certificate)) != NDPI_PROTOCOL_UNKNOWN)
-		return(rc); /* Fix courtesy of Gianluca Costa <g.costa@xplico.org> */
-    } 
+        packet->ssl_certificate_detected++;
+        //printf("***** [SSL] %s\n", certificate);
+        if (NDPI_PROTOCOL_UNKNOWN != ndpi_match_string_subprotocol(ndpi_struct, flow, certificate, strlen(certificate))) {
+            return rc; /* Fix courtesy of Gianluca Costa <g.costa@xplico.org> */
+        }
+    }
 
     if(((packet->ssl_certificate_num_checks >= 2)
        && flow->l4.tcp.seen_syn 
@@ -346,10 +347,12 @@ static int find_mark_subprotocol(struct ndpi_detection_module_struct *ndpi,
 #ifdef DEBUG
     if (pkt->payload_packet_len >= 260) {
         NDPI_LOG(NDPI_PROTOCOL_HUASHENGKE, ndpi, NDPI_LOG_DEBUG,
-                "call find_mark_subprotocol() %s\n", pkt->payload+260);
+                "call find_mark_subprotocol() %.10s\n", pkt->payload+260);
     }
 #endif /* DEBUG */
-    if (pkt->payload_packet_len >= 260+10 && !strncmp(pkt->payload+260, "*.oray.net", 10)) {
+    if (pkt->payload_packet_len >= 260+10
+            && (!strncmp(pkt->payload+260,    "*.oray.net", 10)
+                || !strncmp(pkt->payload+260, "*.oray.com", 10))) {
         ndpi_int_add_connection(ndpi, flow, NDPI_PROTOCOL_HUASHENGKE, NDPI_REAL_PROTOCOL);
         NDPI_LOG(NDPI_PROTOCOL_HUASHENGKE, ndpi, NDPI_LOG_DEBUG,
                 "found HuaShengKe via find_mark_subprotocol() in ssl.\n");
