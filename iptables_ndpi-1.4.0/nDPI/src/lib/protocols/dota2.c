@@ -23,7 +23,7 @@
 #include "ndpi_protocols.h"
 
 #ifdef NDPI_PROTOCOL_GAME_DOTA2
-#define STR0DOTA2 "\x63\x6d\x2e\x73\x74\x65\x61\x6d\x70\x6f"
+#define STR0DOTA2 "\x63\x6d\x2e\x73\x74\x65\x61\x6d\x70\x6f" //cm.steampo
 static void ndpi_int_dota2_add_connection(struct ndpi_detection_module_struct
                 *ndpi_struct, struct ndpi_flow_struct *flow)
 {
@@ -52,10 +52,21 @@ void ndpi_search_dota2(struct ndpi_detection_module_struct *ndpi_struct, struct 
                         return;
                 }
         }
-        if(packet->tcp !=NULL && packet->payload_packet_len >=222) {
+        if(packet->tcp !=NULL) {
                 int i;
                 NDPI_LOG(NDPI_PROTOCOL_GAME_DOTA2, ndpi_struct, NDPI_LOG_DEBUG, "search for tcp dota2.\n");
-                for(i = 0; i < 6; i++){
+               
+                    if(packet->payload[4] == 0x56 && 
+                       packet->payload[5] == 0x54 && 
+                       packet->payload[6] == 0x30){
+                
+                        NDPI_LOG(NDPI_PROTOCOL_GAME_DOTA2, ndpi_struct, NDPI_LOG_DEBUG, "found dota2.\n");
+                        ndpi_int_dota2_add_connection(ndpi_struct, flow);
+                        return;
+
+                   }
+             if(packet->payload_packet_len >=222){
+               for(i = 0; i < 6; i++){
                 
 //                NDPI_LOG(NDPI_PROTOCOL_GAME_DOTA2, ndpi_struct, NDPI_LOG_DEBUG, "payload start is :%x.\n",packet->payload[16*(7+i)-3]);
                    if(memcmp(&packet->payload[16*(7+i)+6],STR0DOTA2,NDPI_STATICSTRING_LEN(STR0DOTA2)) == 0) {
@@ -63,6 +74,7 @@ void ndpi_search_dota2(struct ndpi_detection_module_struct *ndpi_struct, struct 
                         ndpi_int_dota2_add_connection(ndpi_struct, flow);
                         return;
                 }
+            }
             }
         }
         NDPI_LOG(NDPI_PROTOCOL_GAME_DOTA2, ndpi_struct, NDPI_LOG_DEBUG, "exclude DOTA2.\n");
