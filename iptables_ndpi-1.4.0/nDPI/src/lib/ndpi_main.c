@@ -752,7 +752,8 @@ ndpi_protocol_match host_match[] = {
   { ".feixin.10086.cn",	 	"FETION", 		NDPI_PROTOCOL_FETION},
   /* -------wanglei host-------*/
   { "ugcdl.video.gtimg.com",    "QQLive", 		NDPI_PROTOCOL_QQLIVE },
-  //{ "rbv01.ku6.com",  		"Ku6", 			NDPI_PROTOCOL_KU6 },
+  { "rbv01.ku6.com",  		"Ku6", 			NDPI_PROTOCOL_KU6 },
+  { ".ku6.com",  		"Ku6", 			NDPI_PROTOCOL_KU6 },
   { "yixin.im",  		"YiXin", 		NDPI_PROTOCOL_YIXIN },
   { "yy.duowan.com",  		"YY", 			NDPI_PROTOCOL_YY },
   { "yydl.duowan.com",  	"YY", 			NDPI_PROTOCOL_YY },
@@ -773,6 +774,7 @@ ndpi_protocol_match host_match[] = {
   { "ourgame.com", "LianZhong", NDPI_PROTOCOL_LIANZHONG}, /*login page*/
   { "lianzhong.com", "LianZhong", NDPI_PROTOCOL_LIANZHONG}, /*login page*/
   { "auth.tiancity.com/popkart/login", "PopKart", NDPI_PROTOCOL_POPKART}, /*login*/
+  { "livelog.nexon.com", "PopKart", NDPI_PROTOCOL_POPKART}, /*login*/
   { "xyq.163.com"           , "MengHuanXiYou"   , NDPI_PROTOCOL_MENGHUANXIYOU}, 
   { "xyq.gdl.netease.com"   , "MengHuanXiYou"   , NDPI_PROTOCOL_MENGHUANXIYOU}, 
   { "xyq.gdl02.netease.com" , "MengHuanXiYou"   , NDPI_PROTOCOL_MENGHUANXIYOU}, 
@@ -824,7 +826,7 @@ ndpi_protocol_match host_match[] = {
   {".jx3.xoyo.com",              "Jx3"                 , NDPI_PROTOCOL_GAME_JX3 },
   {"qn.163.com",                 "qiannyh"             , NDPI_PROTOCOL_GAME_QIANNYH },
   {"hi-163-qn",                  "qiannyh"             , NDPI_PROTOCOL_GAME_QIANNYH },
-  {"cm.steampowered.com",        "csgo"                , NDPI_PROTOCOL_GAME_CSGO },//可能和stream其他游戏冲突
+  {".steampowered.com",        "dota2"                , NDPI_PROTOCOL_GAME_DOTA2 },//可能和stream其他游戏冲突
 
   /*JK END*/
 

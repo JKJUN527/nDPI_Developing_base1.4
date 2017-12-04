@@ -580,7 +580,10 @@ static void ndpi_int_search_bittorrent_udp(struct ndpi_detection_module_struct *
                 && (v1_extension 	 < 3 /* EXT_NUM_EXT */)
                 && (v1_window_size	 < 32768 /* 32k */)
           ) {
+          //与csgo流量冲突、暂时排除解决
+          if(get_u_int32_t(packet->payload,2)!=htonl(0x73647069)){
             goto bittorrent_found;
+          }
         } else if((v0_flags < 6 /* ST_NUM_STATES */)
                 && (v0_extension < 3 /* EXT_NUM_EXT */)) {
             u_int32_t ts = ntohl(*((u_int32_t*)&(packet->payload[4])));
@@ -606,11 +609,14 @@ static void ndpi_int_search_bittorrent_udp(struct ndpi_detection_module_struct *
     if(flow->bittorrent_stage < 10) {
         if(packet->payload_packet_len > 19 /* min size */) {
             char *begin;
-
-            if(ndpi_strnstr(packet->payload, ":target20:", packet->payload_packet_len)
-                    || ndpi_strnstr(packet->payload, ":find_node1:", packet->payload_packet_len)
-                    || ndpi_strnstr(packet->payload, "d1:ad2:id20:", packet->payload_packet_len)) {
-bittorrent_found:
+            if(ndpi_strnstr((const char *)packet->payload, ":target20:", packet->payload_packet_len)
+                    || ndpi_strnstr((const char *)packet->payload, ":find_node1:", packet->payload_packet_len)
+                    || ndpi_strnstr((const char *)packet->payload, "d1:ad2:id20:", packet->payload_packet_len)
+                    || ndpi_strnstr((const char *)packet->payload, ":info_hash20:", packet->payload_packet_len)
+                    || ndpi_strnstr((const char *)packet->payload, ":filter64", packet->payload_packet_len)
+                    || ndpi_strnstr((const char *)packet->payload, "d1:rd2:id20:", packet->payload_packet_len)
+              ){ 
+     bittorrent_found:
                 NDPI_LOG_BITTORRENT(NDPI_PROTOCOL_BITTORRENT,
                         ndpi_struct, NDPI_LOG_TRACE, "BT: plain BitTorrent protocol detected\n");
                 ndpi_add_connection_as_bittorrent(ndpi_struct, flow,
