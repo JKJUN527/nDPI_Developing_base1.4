@@ -12,6 +12,7 @@
 
 #ifdef __i386__
 #define LruKey u_int32_t
+#error "not support __i386__"
 #else
 #define LruKey u_int64_t
 #endif
