@@ -752,7 +752,8 @@ ndpi_protocol_match host_match[] = {
   { ".feixin.10086.cn",	 	"FETION", 		NDPI_PROTOCOL_FETION},
   /* -------wanglei host-------*/
   { "ugcdl.video.gtimg.com",    "QQLive", 		NDPI_PROTOCOL_QQLIVE },
-  //{ "rbv01.ku6.com",  		"Ku6", 			NDPI_PROTOCOL_KU6 },
+  { "rbv01.ku6.com",  		"Ku6", 			NDPI_PROTOCOL_KU6 },
+  { ".ku6.com",  		"Ku6", 			NDPI_PROTOCOL_KU6 },
   { "yixin.im",  		"YiXin", 		NDPI_PROTOCOL_YIXIN },
   { "yy.duowan.com",  		"YY", 			NDPI_PROTOCOL_YY },
   { "yydl.duowan.com",  	"YY", 			NDPI_PROTOCOL_YY },

@@ -71,6 +71,14 @@ void ndpi_search_dazhihui_tcp(struct ndpi_detection_module_struct *ndpi_struct, 
 		ndpi_int_dazhihui_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);		
 		return;	
 	}
+    if(packet->payload_packet_len >=100
+    &&get_u_int16_t(packet->payload,0) == htons(0x3610)
+    &&get_u_int16_t(packet->payload,4) == htons(0x0000)
+    &&get_u_int32_t(packet->payload, packet->payload_packet_len-4) == htonl( 0x413e0d0a)){ 
+  		NDPI_LOG(NDPI_PROTOCOL_DAZHIHUI365, ndpi_struct, NDPI_LOG_DEBUG,"found dazhihui365\n");
+		ndpi_int_dazhihui_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);		
+		return;	
+	}
 }
 void ndpi_search_dazhihui(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {
