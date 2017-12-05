@@ -1555,9 +1555,6 @@ uninstall-am: uninstall-libLTLIBRARIES
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am uninstall-libLTLIBRARIES
-
-
-#protocols/skype.c \
 # NTOP protocols are at the end
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

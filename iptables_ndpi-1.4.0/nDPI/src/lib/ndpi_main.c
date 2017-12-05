@@ -3635,30 +3635,28 @@ unsigned int ndpi_detection_process_packet(struct ndpi_detection_module_struct *
 					   struct ndpi_id_struct *src,
 					   struct ndpi_id_struct *dst)
 {
-  u_int32_t a;
-  NDPI_SELECTION_BITMASK_PROTOCOL_SIZE ndpi_selection_packet;
-  NDPI_PROTOCOL_BITMASK detection_bitmask;
-  #ifdef DEBUG
-	printf("[NDPI][NDPI2] --------- 2) START in ndpi_detection_process_packet\n");
-	printf("[NDPI][NDPI2] --------------a. flow:%s packet: %s strlen(packet):%d packetlen:%u \n",flow == NULL? "null":"not null", packet == NULL?"null":"not null", packet==NULL?(-1):strlen(packet), packetlen);//no any payload here
-	//printf("[NDPI][NDPI2] -------------------a.tcp:%s\na.udp:%s",((u_int8_t *)flow->packet.tcp),((u_int8_t *)flow->packet.udp));
-  #endif	
+    u_int32_t a;
+    NDPI_SELECTION_BITMASK_PROTOCOL_SIZE ndpi_selection_packet;
+    NDPI_PROTOCOL_BITMASK detection_bitmask;
+#ifdef DEBUG
+    printf("[NDPI][NDPI2] --------- 2) START in ndpi_detection_process_packet\n");
+    printf("[NDPI][NDPI2] --------------a. flow:%s packet: %s strlen(packet):%d packetlen:%u \n",flow == NULL? "null":"not null", packet == NULL?"null":"not null", packet==NULL?(-1):strlen(packet), packetlen);//no any payload here
+    //printf("[NDPI][NDPI2] -------------------a.tcp:%s\na.udp:%s",((u_int8_t *)flow->packet.tcp),((u_int8_t *)flow->packet.udp));
+#endif	
 
-  if (flow == NULL) {
-  #ifdef DEBUG
-	printf("[NDPI][NDPI2] flow is null: skip\n");
-  #endif
-    return NDPI_PROTOCOL_UNKNOWN;
-  }
-  /* need at least 20 bytes for ip header */
-  if (packetlen < 20) {
-    /* reset protocol which is normally done in init_packet_header */
-    ndpi_int_reset_packet_protocol(&flow->packet);
-  #ifdef DEBUG
-	printf("[NDPI][NDPI2] return : packetlen<20\n");
-  #endif
-    return NDPI_PROTOCOL_UNKNOWN;
-  }
+    /* check the paramenteres */
+    /* need at least 20 bytes for ip header */
+    if (!ndpi_struct || !flow || !packet || packetlen < 20 || !src | !dst) {
+        NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, "%s: ERROR: Invalid paramenteres shown blow:\n", __FUNCTION__);
+        NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG,
+                "ndpi_struct: %p, flow: %p, packet: %p, packetlen: %d, src: %p, dst: %p\n",
+                ndpi_struct, flow, packet, packetlen, src, dst);
+        /* reset protocol which is normally done in init_packet_header */
+        if (flow && packetlen < 20) {
+            ndpi_int_reset_packet_protocol(&flow->packet);
+        }
+        return NDPI_PROTOCOL_UNKNOWN;
+    }
   flow->packet.tick_timestamp = current_tick;
 
   /* parse packet */

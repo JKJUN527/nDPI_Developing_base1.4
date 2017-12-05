@@ -27,8 +27,9 @@
 #include "ndpi.h"
 #include "lru.h"
 
-#define DEFAULT_VERDICT		false /* PASS (default) */
-#define DEFAULT_VERDICT_TG	XT_CONTINUE
+#define MATCH_PASS          0
+#define MATCH_BLOCK         1
+#define MATCH_DFL_VERDICT   MATCH_PASS
 
 /*
  * #undef NDPI_ENABLE_DEBUG_MESSAGES
@@ -51,14 +52,31 @@ static struct proc_dir_entry *pde, *pde_proto;
  */
 const u_int8_t guess_protocol = 1;
 
+/* prototype define */
+static int ndpi_process_packet(const struct sk_buff *_skb,
+				 const struct xt_ndpi_protocols *match_info,
+                 const struct xt_ndpi_tginfo    *target_info,
+                 struct nf_conn *ct);
 
-/* Update match and judge verdict*/
-/*
- * @above in iptables 
+#define trace_print(...) do { \
+    if (unlikely(debug)) { \
+        printk(__VA_ARGS__); \
+    } \
+} while (0)
+
+#ifdef NDPI_ENABLE_DEBUG_MESSAGES
+# define debug_print(...)    printk(__VA_ARGS__)
+#else
+# define debug_print(...)    ((void)0)
+#endif
+
+/**
+ * Update match and judge verdict
+ * @above in iptables
  * @entry:
  * @proto_cmp_result: 0 (protocol matches)
  * @return : 0 is match
- * */
+ */
 static  u_int64_t GET_MATCH_ABOVE(const struct xt_ndpi_protocols *info, struct LruCacheEntryValue *entry , u_int64_t proto_cmp_result){
 
 
@@ -108,12 +126,8 @@ static void  ndpi_print_bitmask( const struct xt_ndpi_protocols *info, char * st
 }
 
 
-/* ********************************************************* */
-
-
 /*
- * TODO
- * - IPv6 support
+ * TODO IPv6 support
  */
 
 char* intoaV4( unsigned int addr, char* buf, u_short bufLen )
@@ -198,57 +212,52 @@ static void ndpi_flow_end_notify( struct LruCacheEntryValue *entry )
 
 /* ********************************************* */
 
-static int set_lru_ct_entry( struct LruCacheEntryValue *entry, struct nf_conn *ct )
+static int init_entry_with_ct( struct LruCacheEntryValue *entry, struct nf_conn *ct )
 {
+    int ret = 0;
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
-	pr_info( "[NDPI] %s()\n", __FUNCTION__ );
+    pr_info( "[NDPI] Call %s\n", __FUNCTION__ );
 #endif
+    if(!entry->src)   entry->src  = kmalloc( ndpi_proto_size, GFP_ATOMIC );
+    if(!entry->dst)   entry->dst  = kmalloc( ndpi_proto_size, GFP_ATOMIC );
+    if(!entry->flow)  entry->flow = kmalloc( ndpi_flow_struct_size, GFP_ATOMIC );
 
+    if (entry->src == NULL || entry->dst == NULL || entry->flow == NULL) {
+        ret = -1;
+        goto init_entry_alloc_error;
+    }
+
+    if (unlikely(debug))
+        pr_info( "[NDPI][NDPI2] set protocol_detected=0 in init_entry_with_ct\n" );
+    /* init by declare order */
+    entry->num_packets_processed = 0;
+    entry->protocol_detected     = 0;
+    entry->host_name_checked     = 0;
+    entry->ndpi_proto            = NDPI_PROTOCOL_UNKNOWN;
+    memset(entry->flow, 0, ndpi_flow_struct_size);
+    memset(entry->src,  0, ndpi_proto_size);
+    memset(entry->dst,  0, ndpi_proto_size);
+    entry->ct = ct;
+    entry->last_processed_skb = NULL;
+    entry->last_stamp = 0;
+    entry->src_ip = ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u3.ip;
+    entry->dst_ip = ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u3.ip;
+    entry->sport  = ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.all;
+    entry->dport  = ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.all;
+    memset(entry->above, 0, sizeof(entry->above));
+    entry->proto  = ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.l3num;
+
+    return 0;
+
+    /* allocate error */
+init_entry_alloc_error:
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
-	pr_info( "[NDPI] will free_LruCache %s()\n", __FUNCTION__ );
+    pr_info( "[NDPI][NDPI2] init_entry_with_ct ERROR return -1\n" );
 #endif
-	/* Free memory if any */
-	//free_LruCacheEntryValue( entry );
-
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-	pr_info( "[NDPI] will kmalloc entry %s()\n", __FUNCTION__ );
-#endif
-	/*PT test lock*/
-
-	if(!entry->src)   entry->src  = kmalloc( ndpi_proto_size, GFP_ATOMIC );
-	if(!entry->dst)   entry->dst  = kmalloc( ndpi_proto_size, GFP_ATOMIC );
-	if(!entry->flow)  entry->flow = kmalloc( ndpi_flow_struct_size, GFP_ATOMIC );
-
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-	pr_info( "[NDPI] kmaloc over %s()\n", __FUNCTION__ );
-#endif
-
-	if ( entry->src && entry->dst && entry->flow )
-	{
-		entry->ct = ct, entry->protocol_detected = 0, entry->num_packets_processed = 0;
-		if (unlikely(debug))
-			pr_info( "[NDPI][NDPI2] set protocol_detected=0 in set_lru_ct_entry\n" );
-		memset( entry->src, 0, ndpi_proto_size );
-		memset( entry->dst, 0, ndpi_proto_size );
-		memset( entry->flow, 0, ndpi_flow_struct_size );
-		entry->ndpi_proto = NDPI_PROTOCOL_UNKNOWN;
-		
-		entry->src_ip	= ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u3.ip;
-		entry->dst_ip	= ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u3.ip;
-		entry->sport	= ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.all;
-		entry->dport	= ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.all;
-		entry->proto	= ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.l3num;
-
-		return(0);
-	} else{
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-		pr_info( "[NDPI][NDPI2] set_lru_ct_entry ERROR return -1\n" );
-#endif
-		kfree(entry->src);  entry->src = NULL;
-		kfree(entry->dst);  entry->dst = NULL;
-		kfree(entry->flow); entry->flow = NULL;
-		return(-1);
-	}
+    kfree(entry->src);  entry->src = NULL;
+    kfree(entry->dst);  entry->dst = NULL;
+    kfree(entry->flow); entry->flow = NULL;
+    return ret;
 }
 
 
@@ -270,10 +279,20 @@ static inline void dumpLruCacheEntryValue( struct LruCacheEntryValue *entry, boo
 }
 
 
-/* ********************************************* */
-static bool ndpi_process_packet( const struct sk_buff *_skb,
-				 const struct xt_ndpi_protocols *info,
-				 struct nf_conn *ct )
+/**
+ * process a packet
+ * _skb: indicate a packet
+ * match_info:  if not NULL, this function is invoked by `ndpi_match()`
+ * target_info: if not NULL, this function is invoked by `ndpi_tg()`
+ * ct:   indicate a fllow containing the packet
+ * @return: 0: pass the packet
+ *          1: block the packet
+ * NOTE match_info and target_info are that only one is not NULL
+ */
+static int ndpi_process_packet(const struct sk_buff *_skb,
+				 const struct xt_ndpi_protocols *match_info,
+                 const struct xt_ndpi_tginfo    *target_info,
+                 struct nf_conn *ct)
 {
 	LruKey                    key = (LruKey) ct;
 	struct LruCacheEntryValue *entry;
@@ -287,70 +306,75 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 	char buff[256];
 #endif
-	bool verdict = DEFAULT_VERDICT;
+	int verdict = MATCH_DFL_VERDICT;
+    struct xt_ndpi_protocols dummy_info;
+    struct xt_ndpi_protocols const *info;
+
+    if ((match_info && target_info) || (!match_info && !target_info)) {
+        printk("%s:%d: INEER ERROR, match_info and target_info are that only one is not NULL",
+                __FUNCTION__, __LINE__);
+        return MATCH_DFL_VERDICT;
+    }
+    /* Init the dummy xt_ndpi_protocols info for ndpi_tg function to avoid error */
+    if (!match_info && target_info) {
+        debug_print("%s:%d: Init dummy_info for ndpi_tg\n", __FUNCTION__, __LINE__);
+        memset(&dummy_info, 0, sizeof(dummy_info));
+        match_info = &dummy_info;
+    }
+    info = match_info;
 
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
-	pr_info( "[NDPI] Begin function ndpi_process_packet(%lu)  nfctinfo:%u\n", (long unsigned int) key, _skb->nfctinfo );
+	pr_info( "[NDPI] Begin function ndpi_process_packet(%lu)  nfctinfo:%u\n", (long unsigned int)key, _skb->nfctinfo);
 	ndpi_print_bitmask( info, "--------1) START------------" );
 #endif
-
 
 	/*
 	 * We need that as two chains (e.g. INPUT and OUTPUT) can receive
 	 * packet for the same flow
 	 */
-
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 	pr_info( "[NDPI] add_to_lru#2\n" );
 #endif
-    if (NULL == ct) {
-        return DEFAULT_VERDICT;
-    }
 	node = add_to_lru_cache( lru_cache, key );
 
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
-	pr_info( "[NDPI] add_to_lru over#2\n" );
+	pr_info("[NDPI] add_to_lru over#2\n" );
 #endif
 
 
-	if ( node == NULL )
-	{
+	if (node == NULL) {
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 		pr_info( "[NDPI] add_to_lru_cache() returned NULL\n" );
 #endif
-		return verdict;
-	} else
-		entry = &node->node.value;
+		return MATCH_DFL_VERDICT;
+	}
 
-	if ( entry->ct == NULL )
-	{
+    entry = &node->node.value;
+
+    /* New entry just created */
+	if (entry->ct == NULL) {
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
-		pr_info( "[NDPI] set_lru_ct_entry #1\n" );
+		pr_info( "[NDPI] New entry just created\n" );
 #endif
-		/* New entry just created */
-		if ( set_lru_ct_entry( entry, ct ) == 0 )
-		{
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-			if ( (htons( entry->sport ) != 22) && (htons( entry->dport ) != 22) )
-				pr_info( "[NDPI] Found NEW flow [%s]\n", print_lru_ct_entry( entry, buff, sizeof(buff) ) );
-#endif
-		} else {
+        /* init the new entry */
+		if (init_entry_with_ct(entry, ct) != 0) {
 			/*
 			 * Not enough memory: we let the LRU polish the cache
 			 * without explicitly deleting the entry
 			 */
-
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 			pr_info( "[NDPI] Found NEW flow but NOT ENOUGH MEMORY!\n" );
 #endif
-
+			return MATCH_DFL_VERDICT;
+        }
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
-			pr_info( "[NDPI] Returning default verdict (%d)\n", 1 );
+        if ((htons( entry->sport ) != 22) && (htons( entry->dport ) != 22))
+            pr_info( "[NDPI] Found NEW flow [%s]\n", print_lru_ct_entry( entry, buff, sizeof(buff) ) );
 #endif
-			return(verdict);
-		}
+
+    /* The existing entry */
 	} else {
-		/* Looks like netfilter recycles stuff */
+        /* Looks like netfilter recycles stuff */
 		if (
 			( (entry->src_ip == ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u3.ip)
 			  && (entry->dst_ip == ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u3.ip)
@@ -366,64 +390,49 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 		{
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 			if ( (htons( entry->sport ) != 22) && (htons( entry->dport ) != 22) )
-				pr_info( "[NDPI] Found EXISTING flow (ct!=null and 5meta similar) [%s]\n", print_lru_ct_entry( entry, buff, sizeof(buff) ) );
+                pr_info( "[NDPI] Found EXISTING flow (ct!=null and 5meta similar) [%s]\n", print_lru_ct_entry( entry, buff, sizeof(buff) ) );
 #endif
 		} else {
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-			pr_info( "[NDPI] ct!=null and 5meta dont like RECYCLED %u:%u <-> %u:%u\n ",
-				 ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u3.ip, ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.all,
-				 ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u3.ip, ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.all );
-
-#endif
 
 			/* In this case we need to reset the bucket and start over */
-			ndpi_flow_end_notify( entry );  /* Export all data */
-
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
-			pr_info( "[NDPI] set_lru_entry#3\n" );
-#endif
+			pr_info( "[NDPI] ct!=null and 5meta dont like RECYCLED %u:%u <-> %u:%u\n ",
+                    ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u3.ip, ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.all,
+                    ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u3.ip, ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.all );
 
-			if ( set_lru_ct_entry( entry, ct ) == 0 ) /* Reset data and start over */
-			{			
-				#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-				pr_info( "[NDPI] set_lru_entry over#3\n" );
-				#endif
-			}else{
-									
-				#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-				pr_info( "[NDPI] set_lru_entry fail will cause flow is null !!!#3\n" );
-				#endif
+#endif
+            /* Export all data */
+            ndpi_flow_end_notify( entry );
+
+            /* Reset data and start over */
+			if (init_entry_with_ct( entry, ct ) != 0) {
+#ifdef NDPI_ENABLE_DEBUG_MESSAGES
+                pr_info( "[NDPI] init_entry_with_ct fail will cause flow is null !!!#3\n" );
+#endif
+                return MATCH_DFL_VERDICT;
 			}
-		}
+        }
 	}
 
-
-	/*
-	 * if((htons(entry->sport) != 22) && (htons(entry->dport) != 22))
-	 * pr_info("[NDPI] %s", print_lru_ct_entry(entry, buff, sizeof(buff)));
-	 */
-
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
-	if ( !entry->protocol_detected )
-	{
-		if (unlikely( debug ))
-			pr_info( "[NDPI]  Found existing not detected flow [key: %lu][num_packets_processed: %u]\n",
-				 (long unsigned int) key, entry->num_packets_processed );
+	if ( !entry->protocol_detected ) {
+        if (unlikely( debug ))
+            pr_info( "[NDPI]  Found existing not detected flow [key: %lu][num_packets_processed: %u]\n",
+                    (long unsigned int) key, entry->num_packets_processed );
 	}
 #endif
 
-	if ( entry->protocol_detected )
-	{
+    if ( entry->protocol_detected ) {
 		/* Just in case the host has not been checked yet as the cache was empty */
 
-		verdict = GET_MATCH_ABOVE(info, entry, NDPI_COMPARE_PROTOCOL_TO_BITMASK( info->protocols, entry->ndpi_proto )) ? true : false;
+		verdict = GET_MATCH_ABOVE(info, entry, NDPI_COMPARE_PROTOCOL_TO_BITMASK(info->protocols, entry->ndpi_proto))? MATCH_BLOCK: MATCH_PASS;
 
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 		ndpi_print_bitmask( info, "--" );
 
 		if (unlikely( debug ))
-			pr_info( "[NDPI] line:285 after compare verdict %d [Proto: %s]\n", verdict, (entry->ndpi_proto == NOT_YET_PROTOCOL)
-				 ? "NotYet" : ndpi_get_proto_name( ndpi_struct, entry->ndpi_proto ) );
+			pr_info( "[NDPI] line:%d after compare verdict %d [Proto: %s]\n", __LINE__, verdict,
+                    (entry->ndpi_proto == NOT_YET_PROTOCOL)? "NotYet": ndpi_get_proto_name(ndpi_struct, entry->ndpi_proto) );
 		if (unlikely( debug ))
 			pr_info( "[NDPI] Found existing detected flow detected  [key: %lu][num_packets_processed: %u]. Returning verdict %d \n",
 				 (long unsigned int) key, entry->num_packets_processed, verdict );
@@ -431,12 +440,11 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 		dumpLruCacheEntryValue( entry, verdict );
 		NDPI_CB_RECORD( _skb, entry );
 
-		return(verdict);
+		return verdict;
 	}
 
 	/* PT:here my some influence */
-	if ( entry->last_processed_skb == _skb && entry ->last_stamp == _skb -> tstamp.tv64)
-	{
+	if ( entry->last_processed_skb == _skb && entry ->last_stamp == _skb -> tstamp.tv64) {
 		/*
 		 * This looks a duplicated packet, so let's discard it as it was probably
 		 * processed by another nDPI-based rule
@@ -449,27 +457,23 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 		NDPI_CB_RECORD( _skb, entry );
 
         /* FTP_CONTROL never be mark as detected */
-        int ret = GET_MATCH_ABOVE(info, entry, NDPI_COMPARE_PROTOCOL_TO_BITMASK( info->protocols, entry->ndpi_proto )) ? true : false;
+		verdict = GET_MATCH_ABOVE(info, entry, NDPI_COMPARE_PROTOCOL_TO_BITMASK(info->protocols, entry->ndpi_proto))? MATCH_BLOCK: MATCH_PASS;
         
-        return ret;
-	} else
-		entry->last_processed_skb = _skb;
+        return verdict;
+	}
 
-	//pr_info( "[NDPI] _skb->tstamp is:%ld \n", entry ->last_stamp);
-	//pr_info( "[NDPI] _skb->tstamp is:%ld \n", _skb -> tstamp.tv64);
+    entry->last_processed_skb = _skb;
+	entry ->last_stamp = _skb->tstamp.tv64;
 
-	
 	copied_skb = skb_copy( _skb, GFP_ATOMIC );
-	entry ->last_stamp = copied_skb->tstamp.tv64;
 	
-	if ( copied_skb == NULL )
-	{
+	if ( copied_skb == NULL ) {
 		if (unlikely( debug ))
 			pr_info( "[NDPI] skb_copy() failed.\n" );
 		return verdict;
 	}
 
-	iph	= ip_hdr( copied_skb );
+	iph	= ip_hdr(copied_skb);
 	ip_len	= copied_skb->len, ip = (u_int8_t *) iph;
 	if (unlikely( debug ))
 		pr_info( "[NDPI] ndpi_process_packet(%p, ip_len=%u)\n", _skb, copied_skb->len );
@@ -499,7 +503,7 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 		}
 
 		NDPI_CB_RECORD( _skb, entry );
-		verdict = GET_MATCH_ABOVE(info, entry, NDPI_COMPARE_PROTOCOL_TO_BITMASK( info->protocols, entry->ndpi_proto )) ? true : false;
+		verdict = GET_MATCH_ABOVE(info, entry, NDPI_COMPARE_PROTOCOL_TO_BITMASK(info->protocols, entry->ndpi_proto))? MATCH_BLOCK: MATCH_PASS;
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 		pr_info( "[NDPI] line:374 after guessed, verdict %d [Proto: %s]\n", verdict, (entry->ndpi_proto == NOT_YET_PROTOCOL)
 			 ? "NotYet" : ndpi_get_proto_name( ndpi_struct, entry->ndpi_proto ) );
@@ -513,7 +517,7 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 		 */
         if (entry->ndpi_proto == NDPI_PROTOCOL_UNKNOWN)
             entry->ndpi_proto = NOT_YET_PROTOCOL;
-		verdict	= GET_MATCH_ABOVE(info, entry, NDPI_COMPARE_PROTOCOL_TO_BITMASK( info->protocols, entry->ndpi_proto )) ? true : false;
+		verdict = GET_MATCH_ABOVE(info, entry, NDPI_COMPARE_PROTOCOL_TO_BITMASK(info->protocols, entry->ndpi_proto))? MATCH_BLOCK: MATCH_PASS;
 		NDPI_CB_RECORD(_skb,entry);
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 		pr_info( "[NDPI] line:%d force set proto=NOT_YET_PROTOCOL  skip compare verdict %d [Proto: %s] num_packets_processed:%u\n",
@@ -546,37 +550,36 @@ static bool ndpi_match( const struct sk_buff *skb, const struct xt_match_param *
 static bool ndpi_match( const struct sk_buff *skb, struct xt_action_param *par )
 #endif
 {
-	bool				verdict;
-	struct nf_conn			* ct;
-	enum ip_conntrack_info		ctinfo;
-	const struct xt_ndpi_protocols	*info = par->matchinfo;
+	int verdict;
+	struct nf_conn *ct;
+    enum ip_conntrack_info ctinfo;
+	const struct xt_ndpi_protocols *match_info = par->matchinfo;
 	if (unlikely( debug ))
 		pr_info( "[NDPI] ndpi_match fragoff:%d thoff:%u hooknum:%u family:%u hotdrop:%d\n", par->fragoff, par->thoff, par->hooknum, par->family, *par->hotdrop );
 	ct = nf_ct_get( skb, &ctinfo );
-	if ( (ct == NULL) || (skb == NULL) ) {
+	if ((ct == NULL) || (skb == NULL)) {
 		if (unlikely( debug ))
 			pr_info( "[NDPI] ignoring NULL untracked sk_buff.\n" );
-		return false; /* PASS */
+		return MATCH_PASS;
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION( 3, 0, 0 )
-	} else if ( nf_ct_is_untracked( skb ) ) {
+	} else if (nf_ct_is_untracked(skb)) {
 #else
-	} else if ( nf_ct_is_untracked( ct ) ) {
+	} else if (nf_ct_is_untracked(ct)) {
 #endif
-		if (unlikely( debug ))
-			pr_info( "[NDPI] ignoring untracked sk_buff.\n" );
-		return false; /* PASS */
+        printk("%s:%d: ignoring untracked sk_buff.\n", __FUNCTION__, __LINE__);
+		return MATCH_PASS;
 	}
 
 	/* process the packet */
     spin_lock_bh(&ndpi_lock);
-	verdict = ndpi_process_packet( skb, info, ct );
+	verdict = ndpi_process_packet(skb, match_info, NULL, ct);
     spin_unlock_bh(&ndpi_lock);
 
-	if (unlikely( debug ) &&  verdict == true)
+	if (unlikely(debug) &&  verdict == MATCH_BLOCK)
 		pr_info( "[NDPI] Dropping ...\n" );
 
-	return(verdict);
+	return verdict;
 }
 
 
@@ -633,257 +636,33 @@ static void term_proc_engine( void )
 }
 
 
-/* tg */
-
-/* ********************************************* */
-static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
-				    const struct xt_ndpi_tginfo *info,
-				    struct nf_conn *ct )
-{
-
-    LruKey              key = (LruKey) ct;
-    struct LruCacheEntryValue   *entry;
-    struct LruCacheNode     *node;
-    u_int64_t           time;
-    struct timeval          tv;
-    const struct iphdr      *iph;
-    u_int16_t           ip_len;
-    u_int8_t            *ip;
-    struct sk_buff          *copied_skb;
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-	char buff[256];
-#endif
-	bool verdict = XT_CONTINUE;
-
-
-	/*
-	 * We need that as two chains (e.g. INPUT and OUTPUT) can receive
-	 * packet for the same flow
-	 */
-
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-	pr_info( "[NDPI] add_to_lru#2\n" );
-#endif
-    if (NULL == ct) {
-        return XT_CONTINUE;
-    }
-	node = add_to_lru_cache( lru_cache, key );
-
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-	pr_info( "[NDPI] add_to_lru over#2\n" );
-#endif
-
-
-	if ( node == NULL )
-	{
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-		pr_info( "[NDPI] add_to_lru_cache() returned NULL\n" );
-#endif
-
-		return(verdict);
-	} else
-		entry = &node->node.value;
-
-	if ( entry->ct == NULL )
-	{
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-		pr_info( "[NDPI] set_lru_ct_entry #1\n" );
-#endif
-		/* New entry just created */
-		if ( set_lru_ct_entry( entry, ct ) == 0 )
-		{
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-			if ( (htons( entry->sport ) != 22) && (htons( entry->dport ) != 22) )
-				pr_info( "[NDPI] Found NEW flow [%s]\n", print_lru_ct_entry( entry, buff, sizeof(buff) ) );
-#endif
-		} else {
-			/*
-			 * Not enough memory: we let the LRU polish the cache
-			 * without explicitly deleting the entry
-			 */
-
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-			pr_info( "[NDPI] Found NEW flow but NOT ENOUGH MEMORY!\n" );
-#endif
-
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-			pr_info( "[NDPI] Returning default verdict (%d)\n", 1 );
-#endif
-			return(verdict);
-		}
-	} else {
-		/* Looks like netfilter recycles stuff */
-		if (
-			( (entry->src_ip == ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u3.ip)
-			  && (entry->dst_ip == ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u3.ip)
-			  && (entry->sport == ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.all)
-			  && (entry->dport == ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.all)
-			  && (entry->proto == ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.l3num) )
-			||
-			( (entry->src_ip == ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u3.ip)
-			  && (entry->dst_ip == ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u3.ip)
-			  && (entry->sport == ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.all)
-			  && (entry->dport == ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.all)
-			  && (entry->proto == ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.l3num) ) )
-		{
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-			if ( (htons( entry->sport ) != 22) && (htons( entry->dport ) != 22) )
-				pr_info( "[NDPI] Found EXISTING flow (ct!=null and 5meta similar) [%s]\n", print_lru_ct_entry( entry, buff, sizeof(buff) ) );
-#endif
-		} else {
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-			pr_info( "[NDPI] ct!=null and 5meta dont like RECYCLED %u:%u <-> %u:%u\n ",
-				 ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u3.ip, ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.all,
-				 ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u3.ip, ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.all );
-
-#endif
-
-			/* In this case we need to reset the bucket and start over */
-			ndpi_flow_end_notify( entry );  /* Export all data */
-
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-			pr_info( "[NDPI] set_lru_entry#3\n" );
-#endif
-			if ( set_lru_ct_entry( entry, ct ) == 0 ) /* Reset data and start over */
-				{			
-					#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-					pr_info( "[NDPI] set_lru_entry over#3\n" );
-					#endif
-				}else{
-										
-					#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-					pr_info( "[NDPI] set_lru_entry fail will cause flow is null !!!#3\n" );
-					#endif
-				}
-		}
-	}
-
-
-	/*
-	 * if((htons(entry->sport) != 22) && (htons(entry->dport) != 22))
-	 * pr_info("[NDPI] %s", print_lru_ct_entry(entry, buff, sizeof(buff)));
-	 */
-
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-	if ( !entry->protocol_detected )
-	{
-		if (unlikely( debug ))
-			pr_info( "[NDPI]  Found existing not detected flow [key: %lu][num_packets_processed: %u]\n",
-				 (long unsigned int) key, entry->num_packets_processed );
-	}
-#endif
-
-	if ( entry->protocol_detected )
-	{
-		NDPI_CB_RECORD( _skb, entry );
-		return(verdict);
-	}
-
-	/* PT:here my some influence */
-	if ( entry->last_processed_skb == _skb && entry ->last_stamp == _skb -> tstamp.tv64)
-	{
-		/*
-		 * This looks a duplicated packet, so let's discard it as it was probably
-		 * processed by another nDPI-based rule
-		 */
-		if (unlikely( debug ))
-			pr_info( "[NDPI] Duplicated packet, discard it\n" );
-
-
-		NDPI_CB_RECORD( _skb, entry );
-
-        return XT_CONTINUE;
-	} else
-		entry->last_processed_skb = _skb;
-
-
-	copied_skb = skb_copy( _skb, GFP_ATOMIC );
-	entry ->last_stamp = copied_skb->tstamp.tv64;
-
-	if ( copied_skb == NULL )
-	{
-		if (unlikely( debug ))
-			pr_info( "[NDPI] skb_copy() failed.\n" );
-		return(verdict);
-	}
-
-	iph	= ip_hdr( copied_skb );
-	ip_len	= copied_skb->len, ip = (u_int8_t *) iph;
-	if (unlikely( debug ))
-		pr_info( "[NDPI] ndpi_process_packet(%p, ip_len=%u)\n", _skb, copied_skb->len );
-
-	do_gettimeofday( &tv );
-	time = ( (u_int64_t) tv.tv_sec) * ndpi_detection_tick_resolution + tv.tv_usec / (1000000 / ndpi_detection_tick_resolution);
-
-	entry->num_packets_processed++;
-
-	/*PT test lock*/
-	entry->ndpi_proto = ndpi_detection_process_packet( ndpi_struct, entry->flow, ip, ip_len, time, entry->src, entry->dst );
-    
-    if (entry->ndpi_proto != NDPI_PROTOCOL_FTP_CONTROL   /* always check ftp_control */
-            && (   (entry->ndpi_proto == NDPI_PROTOCOL_HTTP && entry->flow->packet_counter >= 5)  /* give up after some counts */
-                || (iph->protocol == IPPROTO_UDP && entry->num_packets_processed >= 15)
-                || (iph->protocol == IPPROTO_TCP && entry->num_packets_processed >= 15)
-                || (entry->ndpi_proto != NDPI_PROTOCOL_UNKNOWN && entry->ndpi_proto != NDPI_PROTOCOL_HTTP))) {
-        entry->protocol_detected = 1;   /* We have made a decision */
-        if (unlikely( debug ))
-            pr_info( "[NDPI][NDPI2] set protocol_detected=1" );
-        if ( (entry->ndpi_proto == NDPI_PROTOCOL_UNKNOWN) && guess_protocol )
-        {
-            entry->ndpi_proto = ndpi_guess_undetected_protocol( ndpi_struct, iph->protocol,
-                    ntohl( entry->src_ip ), ntohs( entry->sport ),
-                    ntohl( entry->dst_ip ), ntohs( entry->dport ) );
-            if (unlikely( debug ))
-                pr_info( "[NDPI][NDPI2] process dont find, guessed \n" );
-        }
-
-        NDPI_CB_RECORD( _skb, entry );
-
-        free_LruCacheEntryValue( entry ); /* Free nDPI memory */
-    } else {
-		/*
-		 * In this case we have not yet detected the protocol but the user has specified unknown as protocol
-		 */
-        if (entry->ndpi_proto == NDPI_PROTOCOL_UNKNOWN)
-            entry->ndpi_proto = NOT_YET_PROTOCOL;
-		NDPI_CB_RECORD(_skb,entry);
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-		pr_info( "[NDPI] line:%d force set proto=NOT_YET_PROTOCOL  skip compare verdict %d [Proto: %s]\n",
-                __LINE__, verdict, (entry->ndpi_proto == NOT_YET_PROTOCOL)
-			 ? "NotYet" : ndpi_get_proto_name( ndpi_struct, entry->ndpi_proto ) );
-#endif
-	}
-
-	kfree_skb( copied_skb );
-
-	return verdict;
-}
 
 
 /* ********************************************* */
 
 static unsigned int ndpi_tg( struct sk_buff *skb, const struct xt_target_param *par )
 {
-	const struct xt_ndpi_tginfo	*info;
-	struct nf_conn			* ct;
-	enum ip_conntrack_info		ctinfo;
-	info	= par->targinfo;
-	ct	= nf_ct_get( skb, &ctinfo );
-	if ( (ct == NULL) || (skb == NULL) ) {
+    const struct xt_ndpi_tginfo *target_info;
+    struct nf_conn              *ct;
+    enum ip_conntrack_info      ctinfo;
+    target_info = par->targinfo;
+    ct   = nf_ct_get( skb, &ctinfo );
+    if ( (ct == NULL) || (skb == NULL) ) {
 
-		return XT_CONTINUE;
+        return XT_CONTINUE;
 #if LINUX_VERSION_CODE < KERNEL_VERSION( 3, 0, 0 )
-	} else if ( nf_ct_is_untracked( skb ) ) {
+    } else if ( nf_ct_is_untracked( skb ) ) {
 #else
-	} else if ( nf_ct_is_untracked( ct ) ) {
+    } else if ( nf_ct_is_untracked( ct ) ) {
 #endif
         return XT_CONTINUE;
-	}
+    }
     spin_lock_bh(&ndpi_lock);
-	ndpi_process_packet_tg( skb, info, ct );    /*just check and update lrucache*/
+    /* just check and update lrucache, therefore, I ignore the return value */
+    ndpi_process_packet(skb, NULL, target_info, ct);
     spin_unlock_bh(&ndpi_lock);
 
-	return XT_CONTINUE;
+    return XT_CONTINUE;
 }
 
 

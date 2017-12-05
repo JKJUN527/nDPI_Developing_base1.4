@@ -14,7 +14,6 @@
 
 /* Globals */
 extern spinlock_t				ndpi_lock;      /*flow lock*/
-// extern spinlock_t				ipq_lock;       /*detect lock*/
 extern u_int32_t				ndpi_proto_size, ndpi_flow_struct_size;
 extern struct ndpi_detection_module_struct	*ndpi_struct;
 extern u_int32_t				ndpi_detection_tick_resolution;
