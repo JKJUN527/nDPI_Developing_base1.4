@@ -382,18 +382,15 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 			pr_info( "[NDPI] set_lru_entry#3\n" );
 #endif
-
 			if ( set_lru_ct_entry( entry, ct ) == 0 ) /* Reset data and start over */
-			{			
-				#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-				pr_info( "[NDPI] set_lru_entry over#3\n" );
-				#endif
-			}else{
-									
-				#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-				pr_info( "[NDPI] set_lru_entry fail will cause flow is null !!!#3\n" );
-				#endif
-			}
+            {			
+#ifdef NDPI_ENABLE_DEBUG_MESSAGES
+                pr_info( "[NDPI] set_lru_entry over#3\n" );
+#endif
+            }else{
+                pr_err("%s:%d: set_lru_entry fail will cause flow is NULL\n", __FUNCTION__, __LINE__);
+                return false;
+            }
 		}
 	}
 
@@ -744,17 +741,15 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 			pr_info( "[NDPI] set_lru_entry#3\n" );
 #endif
-			if ( set_lru_ct_entry( entry, ct ) == 0 ) /* Reset data and start over */
-				{			
-					#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-					pr_info( "[NDPI] set_lru_entry over#3\n" );
-					#endif
-				}else{
-										
-					#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-					pr_info( "[NDPI] set_lru_entry fail will cause flow is null !!!#3\n" );
-					#endif
-				}
+            if ( set_lru_ct_entry( entry, ct ) == 0 ) /* Reset data and start over */
+            {			
+#ifdef NDPI_ENABLE_DEBUG_MESSAGES
+                pr_info( "[NDPI] set_lru_entry over#3\n" );
+#endif
+            }else{
+                pr_err("%s:%d: set_lru_entry fail will cause flow is NULL\n", __FUNCTION__, __LINE__);
+                return false;
+            }
 		}
 	}
 
