@@ -1,81 +1,79 @@
-Name:iptables_ndpi		
-Version:1.4.0	
-Vendor:capsheaf
-Release:37.1
-Summary:iptables ndpi mod based on 1.4
-Group:flowmeter
-Url:https://github.com/ntop/nDPI
-License:GPL		
-Source:%{name}-%{version}-%{vendor}.tar.gz
-BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{vendor}-%{release}-XXXXXX)
-BuildRequires:gcc,autoconf,automake,libpcap-devel,libtool,iptables-devel >= 1.4.7-10
+Name: iptables_ndpi		
+Version: 1.4.0	
+Release: 37.1
+Vendor: capsheaf
+Summary: iptables ndpi mod based on 1.4
+Group: flowmeter
+Url: https://github.com/ntop/nDPI
+License: GPL		
+Source: %{name}.tar.gz
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{vendor}-%{release}
+BuildRequires: gcc,autoconf,automake,libpcap-devel,libtool,iptables-devel >= 1.4.7-10
+Packager: capsheaf
+
 %define debug no
 
 %description
+%{summary}
 this is the core of app control
-%prep
 
-#app_ctrl
-rm -rf $RPM_BUILD_ROOT
-%setup -q
+
+%prep
+# unpack %{name}.tar.gz
+%setup -c $RPM_BUILD_ROOT
+# configure nDPI
+pushd nDPI
+./autogen.sh
+./configure --enable-debug=%{debug}
+popd
+
 
 %build
-#rpm -q json-c-devel |grep -v 'not installed' || rpm -ivh ./deps/json-c/json-c*
-#./configure --prefix=%{_prefix} --libdir=%{_libdir}
-rm -rf $RPM_BUILD_ROOT
-#echo "[PT]dir checking"
-#if [ ! -d $RPM_BUILD_ROOT/lib64/xtables ] ; then
-#	echo "[PT]creating /lib64/xtables.."
-#	mkdir -p $RPM_BUILD_ROOT/lib64/xtables
-#fi
+# build nDPI
+pushd nDPI
+make
+popd
 
-
-#if [ ! -d $RPM_BUILD_ROOT/lib/modules/2.6.32-431.el6.x86_64/kernel/net/netfilter ] ; then
-#	echo "[PT]creating /modules/...."
-#	mkdir -p $RPM_BUILD_ROOT/lib/modules/2.6.32-431.el6.x86_64/kernel/net/netfilter
-#fi
-
-%install
-echo "[PT]dir checking"
-if [ ! -d $RPM_BUILD_ROOT/lib64/xtables ] ; then
-	echo "[PT]creating /lib64/xtables.."
-	mkdir -p $RPM_BUILD_ROOT/lib64/xtables
-fi
-
-
-if [ ! -d $RPM_BUILD_ROOT/lib/modules/2.6.32-431.el6.x86_64/kernel/net/netfilter ] ; then
-        echo "[PT]creating /modules/...."
-        mkdir -p $RPM_BUILD_ROOT/lib/modules/2.6.32-431.el6.x86_64/kernel/net/netfilter
-fi
-#make nDPI
-(cd nDPI && sh configure --enable-debug=%{debug} && make)
-#make flowmeter
-cd nDPI/example/
+# build flowmeter
+pushd nDPI/example/
 make clean
 make
-mkdir $RPM_BUILD_ROOT/etc/cron.daily/ -p
-mkdir $RPM_BUILD_ROOT/etc/ndpi -p
-mkdir $RPM_BUILD_ROOT/var/log/flowmeter -p
+popd
+
+# build xt_ndpi.ko
+make
+
+%install
+mkdir -p $RPM_BUILD_ROOT/lib64/xtables
+mkdir -p $RPM_BUILD_ROOT/lib/modules/$(uname -r)/kernel/net/netfilter
+mkdir -p $RPM_BUILD_ROOT/etc/cron.daily/
+mkdir -p $RPM_BUILD_ROOT/etc/ndpi
+mkdir -p $RPM_BUILD_ROOT/var/log/flowmeter
 install -o nobody -g nobody -d $RPM_BUILD_ROOT/var/efw/flowmeter/
 touch $RPM_BUILD_ROOT/etc/ndpi/config
-echo "IP_FILE=/var/efw/flowmeter/all_ip.txt" > $RPM_BUILD_ROOT/etc/ndpi/config
-echo "LOG_SIZE_FM=1048576900" >> $RPM_BUILD_ROOT/etc/ndpi/config
-echo "MAX_USER_COUNT=131070" >> $RPM_BUILD_ROOT/etc/ndpi/config
-echo "#!/bin/sh" >> $RPM_BUILD_ROOT/etc/cron.daily/clearflowmeterlog
-echo "cat /dev/null > /var/log/flowmeter/data_log_rt " > $RPM_BUILD_ROOT/etc/cron.daily/clearflowmeterlog
-echo "exit 0" >> $RPM_BUILD_ROOT/etc/cron.daily/clearflowmeterlog
 
-# touch $RPM_BUILD_ROOT/var/efw/flowmeter/interfaces.txt
-# chown nobody:nobody $RPM_BUILD_ROOT/var/efw/flowmeter/interfaces.txt
-# touch $RPM_BUILD_ROOT/var/efw/flowmeter/disable
-# chown nobody:nobody  $RPM_BUILD_ROOT/var/efw/flowmeter/disable
+cat >> $RPM_BUILD_ROOT/etc/ndpi/config << EOF
+IP_FILE=/var/efw/flowmeter/all_ip.txt
+LOG_SIZE_FM=1048576900
+MAX_USER_COUNT=131070
+EOF
+
+cat >> $RPM_BUILD_ROOT/etc/cron.daily/clearflowmeterlog << EOF
+#!/bin/sh"
+> /var/log/flowmeter/data_log_rt
+exit 0
+EOF
+
 touch $RPM_BUILD_ROOT/var/efw/flowmeter/all_ip.txt
 chown nobody:nobody  $RPM_BUILD_ROOT/var/efw/flowmeter/all_ip.txt
 echo "192.168.0.0/24" > $RPM_BUILD_ROOT/var/efw/flowmeter/all_ip.txt
 # echo "br0" > $RPM_BUILD_ROOT/var/efw/flowmeter/interfaces.txt
 
+pushd nDPI/example/
 install -D flowmeter  $RPM_BUILD_ROOT/usr/bin/flowmeter
 install -D pcapReader  $RPM_BUILD_ROOT/usr/bin/pcapReader
+popd
+
 install -d $RPM_BUILD_ROOT/usr/local/bin/
 # install  restartflowmeter.py $RPM_BUILD_ROOT/usr/local/bin/
 # install  flowmeter_parser.py $RPM_BUILD_ROOT/usr/local/bin/
@@ -87,18 +85,11 @@ install -d $RPM_BUILD_ROOT/usr/local/bin/
 # grep  -qEe "/usr/local/bin/restartflowmeter.py" /etc/sudoers || \
 # echo "nobody  ALL=NOPASSWD: /usr/local/bin/restartflowmeter.py" >> /etc/sudoers
 
-cd ../../
-#make flowmeter end
-
-#make iptables_ndpi
-make clean
-make all
 make install prefix=$RPM_BUILD_ROOT
 
 # generate version file
-mkdir $RPM_BUILD_ROOT/var/efw/unify_update/app_lib/ -p 
-today=`date "+%Y-%m-%d"`
-echo "version=$today" >  $RPM_BUILD_ROOT/var/efw/unify_update/app_lib/release
+mkdir -p $RPM_BUILD_ROOT/var/efw/unify_update/app_lib/
+echo "version=`date '+%Y-%m-%d'`" > $RPM_BUILD_ROOT/var/efw/unify_update/app_lib/release
 
 #sh autogen.sh 
 #./configure --prefix=$RPM_BUILD_DIR  && make clean && make && make install
@@ -108,7 +99,7 @@ echo "version=$today" >  $RPM_BUILD_ROOT/var/efw/unify_update/app_lib/release
 #chmod +x $fn
 cp app_ctrl/* "$RPM_BUILD_ROOT" -rf
 
-sort  -k 3 -t ',' -f -b $RPM_BUILD_ROOT/var/efw/objects/application/app_system  -o $RPM_BUILD_ROOT/var/efw/objects/application/app_system
+sort  -k 3 -t ',' -f -b $RPM_BUILD_ROOT/var/efw/objects/application/app_system -o $RPM_BUILD_ROOT/var/efw/objects/application/app_system
 cat $RPM_BUILD_ROOT/var/efw/objects/application/app_system | awk '{split($0,arr,",");print arr[1],",",arr[3],",",arr[4],",",arr[0],arr[1],",","1";}' | tr -d ' ' > $RPM_BUILD_ROOT/var/efw/objects/application/app_rule
 #rm $RPM_BUILD_ROOT/usr/local/bin/*pyc -vf
 
