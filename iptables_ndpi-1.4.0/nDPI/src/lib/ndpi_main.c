@@ -3646,9 +3646,9 @@ unsigned int ndpi_detection_process_packet(struct ndpi_detection_module_struct *
 
     /* check the paramenteres */
     /* need at least 20 bytes for ip header */
-    if (!ndpi_struct || !flow || !packet || packetlen < 20 || !src | !dst) {
-        NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG, "%s: ERROR: Invalid paramenteres shown blow:\n", __FUNCTION__);
-        NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG,
+    if (!ndpi_struct || !flow || !packet || packetlen < 20 || !src || !dst) {
+        NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_ERROR, "%s: ERROR: Invalid paramenteres shown blow:\n", __FUNCTION__);
+        NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_ERROR,
                 "ndpi_struct: %p, flow: %p, packet: %p, packetlen: %d, src: %p, dst: %p\n",
                 ndpi_struct, flow, packet, packetlen, src, dst);
         /* reset protocol which is normally done in init_packet_header */

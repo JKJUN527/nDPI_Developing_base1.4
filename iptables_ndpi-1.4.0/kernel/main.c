@@ -60,12 +60,12 @@ static int ndpi_process_packet(const struct sk_buff *_skb,
 
 #define trace_print(...) do { \
     if (unlikely(debug)) { \
-        printk(__VA_ARGS__); \
+        pr_debug(__VA_ARGS__); \
     } \
 } while (0)
 
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
-# define debug_print(...)    printk(__VA_ARGS__)
+# define debug_print(...)    pr_debug(__VA_ARGS__)
 #else
 # define debug_print(...)    ((void)0)
 #endif
@@ -106,17 +106,17 @@ static void  ndpi_print_bitmask( const struct xt_ndpi_protocols *info, char * st
 
 	u_int i, flag;
 	u_int num_supported_protocols = ndpi_get_num_supported_protocols( ndpi_struct ) + 1 /* NOT_YET protocol */;
-	pr_info( "[NDPI] Protos: %s", str );
+	pr_debug( "[NDPI] Protos: %s", str );
 	for ( i = 0; i < num_supported_protocols; i++ )
 	{
 		if ( NDPI_COMPARE_PROTOCOL_TO_BITMASK( info->protocols, i ) != 0 )
 		{
 			if ( flag == 1 )
 			{
-				pr_info( ",%s",
+				pr_debug( ",%s",
 					 (i == NOT_YET_PROTOCOL) ? "NOT_YET" : ndpi_get_proto_by_id( ndpi_struct, i ) );
 			}else{
-				pr_info( "--n-protos %s",
+				pr_debug( "--n-protos %s",
 					 (i == NOT_YET_PROTOCOL) ? "NOT_YET" : ndpi_get_proto_by_id( ndpi_struct, i ) );
 				flag = 1;
 			}
@@ -205,7 +205,7 @@ static void ndpi_flow_end_notify( struct LruCacheEntryValue *entry )
 {
 	if( unlikely(debug)){
 		char buff[256];
-		pr_info( "[NDPI] Exporting dead flow %s\n", print_lru_ct_entry( entry, buff, sizeof(buff) ) );
+		pr_warning( "[NDPI] Exporting dead flow %s\n", print_lru_ct_entry( entry, buff, sizeof(buff) ) );
 	}
 }
 
@@ -215,9 +215,7 @@ static void ndpi_flow_end_notify( struct LruCacheEntryValue *entry )
 static int init_entry_with_ct( struct LruCacheEntryValue *entry, struct nf_conn *ct )
 {
     int ret = 0;
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-    pr_info( "[NDPI] Call %s\n", __FUNCTION__ );
-#endif
+    debug_print("call %s\n", __FUNCTION__ );
     if(!entry->src)   entry->src  = kmalloc( ndpi_proto_size, GFP_ATOMIC );
     if(!entry->dst)   entry->dst  = kmalloc( ndpi_proto_size, GFP_ATOMIC );
     if(!entry->flow)  entry->flow = kmalloc( ndpi_flow_struct_size, GFP_ATOMIC );
@@ -227,8 +225,7 @@ static int init_entry_with_ct( struct LruCacheEntryValue *entry, struct nf_conn 
         goto init_entry_alloc_error;
     }
 
-    if (unlikely(debug))
-        pr_info( "[NDPI][NDPI2] set protocol_detected=0 in init_entry_with_ct\n" );
+    pr_debug("%s:%d: set protocol_detected = 0\n", __FUNCTION__, __LINE__);
     /* init by declare order */
     entry->num_packets_processed = 0;
     entry->protocol_detected     = 0;
@@ -251,9 +248,7 @@ static int init_entry_with_ct( struct LruCacheEntryValue *entry, struct nf_conn 
 
     /* allocate error */
 init_entry_alloc_error:
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-    pr_info( "[NDPI][NDPI2] init_entry_with_ct ERROR return -1\n" );
-#endif
+    pr_err("%s:%d: INNER ERROR return -1\n", __FUNCTION__, __LINE__);
     kfree(entry->src);  entry->src = NULL;
     kfree(entry->dst);  entry->dst = NULL;
     kfree(entry->flow); entry->flow = NULL;
@@ -268,7 +263,7 @@ static inline void dumpLruCacheEntryValue( struct LruCacheEntryValue *entry, boo
 	if ( unlikely(debug))
 	{
 		char buf0[24], buf1[24], buf2[24];
-		pr_info( "[NDPI] DUMP [%s][%s][%s:%u <-> %s:%u][%s]\n",
+		pr_debug( "[NDPI] DUMP [%s][%s][%s:%u <-> %s:%u][%s]\n",
 				 (entry->ndpi_proto == NOT_YET_PROTOCOL)
 				 ? "NotYet" : ndpi_get_proto_name( ndpi_struct, entry->ndpi_proto ),
 				 protoname( entry->proto, buf0, sizeof(buf0) - 1 ),
@@ -285,8 +280,8 @@ static inline void dumpLruCacheEntryValue( struct LruCacheEntryValue *entry, boo
  * match_info:  if not NULL, this function is invoked by `ndpi_match()`
  * target_info: if not NULL, this function is invoked by `ndpi_tg()`
  * ct:   indicate a fllow containing the packet
- * @return: 0: pass the packet
- *          1: block the packet
+ * @return: MATCH_PASS:  pass the packet
+ *          MATCH_BLOCK: block the packet
  * NOTE match_info and target_info are that only one is not NULL
  */
 static int ndpi_process_packet(const struct sk_buff *_skb,
@@ -311,7 +306,7 @@ static int ndpi_process_packet(const struct sk_buff *_skb,
     struct xt_ndpi_protocols const *info;
 
     if ((match_info && target_info) || (!match_info && !target_info)) {
-        printk("%s:%d: INEER ERROR, match_info and target_info are that only one is not NULL",
+        pr_err("%s:%d: INEER ERROR, match_info and target_info are that only one is not NULL",
                 __FUNCTION__, __LINE__);
         return MATCH_DFL_VERDICT;
     }
@@ -336,16 +331,12 @@ static int ndpi_process_packet(const struct sk_buff *_skb,
 	pr_info( "[NDPI] add_to_lru#2\n" );
 #endif
 	node = add_to_lru_cache( lru_cache, key );
-
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
 	pr_info("[NDPI] add_to_lru over#2\n" );
 #endif
 
-
 	if (node == NULL) {
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-		pr_info( "[NDPI] add_to_lru_cache() returned NULL\n" );
-#endif
+		pr_warning("%s:%d: add_to_lru_cache() returned NULL\n", __FUNCTION__, __LINE__);
 		return MATCH_DFL_VERDICT;
 	}
 
@@ -362,9 +353,7 @@ static int ndpi_process_packet(const struct sk_buff *_skb,
 			 * Not enough memory: we let the LRU polish the cache
 			 * without explicitly deleting the entry
 			 */
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-			pr_info( "[NDPI] Found NEW flow but NOT ENOUGH MEMORY!\n" );
-#endif
+			pr_warning("%s:%d Found NEW flow but NOT ENOUGH MEMORY!\n", __FUNCTION__, __LINE__);
 			return MATCH_DFL_VERDICT;
         }
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
@@ -399,16 +388,13 @@ static int ndpi_process_packet(const struct sk_buff *_skb,
 			pr_info( "[NDPI] ct!=null and 5meta dont like RECYCLED %u:%u <-> %u:%u\n ",
                     ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u3.ip, ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.all,
                     ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u3.ip, ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.all );
-
 #endif
             /* Export all data */
             ndpi_flow_end_notify( entry );
 
             /* Reset data and start over */
 			if (init_entry_with_ct( entry, ct ) != 0) {
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-                pr_info( "[NDPI] init_entry_with_ct fail will cause flow is null !!!#3\n" );
-#endif
+                pr_warning("%s:%d Fail will cause flow is NULL\n", __FUNCTION__, __LINE__);
                 return MATCH_DFL_VERDICT;
 			}
         }
@@ -449,21 +435,16 @@ static int ndpi_process_packet(const struct sk_buff *_skb,
 		 * This looks a duplicated packet, so let's discard it as it was probably
 		 * processed by another nDPI-based rule
 		 */
-		if (unlikely( debug )) {
-			pr_info( "[NDPI] Duplicated packet, discard it\n" );
-		}
-
-
+        debug_print( "[NDPI] Duplicated packet, discard it\n" );
 		NDPI_CB_RECORD( _skb, entry );
 
         /* FTP_CONTROL never be mark as detected */
 		verdict = GET_MATCH_ABOVE(info, entry, NDPI_COMPARE_PROTOCOL_TO_BITMASK(info->protocols, entry->ndpi_proto))? MATCH_BLOCK: MATCH_PASS;
-        
         return verdict;
 	}
 
     entry->last_processed_skb = _skb;
-	entry ->last_stamp = _skb->tstamp.tv64;
+	entry->last_stamp = _skb->tstamp.tv64;
 
 	copied_skb = skb_copy( _skb, GFP_ATOMIC );
 	
@@ -559,7 +540,7 @@ static bool ndpi_match( const struct sk_buff *skb, struct xt_action_param *par )
 	ct = nf_ct_get( skb, &ctinfo );
 	if ((ct == NULL) || (skb == NULL)) {
 		if (unlikely( debug ))
-			pr_info( "[NDPI] ignoring NULL untracked sk_buff.\n" );
+			pr_notice( "[NDPI] ignoring NULL untracked sk_buff.\n" );
 		return MATCH_PASS;
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION( 3, 0, 0 )
@@ -567,7 +548,7 @@ static bool ndpi_match( const struct sk_buff *skb, struct xt_action_param *par )
 #else
 	} else if (nf_ct_is_untracked(ct)) {
 #endif
-        printk("%s:%d: ignoring untracked sk_buff.\n", __FUNCTION__, __LINE__);
+        pr_notice("%s:%d: ignoring untracked sk_buff.\n", __FUNCTION__, __LINE__);
 		return MATCH_PASS;
 	}
 
@@ -577,7 +558,7 @@ static bool ndpi_match( const struct sk_buff *skb, struct xt_action_param *par )
     spin_unlock_bh(&ndpi_lock);
 
 	if (unlikely(debug) &&  verdict == MATCH_BLOCK)
-		pr_info( "[NDPI] Dropping ...\n" );
+		pr_debug( "[NDPI] Dropping ...\n" );
 
 	return verdict;
 }
@@ -689,11 +670,11 @@ static int __init ndpi_init( void )
 {
 	int rc;
 
-	#if defined( DEBUG ) ||  defined (ENABLE_DEBUG_MESSAGES) 
-	pr_info( "[NDPI] Initializing nDPI module in DEBUG Mode...\n" );
-	#else
-	pr_info( "[NDPI] Initializing nDPI module...\n" );	
-	#endif
+#if defined( DEBUG ) ||  defined (ENABLE_DEBUG_MESSAGES)
+	pr_debug("Initializing nDPI module in DEBUG Mode...\n" );
+#else
+	pr_info("Initializing nDPI module...\n" );
+#endif
 
 	if ( (rc = init_lru_engine() ) < 0 )
 		goto out_lru;
@@ -705,7 +686,7 @@ static int __init ndpi_init( void )
 		goto out_mt;
 	if ( (rc = xt_register_targets( ndpi_tg_regs, ARRAY_SIZE( ndpi_tg_regs ) ) ) < 0 )
 		goto out_tg;
-	pr_info( "[NDPI] nDPI module initialized succesfully\n" );
+	pr_info("nDPI module initialized succesfully\n" );
 	return(rc);
 out_tg:
 	xt_unregister_matches( ndpi_regs, ARRAY_SIZE( ndpi_regs ) );
@@ -716,7 +697,7 @@ out_proc:
 out_ndpi:
 	term_lru_engine();
 out_lru:
-	pr_info( "[NDPI] nDPI module initialized FAILED\n" );
+	pr_err("nDPI module initialized FAILED\n" );
 
 //打开skb时间戳
 	net_enable_timestamp();
@@ -737,7 +718,7 @@ static void __exit ndpi_exit( void )
 
 //关闭skb时间戳
 	net_disable_timestamp();
-	pr_info( "[NDPI] nDPI module terminated\n" );
+	pr_info("nDPI module terminated\n" );
 }
 
 
