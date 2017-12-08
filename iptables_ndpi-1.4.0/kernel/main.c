@@ -200,55 +200,48 @@ static void ndpi_flow_end_notify( struct LruCacheEntryValue *entry )
 
 static int set_lru_ct_entry( struct LruCacheEntryValue *entry, struct nf_conn *ct )
 {
+    int ret = 0;
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
-	pr_info( "[NDPI] %s()\n", __FUNCTION__ );
+    pr_info( "[NDPI] Call %s\n", __FUNCTION__ );
 #endif
+    if(!entry->src)   entry->src  = kmalloc( ndpi_proto_size, GFP_ATOMIC );
+    if(!entry->dst)   entry->dst  = kmalloc( ndpi_proto_size, GFP_ATOMIC );
+    if(!entry->flow)  entry->flow = kmalloc( ndpi_flow_struct_size, GFP_ATOMIC );
 
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-	pr_info( "[NDPI] will free_LruCache %s()\n", __FUNCTION__ );
-#endif
-	/* Free memory if any */
-	//free_LruCacheEntryValue( entry );
+    if (entry->src == NULL || entry->dst == NULL || entry->flow == NULL) {
+        ret = -1;
+        goto init_entry_alloc_error;
+    }
 
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-	pr_info( "[NDPI] will kmalloc entry %s()\n", __FUNCTION__ );
-#endif
-	/*PT test lock*/
+    if (unlikely(debug))
+        pr_info( "[NDPI][NDPI2] set protocol_detected=0 in init_entry_with_ct\n" );
+    /* init by declare order */
+    entry->num_packets_processed = 0;
+    entry->protocol_detected     = 0;
+    entry->host_name_checked     = 0;
+    entry->ndpi_proto            = NDPI_PROTOCOL_UNKNOWN;
+    memset(entry->flow, 0, ndpi_flow_struct_size);
+    memset(entry->src,  0, ndpi_proto_size);
+    memset(entry->dst,  0, ndpi_proto_size);
+    entry->ct = ct;
+    entry->last_processed_skb = NULL;
+    entry->last_stamp = 0;
+    entry->src_ip = ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u3.ip;
+    entry->dst_ip = ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u3.ip;
+    entry->sport  = ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.all;
+    entry->dport  = ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.all;
+    memset(entry->above, 0, sizeof(entry->above));
+    entry->proto  = ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.l3num;
 
-	if(!entry->src)   entry->src  = kmalloc( ndpi_proto_size, GFP_ATOMIC );
-	if(!entry->dst)   entry->dst  = kmalloc( ndpi_proto_size, GFP_ATOMIC );
-	if(!entry->flow)  entry->flow = kmalloc( ndpi_flow_struct_size, GFP_ATOMIC );
+    return 0;
 
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-	pr_info( "[NDPI] kmaloc over %s()\n", __FUNCTION__ );
-#endif
-
-	if ( entry->src && entry->dst && entry->flow )
-	{
-		entry->ct = ct, entry->protocol_detected = 0, entry->num_packets_processed = 0;
-		if (unlikely(debug))
-			pr_info( "[NDPI][NDPI2] set protocol_detected=0 in set_lru_ct_entry\n" );
-		memset( entry->src, 0, ndpi_proto_size );
-		memset( entry->dst, 0, ndpi_proto_size );
-		memset( entry->flow, 0, ndpi_flow_struct_size );
-		entry->ndpi_proto = NDPI_PROTOCOL_UNKNOWN;
-		
-		entry->src_ip	= ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u3.ip;
-		entry->dst_ip	= ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u3.ip;
-		entry->sport	= ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.all;
-		entry->dport	= ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.all;
-		entry->proto	= ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.l3num;
-
-		return(0);
-	} else{
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-		pr_info( "[NDPI][NDPI2] set_lru_ct_entry ERROR return -1\n" );
-#endif
-		kfree(entry->src);  entry->src = NULL;
-		kfree(entry->dst);  entry->dst = NULL;
-		kfree(entry->flow); entry->flow = NULL;
-		return(-1);
-	}
+    /* allocate error */
+init_entry_alloc_error:
+    pr_err("%s:%d: init_entry_with_ct ERROR return -1\n", __FUNCTION__, __LINE__);
+    kfree(entry->src);  entry->src = NULL;
+    kfree(entry->dst);  entry->dst = NULL;
+    kfree(entry->flow); entry->flow = NULL;
+    return ret;
 }
 
 
