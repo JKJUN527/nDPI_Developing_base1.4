@@ -366,15 +366,10 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
 			pr_info( "[NDPI] ct!=null and 5meta dont like RECYCLED %u:%u <-> %u:%u\n ",
 				 ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u3.ip, ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.all,
 				 ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u3.ip, ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.all );
-
 #endif
-
 			/* In this case we need to reset the bucket and start over */
 			ndpi_flow_end_notify( entry );  /* Export all data */
-
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-			pr_info( "[NDPI] set_lru_entry#3\n" );
-#endif
+			pr_info("[NDPI] %s:%d set_lru_entry#3\n", __FUNCTION__, __LINE__);
 			if ( set_lru_ct_entry( entry, ct ) == 0 ) /* Reset data and start over */
             {			
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
@@ -442,15 +437,11 @@ static bool ndpi_process_packet( const struct sk_buff *_skb,
         int ret = GET_MATCH_ABOVE(info, entry, NDPI_COMPARE_PROTOCOL_TO_BITMASK( info->protocols, entry->ndpi_proto )) ? true : false;
         
         return ret;
-	} else
-		entry->last_processed_skb = _skb;
+	}
 
-	//pr_info( "[NDPI] _skb->tstamp is:%ld \n", entry ->last_stamp);
-	//pr_info( "[NDPI] _skb->tstamp is:%ld \n", _skb -> tstamp.tv64);
-
-	
+	entry->last_processed_skb = _skb;
+	entry->last_stamp = _skb->tstamp.tv64;
 	copied_skb = skb_copy( _skb, GFP_ATOMIC );
-	entry ->last_stamp = copied_skb->tstamp.tv64;
 	
 	if ( copied_skb == NULL )
 	{
@@ -731,9 +722,7 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 			/* In this case we need to reset the bucket and start over */
 			ndpi_flow_end_notify( entry );  /* Export all data */
 
-#ifdef NDPI_ENABLE_DEBUG_MESSAGES
-			pr_info( "[NDPI] set_lru_entry#3\n" );
-#endif
+			pr_info("[NDPI] %s:%d set_lru_entry#3\n", __FUNCTION__, __LINE__);
             if ( set_lru_ct_entry( entry, ct ) == 0 ) /* Reset data and start over */
             {			
 #ifdef NDPI_ENABLE_DEBUG_MESSAGES
@@ -781,12 +770,11 @@ static bool ndpi_process_packet_tg( const struct sk_buff *_skb,
 		NDPI_CB_RECORD( _skb, entry );
 
         return XT_CONTINUE;
-	} else
-		entry->last_processed_skb = _skb;
+	}
 
-
+	entry->last_processed_skb = _skb;
+	entry->last_stamp = _skb->tstamp.tv64;
 	copied_skb = skb_copy( _skb, GFP_ATOMIC );
-	entry ->last_stamp = copied_skb->tstamp.tv64;
 
 	if ( copied_skb == NULL )
 	{
