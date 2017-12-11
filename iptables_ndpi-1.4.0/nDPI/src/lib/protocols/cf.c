@@ -48,6 +48,7 @@ static void ndpi_int_game_cf_add_connection(struct ndpi_detection_module_struct 
 __forceinline static
 #endif
 #define STR0CF "\x00\x70\x82\x42\xef\x2e\xbc\45"//.p.B...E
+#define STR1CF "\x46\x00\x39\x33\x37\x61\x61\x33\x35\x30\x61\x65\x30\x34\x61\x62\x38\x37\x36\x33"//F.937aa3 50ae04ab8763ea23 f1cc2fb99c.17601 900
  void ndpi_search_game_cf_tcp(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {
 	struct ndpi_packet_struct *packet = &flow->packet;
@@ -56,7 +57,6 @@ __forceinline static
 	if(packet->payload_packet_len == 1460
 	&& get_u_int32_t(packet->payload, 0)==htonl(0xf1a00601)
 	&& get_u_int16_t(packet->payload, 4)==htons(0x0000)
-    && packet->payload[9]==0x0c
 	&& get_u_int16_t(packet->payload, 10)==htons(0x0001)
 	&& get_u_int16_t(packet->payload, 16)==htons(0x0070)	
 	){	
@@ -64,15 +64,31 @@ __forceinline static
 		ndpi_int_game_cf_add_connection(ndpi_struct, flow, NDPI_REAL_PROTOCOL);
 		return;	
 	}
-    if(packet->payload_packet_len >3*16
+    if(packet->payload_packet_len >8*16+1
         &&packet->payload[0]==0xf1
-        &&memcmp(&packet->payload[16],STR0CF,NDPI_STATICSTRING_LEN(STR0CF)) == 0
-    ){ 
-		NDPI_LOG(NDPI_PROTOCOL_GAME_CF, ndpi_struct, NDPI_LOG_DEBUG,"found game_cf------2 \n");
-		ndpi_int_game_cf_add_connection(ndpi_struct, flow, NDPI_REAL_PROTOCOL);
-		return;	
+       // &&memcmp(&packet->payload[16],STR0CF,NDPI_STATICSTRING_LEN(STR0CF)) == 0
+    ){
+		NDPI_LOG(NDPI_PROTOCOL_GAME_CF, ndpi_struct, NDPI_LOG_DEBUG,"comming cf  \n");
+        int i = 0;
+        int offset = packet->payload_packet_len-16*7;
+	//	NDPI_LOG(NDPI_PROTOCOL_GAME_CF, ndpi_struct, NDPI_LOG_DEBUG,"pcaket[%u]:%x \n",offset,packet->payload[offset]);
+        for(i;i<16*2;i++){
+	//	NDPI_LOG(NDPI_PROTOCOL_GAME_CF, ndpi_struct, NDPI_LOG_DEBUG,"pcaket[%u]:%x \n",offset,packet->payload[offset]);
+            if(packet->payload[offset]==0x00){
+                offset++;
+                continue;
+            }else{
+                if(memcmp(&packet->payload[offset],STR1CF,NDPI_STATICSTRING_LEN(STR1CF))==0){
+                    NDPI_LOG(NDPI_PROTOCOL_GAME_CF, ndpi_struct, NDPI_LOG_DEBUG,"found game_cf------2 \n");
+                    ndpi_int_game_cf_add_connection(ndpi_struct, flow, NDPI_REAL_PROTOCOL);
+                    return;	
+                }
+                break;
+               // goto exit;
+            }
+        }
 	}
-
+exit:
   	NDPI_LOG(NDPI_PROTOCOL_GAME_CF, ndpi_struct, NDPI_LOG_DEBUG, "exclude game_cf.\n");
   	NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_GAME_CF);
 }
