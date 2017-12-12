@@ -934,7 +934,7 @@ static void check_host_line(struct ndpi_detection_module_struct
 
 
                 /* Copy result for nDPI apps */
-                if ('\0' == flow->host_server_name[0]) {
+                if (packet->host_line.ptr != flow->host_server_name) {
                     len = ndpi_min(packet->host_line.len, sizeof(flow->host_server_name)-1);
                     strncpy((char*)flow->host_server_name, (char*)packet->host_line.ptr, len);
                     flow->host_server_name[len] = '\0';
@@ -1042,13 +1042,6 @@ static int check_content_type_and_change_protocol(struct ndpi_detection_module_s
         }
         if(flow->detected_protocol_stack[0] == NDPI_PROTOCOL_UNKNOWN
                         ||flow->detected_protocol_stack[0] == NDPI_PROTOCOL_HTTP){
-
-                /* check for user agent here too */
-                check_useragent_line(ndpi_struct,flow);
-
-                /* check for host line */
-                check_host_line(ndpi_struct,flow);
-
                 /* check for accept line */
                 check_accept_line(ndpi_struct, flow);
 
