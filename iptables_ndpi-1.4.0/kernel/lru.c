@@ -124,28 +124,26 @@ static int delete_oldest_lru_cache_unit( struct LruCacheUnit *cache_unit )
 	/* [1] Remove the last list element */
 	if ( cache_unit->list_tail == NULL )
 	{
-		pr_info( "[NDPI ERROR] Internal error (NULL tail)" );
-		return(-1);
+		pr_crit( "[NDPI ERROR] Internal error (NULL tail)" );
+		return -1;
 	} else {
 		cache_unit->list_tail = (cache_unit->list_tail)->lru_list.prev;
 
-		if ( cache_unit->list_tail == NULL )
-		{
-			pr_info( "[NDPI ERROR] Internal error (NULL tail)" );
-			return(-1);
+		if ( cache_unit->list_tail == NULL ) {
+			pr_crit( "[NDPI ERROR] Internal error (NULL prev tail)" );
+			return -1;
 		}
         cache_unit->list_tail->lru_list.next = NULL;
     }
 
 	hash_id = node->node.key % cache_unit->hash_size;
-	head	= cache_unit->hash[hash_id];
+	head    = cache_unit->hash[hash_id];
 
 	/* [2] Remove the node from the hash */
-	while ( head != NULL )
-	{
-		if ( head->node.key == node->node.key )
-		{
-			/* Duplicated key found */
+	while ( head != NULL ) {
+		//if ( head->node.key == node->node.key )
+		if (head == node) {
+			/* node found */
 			if ( prev == NULL )
 				cache_unit->hash[hash_id] = node->hash.next;
 			else {
@@ -154,8 +152,8 @@ static int delete_oldest_lru_cache_unit( struct LruCacheUnit *cache_unit )
 
 			break;
 		} else {
-			prev	= head;
-			head	= head->hash.next;
+			prev = head;
+			head = head->hash.next;
 		}
 	}
 
@@ -167,7 +165,7 @@ static int delete_oldest_lru_cache_unit( struct LruCacheUnit *cache_unit )
 	kfree( node );
     node = NULL;
 	cache_unit->current_size--;
-	return(0);
+	return 0;
 }
 
 
@@ -208,16 +206,18 @@ static void add_node_to_lru_list( struct LruCacheUnit *cache_unit,
 {
 	if ( cache_unit->list_head != NULL )
 	{
-		node->lru_list.next			= cache_unit->list_head, node->lru_list.prev = NULL;
-		(cache_unit->list_head)->lru_list.prev	= node;
+		node->lru_list.next = cache_unit->list_head;
+        node->lru_list.prev = NULL;
+		(cache_unit->list_head)->lru_list.prev = node;
 	} else {
 		/*
 		 * The list is empty so our node is going
 		 * to be the oldest one in the LRU
 		 */
 
-		cache_unit->list_tail	= node;
-		node->lru_list.next	= NULL, node->lru_list.prev = NULL;
+		cache_unit->list_tail = node;
+        node->lru_list.next	= NULL;
+        node->lru_list.prev = NULL;
 	}
 
 	cache_unit->list_head = node; /* Add as head */
@@ -233,18 +233,16 @@ static struct LruCacheNode* allocCacheNode( LruKey key )
 {
 	struct LruCacheNode *node = (struct LruCacheNode *) kmalloc( sizeof(struct LruCacheNode), GFP_ATOMIC );
 
-	if ( !node )
-		return(NULL);
-	else
-		memset( node, 0, sizeof(struct LruCacheNode) );
+	if (!node) {
+		pr_info( "[NDPI ERROR] Not enough memory?" );
+		return NULL;
+    }
 
 	if ( unlikely( traceLRU ) )
 		pr_info( "[NDPI] %s(key=%lu)", __FUNCTION__, (long unsigned int) key );
 
-	if ( node == NULL )
-		pr_info( "[NDPI ERROR] Not enough memory?" );
-	else
-		node->node.key = key;
+    memset( node, 0, sizeof(struct LruCacheNode) );
+    node->node.key = key;
 
 	return(node);
 }
@@ -269,6 +267,7 @@ static struct LruCacheNode* add_to_lru_cache_unit( struct LruCacheUnit *cache_un
 			goto ret_add_to_lru_cache;
 		}
 
+        node->hash.next = NULL;
 		cache_unit->hash[hash_id] = node;
 		cache_unit->current_size++;
 		add_node_to_lru_list( cache_unit, node );
@@ -278,32 +277,29 @@ static struct LruCacheNode* add_to_lru_cache_unit( struct LruCacheUnit *cache_un
 
 		while ( head != NULL )
 		{
-			if ( head->node.key == key )
-			{
-				/* Duplicated key found */
-				node			= head;
+			if ( head->node.key == key ) {
+				/* key found */
+				node = head;
 				node_already_existing	= 1;
 				break;
-			} else
-				head = head->hash.next;
-		}
-
-		if ( !node_already_existing )
-		{
-			if ( (node = allocCacheNode( key ) ) == NULL )
-			{
-				goto ret_add_to_lru_cache;
 			}
 
-			node->hash.next			= cache_unit->hash[hash_id];
-			cache_unit->hash[hash_id]	= node;
+            head = head->hash.next;
+		}
+
+		if ( !node_already_existing ) {
+			if ( (node = allocCacheNode( key ) ) == NULL )
+				goto ret_add_to_lru_cache;
+
+			node->hash.next = cache_unit->hash[hash_id];
+			cache_unit->hash[hash_id] = node;
 			cache_unit->current_size++;
 			add_node_to_lru_list( cache_unit, node );
 		}
 	}
 
 ret_add_to_lru_cache:
-	return(node);
+	return node;
 }
 
 
