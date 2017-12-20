@@ -46,7 +46,7 @@
 47,MsSQL,MSSQL,微软的数据库SQLServer协议,14,1
 48,PPTP,点对点隧道协议,在PPP协议的基础上开发的一种新的增强型安全协议，支持多协议虚拟专用网（VPN），可以通过密码验证协议（PAP）、可扩展认证协议（EAP）等方法增强安全性,12,1
 49,Facebook,Facebook,国外的一个社交平台脸书（Facebook）的通讯协议,7,1
-49,Twitter,Twitter,国外的一个社交平台Twitter的通讯协议,7,1
+50,Twitter,Twitter,国外的一个社交平台Twitter的通讯协议,7,1
 51,DCE_RPC,DCE RPC,为分布式计算环境开发的一中远程过程调用系统,18,1
 52,Radius,Radius认证服务,远程用户拨号认证系统,12,1
 53,LLMNR,LLMNR,为使用IPv4、IPv6或者同时使用这两种地址的设备提供了点对点名称解析服务,18,1
@@ -66,7 +66,7 @@
 73,BAIDUHI,百度HI,,7,1
 74,YIXIN,易信,,7,1
 75,YY,YY语音,,7,1
-76,Rip,RIP,,16,1
+76,Rip,RIP,,18,1
 77,L2tp,L2TP,,12,1
 78,FTPS,FTPS,,14,1
 79,NNTP,NNTP,,16,1

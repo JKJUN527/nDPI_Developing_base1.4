@@ -25,16 +25,15 @@ if(packet->payload_packet_len >(16*8)
 			//if(get_u_int32_t(packet->payload, 16*8) == htonl( 0xe28ef175)){
 			//if(get_u_int32_t(packet->payload, 16*8) == htonl( 0x0ac1f86a)){
 			if(get_u_int32_t(packet->payload, 16*8) == htonl(0xb0ea824d) //...M.... .T.gt.3.
-              ||get_u_int32_t(packet->payload, 16*8) == htonl( 0x0ac1f86a)){
+              ||get_u_int32_t(packet->payload, 16*8) == htonl(0x0ac1f86a)
+              ||get_u_int32_t(packet->payload, 16*8) == htonl(0x4d2d6b85)//M-k...;..b(,t.3. 
+              ){
 				NDPI_LOG(NDPI_PROTOCOL_ZHAOSHANGZHENGQUAN, ndpi_struct, NDPI_LOG_DEBUG,"found zhaoshang------tcp[0->0c]:%x]tcp[1->01|02]:%x]tcp[8*16->e2]:%x]\n",packet->payload[0],packet->payload[1],packet->payload[8*16]);
 				ndpi_int_zhaoshangzhengquan_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);		
 				return;	
-			}
-			//else{
-			//	NDPI_LOG(NDPI_PROTOCOL_ZHAOSHANGZHENGQUAN, ndpi_struct, NDPI_LOG_DEBUG, "exclude zhaoshang\n");
-  			//	NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_ZHAOSHANGZHENGQUAN);
-			//	return;
-			//}
+			}else{
+            goto exit;
+            }
 		}else if(packet->payload_packet_len >(32)){
 			if((packet ->payload[0]==0x0c&&packet ->payload[2]==0x18&&packet ->payload[4]==0x00&&packet ->payload[5]==0x01)){
 				if(packet->payload[0]==0x0c&&packet->payload[1]==0x06
@@ -55,7 +54,9 @@ if(packet->payload_packet_len >(16*8)
 			}
 
 		}
-
+exit:
+NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask,NDPI_PROTOCOL_ZHAOSHANGZHENGQUAN);
+return;
 }
 void ndpi_search_zhaoshangzhengquan(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {
