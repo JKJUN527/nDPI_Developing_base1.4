@@ -4,19 +4,21 @@
 2. automake
 3. autoconf
 4. gcc && make
+5. rpmbuild     [optional]
 
 # How To Build
 
 ```shell
-$ cd iptables_ndpi-1.4.0/nDPI/
+$ pushd nDPI
 $ autoheader
 $ aclocal
 $ autoconf
 $ autoreconf -ivf
 $ ./configure --enable-debug=yes    # enable debug
 $ make  # for nDPI
-$ cd ..
+$ popd
 $ make  # for kernel module
 $ make install
-$ make test
+$ make test     # simple test
+$ make rpm      # build rpm package
 ```

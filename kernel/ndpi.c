@@ -12,12 +12,11 @@
 #include "lru.h"
 
 /* ************************************* */
-
-struct ndpi_detection_module_struct	*ndpi_struct;
-u_int32_t				ndpi_detection_tick_resolution;
-u_int32_t				ndpi_proto_size, ndpi_flow_struct_size;
+struct ndpi_detection_module_struct *ndpi_struct;
+u_int32_t ndpi_detection_tick_resolution;
+u_int32_t ndpi_proto_size, ndpi_flow_struct_size;
+/* define and init ndpi_lock */
 DEFINE_SPINLOCK( ndpi_lock );
-// DEFINE_SPINLOCK( ipq_lock );
 /* ************************************* */
 
 static void debug_printf( u_int32_t protocol, void *id_struct,

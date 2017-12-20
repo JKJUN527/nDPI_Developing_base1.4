@@ -34,6 +34,7 @@
 
 #include "ahocorasick.h"
 
+/* Enable debug tracings */
 //#define DEBUG
 //#define ENABLE_DEBUG_MESSAGES
 
@@ -53,10 +54,6 @@
 
 // #include "ndpi_credis.c"
 #include "ndpi_cache.c"
-#define HOST_MAX_LEN 256
-
-char long_url[HOST_MAX_LEN] = {0};
-/* Enable debug tracings */
 
 typedef struct {
   char *string_to_match, *proto_name;
@@ -3635,37 +3632,40 @@ unsigned int ndpi_detection_process_packet(struct ndpi_detection_module_struct *
 					   struct ndpi_id_struct *src,
 					   struct ndpi_id_struct *dst)
 {
-  u_int32_t a;
-  NDPI_SELECTION_BITMASK_PROTOCOL_SIZE ndpi_selection_packet;
-  NDPI_PROTOCOL_BITMASK detection_bitmask;
-  #ifdef DEBUG
-	printf("[NDPI][NDPI2] --------- 2) START in ndpi_detection_process_packet\n");
-	printf("[NDPI][NDPI2] --------------a. flow:%s packet: %s strlen(packet):%d packetlen:%u \n",flow == NULL? "null":"not null", packet == NULL?"null":"not null", packet==NULL?(-1):strlen(packet), packetlen);//no any payload here
-	//printf("[NDPI][NDPI2] -------------------a.tcp:%s\na.udp:%s",((u_int8_t *)flow->packet.tcp),((u_int8_t *)flow->packet.udp));
-  #endif	
+    u_int32_t a;
+    NDPI_SELECTION_BITMASK_PROTOCOL_SIZE ndpi_selection_packet;
+    NDPI_PROTOCOL_BITMASK detection_bitmask;
+#ifdef DEBUG
+    printf("[NDPI][NDPI2] --------- 2) START in ndpi_detection_process_packet\n");
+    printf("[NDPI][NDPI2] --------------a. flow:%s packet: %s strlen(packet):%d packetlen:%u \n",flow == NULL? "null":"not null", packet == NULL?"null":"not null", packet==NULL?(-1):strlen(packet), packetlen);//no any payload here
+    //printf("[NDPI][NDPI2] -------------------a.tcp:%s\na.udp:%s",((u_int8_t *)flow->packet.tcp),((u_int8_t *)flow->packet.udp));
+#endif	
+    /* check the paramenteres */
+    if (!ndpi_struct || !flow || !packet || packetlen < 20 || !src || !dst) {
+#ifdef __KERNEL__
+        pr_err("%s: ERROR: Invalid paramenteres shown blow:\n", __FUNCTION__);
+        pr_err("ndpi_struct: %p, flow: %p, packet: %p, packetlen: %d, src: %p, dst: %p\n",
+                ndpi_struct, flow, packet, packetlen, src, dst);
+#else
+        printf("%s: ERROR: Invalid paramenteres shown blow:\n", __FUNCTION__);
+        printf("ndpi_struct: %p, flow: %p, packet: %p, packetlen: %d, src: %p, dst: %p\n",
+                ndpi_struct, flow, packet, packetlen, src, dst);
+#endif
+        /* need at least 20 bytes for ip header */
+        if (flow && packetlen < 20) {
+            /* reset protocol which is normally done in init_packet_header */
+            ndpi_int_reset_packet_protocol(&flow->packet);
+        }
+        return NDPI_PROTOCOL_UNKNOWN;
+    }
 
-  if (flow == NULL) {
-  #ifdef DEBUG
-	printf("[NDPI][NDPI2] flow is null: skip\n");
-  #endif
-    return NDPI_PROTOCOL_UNKNOWN;
-  }
-  /* need at least 20 bytes for ip header */
-  if (packetlen < 20) {
-    /* reset protocol which is normally done in init_packet_header */
-    ndpi_int_reset_packet_protocol(&flow->packet);
-  #ifdef DEBUG
-	printf("[NDPI][NDPI2] return : packetlen<20\n");
-  #endif
-    return NDPI_PROTOCOL_UNKNOWN;
-  }
-  flow->packet.tick_timestamp = current_tick;
+    flow->packet.tick_timestamp = current_tick;
 
-  /* parse packet */
-  flow->packet.iph = (struct ndpi_iphdr *) packet;
-  /* we are interested in ipv4 packet */
+    /* parse packet */
+    flow->packet.iph = (struct ndpi_iphdr *) packet;
+    /* we are interested in ipv4 packet */
 
-  if (ndpi_init_packet_header(ndpi_struct, flow, packetlen) != 0) {
+    if (ndpi_init_packet_header(ndpi_struct, flow, packetlen) != 0) {
   #ifdef DEBUG
   	printf("[NDPI][NDPI2] return : top payload: fail to init_packet_header\n");
   #endif
@@ -5110,59 +5110,7 @@ char* ndpi_strnstr(const char *s, const char *find, size_t slen) {
   return ((char *)s);
 }
 
-/* ****************************************************** */
-
-/*---------------wanglei-----------------*/
-void HandleLongUrl(struct ndpi_detection_module_struct *ndpi_struct,struct ndpi_flow_struct *flow)
-{	
-	const char * postfix;
-	u_int16_t index = 0;
-
-  	struct ndpi_packet_struct *packet = &flow->packet;
-	memset(long_url, 0, HOST_MAX_LEN - 1);
-	long_url[HOST_MAX_LEN - 1] = '\0';
-    ndpi_parse_packet_line_info(ndpi_struct, flow);
-	if (packet->parsed_lines < 1)
-		return;
-	postfix = packet->line[0].ptr;	
-	if(postfix == NULL || *postfix == '\0' || packet->host_line.ptr == NULL)
-		return;
-	while( index < (HOST_MAX_LEN) 
-	  && (packet->host_line.ptr+index) != NULL
-	  && *(packet->host_line.ptr+index) != '\0' 
-	  && *(packet->host_line.ptr+index) != '\r' 
-	  && index < packet->host_line.len){
-		long_url[index] = packet->host_line.ptr[index];
-		index++;
-	}
-
-	postfix = strstr(postfix," ") ;
-	if(postfix == NULL || (postfix + 1) == NULL || *(postfix + 1) == '\0')
-		return;
-	postfix++;
-	while( index < (HOST_MAX_LEN - 1) && NULL != postfix && *postfix != ' ' && *postfix != '\r' && *postfix != '\0'){
-			long_url[index++] = *postfix++;
-	}
-}
-
-int ndpi_match_string_subprotocol(struct ndpi_detection_module_struct *ndpi_struct,	struct ndpi_flow_struct *flow,char *string_to_match, u_int string_to_match_len){
-	int proto=0;
-	#ifdef DEBUG
-		printf("[NDPI] will HandleLongUrl \n");
-	#endif
-	HandleLongUrl(ndpi_struct, flow);
-	#ifdef DEBUG
-	printf("[NDPI] after HandleLongUrl:[%s]\n",long_url);
-	#endif
-	proto = ndpi_match_string_subprotocol2(ndpi_struct, flow, long_url, strlen(long_url));
-	if(strlen(long_url) == 0 || proto == 0){
-		return ndpi_match_string_subprotocol2(ndpi_struct, flow, string_to_match, string_to_match_len);
-	}	
-	return proto;
-}
-
-/* ****************************************************** */
-int ndpi_match_string_subprotocol2(struct ndpi_detection_module_struct *ndpi_struct,
+static int ndpi_match_string_subprotocol2(struct ndpi_detection_module_struct *ndpi_struct,
 				  struct ndpi_flow_struct *flow,
 				  char *string_to_match, u_int string_to_match_len) {
   int matching_protocol_id;
@@ -5206,7 +5154,7 @@ int ndpi_match_string_subprotocol2(struct ndpi_detection_module_struct *ndpi_str
 
     strncpy(m, string_to_match, len);
     m[len] = '\0';
-    printf("[NDPI] ndpi_match_string_subprotocol(%s): %s\n", m, ndpi_struct->proto_defaults[matching_protocol_id].protoName);
+    printf("[NDPI] ndpi_match_string_subprotocol2(%s): %s\n", m, ndpi_struct->proto_defaults[matching_protocol_id].protoName);
   }
 #endif
 
@@ -5223,7 +5171,28 @@ int ndpi_match_string_subprotocol2(struct ndpi_detection_module_struct *ndpi_str
   return(NDPI_PROTOCOL_UNKNOWN);
 }
 
-/* ****************************************************** */
+int ndpi_match_string_subprotocol(struct ndpi_detection_module_struct *ndpi_struct,	struct ndpi_flow_struct *flow,
+        char *string_to_match, u_int string_to_match_len)
+{
+    const int URL_MAX = 512;
+    char url[URL_MAX];
+    int cnt;
+    int proto = NDPI_PROTOCOL_UNKNOWN;
+    struct ndpi_packet_struct *packet = &flow->packet;
+
+    cnt = snprintf(url,URL_MAX,  "%.*s", string_to_match_len, string_to_match);
+    if (cnt != string_to_match_len)
+        return proto;
+    if (packet->http_url_name.ptr && packet->http_url_name.len > 0) {
+        int tmp;
+        tmp = snprintf(url+cnt, URL_MAX-cnt, "%.*s", packet->http_url_name.len, packet->http_url_name.ptr);
+        cnt += (tmp>0)? tmp: 0;
+    }
+
+    proto = ndpi_match_string_subprotocol2(ndpi_struct, flow, url, cnt);
+
+    return proto;
+}
 
 void* ndpi_create_empty_automa(struct ndpi_detection_module_struct *ndpi_struct) {
   int i;
