@@ -3640,27 +3640,32 @@ unsigned int ndpi_detection_process_packet(struct ndpi_detection_module_struct *
     printf("[NDPI][NDPI2] --------------a. flow:%s packet: %s strlen(packet):%d packetlen:%u \n",flow == NULL? "null":"not null", packet == NULL?"null":"not null", packet==NULL?(-1):strlen(packet), packetlen);//no any payload here
     //printf("[NDPI][NDPI2] -------------------a.tcp:%s\na.udp:%s",((u_int8_t *)flow->packet.tcp),((u_int8_t *)flow->packet.udp));
 #endif	
-
     /* check the paramenteres */
-    /* need at least 20 bytes for ip header */
     if (!ndpi_struct || !flow || !packet || packetlen < 20 || !src || !dst) {
-        NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_ERROR, "%s: ERROR: Invalid paramenteres shown blow:\n", __FUNCTION__);
-        NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_ERROR,
-                "ndpi_struct: %p, flow: %p, packet: %p, packetlen: %d, src: %p, dst: %p\n",
+#ifdef __KERNEL__
+        pr_err("%s: ERROR: Invalid paramenteres shown blow:\n", __FUNCTION__);
+        pr_err("ndpi_struct: %p, flow: %p, packet: %p, packetlen: %d, src: %p, dst: %p\n",
                 ndpi_struct, flow, packet, packetlen, src, dst);
-        /* reset protocol which is normally done in init_packet_header */
+#else
+        printf("%s: ERROR: Invalid paramenteres shown blow:\n", __FUNCTION__);
+        printf("ndpi_struct: %p, flow: %p, packet: %p, packetlen: %d, src: %p, dst: %p\n",
+                ndpi_struct, flow, packet, packetlen, src, dst);
+#endif
+        /* need at least 20 bytes for ip header */
         if (flow && packetlen < 20) {
+            /* reset protocol which is normally done in init_packet_header */
             ndpi_int_reset_packet_protocol(&flow->packet);
         }
         return NDPI_PROTOCOL_UNKNOWN;
     }
-  flow->packet.tick_timestamp = current_tick;
 
-  /* parse packet */
-  flow->packet.iph = (struct ndpi_iphdr *) packet;
-  /* we are interested in ipv4 packet */
+    flow->packet.tick_timestamp = current_tick;
 
-  if (ndpi_init_packet_header(ndpi_struct, flow, packetlen) != 0) {
+    /* parse packet */
+    flow->packet.iph = (struct ndpi_iphdr *) packet;
+    /* we are interested in ipv4 packet */
+
+    if (ndpi_init_packet_header(ndpi_struct, flow, packetlen) != 0) {
   #ifdef DEBUG
   	printf("[NDPI][NDPI2] return : top payload: fail to init_packet_header\n");
   #endif

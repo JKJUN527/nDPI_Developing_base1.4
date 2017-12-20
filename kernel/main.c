@@ -616,11 +616,6 @@ static void term_proc_engine( void )
 	remove_proc_entry( PDE_ROOT, NULL );
 }
 
-
-
-
-/* ********************************************* */
-
 static unsigned int ndpi_tg( struct sk_buff *skb, const struct xt_target_param *par )
 {
     const struct xt_ndpi_tginfo *target_info;

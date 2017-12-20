@@ -17,8 +17,7 @@
 #define LruKey u_int64_t
 #endif
 
-//#define CACHE_SIZE  (32768)
-#define CACHE_SIZE  (128)
+#define CACHE_SIZE  (32768)
 
 #define MAX_MATCH_ABOVE_POOL 4
 struct LruCacheEntryValue {
@@ -66,8 +65,7 @@ struct LruCacheUnit {
  * #define NUM_LRU_CACHE_UNITS        64
  * #define NUM_LRU_CACHE_UNITS        256 //PT
  */
-//#define NUM_LRU_CACHE_UNITS        1024
-#define NUM_LRU_CACHE_UNITS        (128)
+#define NUM_LRU_CACHE_UNITS        1024
 
 struct LruCache {
 	struct LruCacheUnit units[NUM_LRU_CACHE_UNITS];

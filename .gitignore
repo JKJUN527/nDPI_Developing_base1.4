@@ -41,3 +41,7 @@ kernel/xt_ndpi.ko.unsigned
 kernel/xt_ndpi.mod.c
 
 tests/
+
+# temp of rmp build
+rpmbuild/
+*.rpm
