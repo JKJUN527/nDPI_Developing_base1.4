@@ -5176,20 +5176,23 @@ int ndpi_match_string_subprotocol(struct ndpi_detection_module_struct *ndpi_stru
 {
     const int URL_MAX = 512;
     char url[URL_MAX];
-    int cnt;
+    int cnt, len;
     int proto = NDPI_PROTOCOL_UNKNOWN;
     struct ndpi_packet_struct *packet = &flow->packet;
 
-    cnt = snprintf(url,URL_MAX,  "%.*s", string_to_match_len, string_to_match);
-    if (cnt != string_to_match_len)
+    if (!string_to_match || string_to_match_len <= 0)
         return proto;
+
+    cnt = ndpi_min(URL_MAX, string_to_match_len);
+    memcpy(url, string_to_match, cnt);
+    len = cnt;
     if (packet->http_url_name.ptr && packet->http_url_name.len > 0) {
-        int tmp;
-        tmp = snprintf(url+cnt, URL_MAX-cnt, "%.*s", packet->http_url_name.len, packet->http_url_name.ptr);
-        cnt += (tmp>0)? tmp: 0;
+        cnt = ndpi_min(URL_MAX-len, packet->http_url_name.len);
+        memcpy(url+len, packet->http_url_name.ptr, cnt);
+        len += cnt;
     }
 
-    proto = ndpi_match_string_subprotocol2(ndpi_struct, flow, url, cnt);
+    proto = ndpi_match_string_subprotocol2(ndpi_struct, flow, url, len);
 
     return proto;
 }

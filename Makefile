@@ -1,7 +1,7 @@
 PREFIX=$(prefix)
 
 # complie only
-all: ndpi
+all:
 	cd userland; make clean&&make
 	cd kernel; make clean &&make
 
