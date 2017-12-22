@@ -12,7 +12,6 @@ install:
 
 # insmod xt_ndpi.ko
 insmod: stop install
-	-rmmod xt_ndpi
 	insmod kernel/xt_ndpi.ko
 
 # build ndpi
@@ -45,7 +44,7 @@ stop:
 # just for test
 test: insmod
 	iptables -I FORWARD  -j NDPI
-	iptables -A FORWARD -m ndpi --protos  dazhihui365 -j DROP 
+	iptables -A FORWARD -m ndpi --protos  dazhihui365 -j DROP
 	watch -n 0.5 'iptables -S -v'
 status:
 	iptables -S -v
