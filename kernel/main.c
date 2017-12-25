@@ -71,6 +71,19 @@ static int ndpi_process_packet(const struct sk_buff *_skb,
 #endif
 
 /**
+ * hash of address
+ * @return LruKey (aka. uint64_t)
+ * Ref: http://www.cnblogs.com/napoleon_liu/archive/2010/12/29/1920839.html
+ */
+static inline LruKey toLruKey(struct nf_conn *ct)
+{
+    LruKey key = (LruKey)ct;
+    key = (key>>3)*2654435761;  /* 2654435761 2^32 */
+    /* use the high bits */
+    return ((key>>32)|(key<<32));
+}
+
+/**
  * Update match and judge verdict
  * @above in iptables
  * @entry:
@@ -289,7 +302,7 @@ static int ndpi_process_packet(const struct sk_buff *_skb,
                  const struct xt_ndpi_tginfo    *target_info,
                  struct nf_conn *ct)
 {
-	LruKey                    key = (LruKey) ct;
+	LruKey                    key = toLruKey(ct);
 	struct LruCacheEntryValue *entry;
 	struct LruCacheNode       *node;
 	u_int64_t                 time;

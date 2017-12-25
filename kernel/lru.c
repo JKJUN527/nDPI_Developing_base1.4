@@ -24,22 +24,24 @@ struct LruCache *lru_cache;
 
 void init_lru_cache_unit( struct LruCacheUnit *cache_unit, u_int32_t max_size )
 {
-	u_int size;
+    u_int size;
 
-	if ( unlikely( traceLRU ) )
-		pr_info( "[NDPI] %s()", __FUNCTION__ );
+    if ( unlikely( traceLRU ) )
+        pr_info( "[NDPI] %s()", __FUNCTION__ );
 
-	cache_unit->max_lru_size = max_size, cache_unit->hash_size = 4 * max_size, cache_unit->current_size = 0;
+    cache_unit->max_lru_size = max_size;
+    cache_unit->hash_size = 4 * max_size + 1;
+    cache_unit->current_size = 0;
 
-	size = cache_unit->hash_size * sizeof(struct LruCacheNode*);
-	if ( (cache_unit->hash = (struct LruCacheNode * *) kmalloc( size, GFP_ATOMIC ) ) == NULL )
-	{
-		pr_info( "[NDPI ERROR] Not enough memory?" );
-		return;
-	} else
-		memset( cache_unit->hash, 0, size );
+    size = cache_unit->hash_size * sizeof(struct LruCacheNode*);
+    if ( (cache_unit->hash = (struct LruCacheNode * *) kmalloc( size, GFP_ATOMIC ) ) == NULL )
+    {
+        pr_info( "[NDPI ERROR] Not enough memory?" );
+        return;
+    } else
+        memset( cache_unit->hash, 0, size );
 
-	cache_unit->list_head = cache_unit->list_tail = NULL;
+    cache_unit->list_head = cache_unit->list_tail = NULL;
 }
 
 
@@ -204,26 +206,26 @@ void delete_node_from_lru_list( struct LruCacheUnit *cache_unit, struct LruCache
 static void add_node_to_lru_list( struct LruCacheUnit *cache_unit,
 				  struct LruCacheNode *node )
 {
-	if ( cache_unit->list_head != NULL )
-	{
-		node->lru_list.next = cache_unit->list_head;
+    if ( cache_unit->list_head != NULL )
+    {
+        node->lru_list.next = cache_unit->list_head;
         node->lru_list.prev = NULL;
-		(cache_unit->list_head)->lru_list.prev = node;
-	} else {
-		/*
-		 * The list is empty so our node is going
-		 * to be the oldest one in the LRU
-		 */
+        (cache_unit->list_head)->lru_list.prev = node;
+    } else {
+        /*
+         * The list is empty so our node is going
+         * to be the oldest one in the LRU
+         */
 
-		cache_unit->list_tail = node;
+        cache_unit->list_tail = node;
         node->lru_list.next	= NULL;
         node->lru_list.prev = NULL;
-	}
+    }
 
-	cache_unit->list_head = node; /* Add as head */
+    cache_unit->list_head = node; /* Add as head */
 
-	if ( cache_unit->current_size > cache_unit->max_lru_size )
-		delete_oldest_lru_cache_unit( cache_unit );
+    if ( cache_unit->current_size > cache_unit->max_lru_size )
+        delete_oldest_lru_cache_unit( cache_unit );
 }
 
 
@@ -252,54 +254,58 @@ static struct LruCacheNode* allocCacheNode( LruKey key )
 
 static struct LruCacheNode* add_to_lru_cache_unit( struct LruCacheUnit *cache_unit, LruKey key )
 {
-	u_int32_t		hash_id			= key % cache_unit->hash_size;
-	struct LruCacheNode	*node			= NULL;
-	u_int8_t		node_already_existing	= 0;
+    u_int32_t		hash_id			= key % cache_unit->hash_size;
+    struct LruCacheNode	*node			= NULL;
+    u_int8_t		node_already_existing	= 0;
 
-	if ( unlikely( traceLRU ) )
-		pr_info( "[NDPI] %s(key=%lu)", __FUNCTION__, (unsigned long int) key );
+    if ( unlikely( traceLRU ) )
+        pr_info( "[NDPI] %s(key=%lu)", __FUNCTION__, (unsigned long int) key );
 
-	/* [1] Add to hash */
-	if ( cache_unit->hash[hash_id] == NULL )
-	{
-		if ( (node = allocCacheNode( key ) ) == NULL )
-		{
-			goto ret_add_to_lru_cache;
-		}
+    /* [1] Add to hash */
+    if ( cache_unit->hash[hash_id] == NULL )
+    {
+        if ( (node = allocCacheNode( key ) ) == NULL )
+        {
+            goto ret_add_to_lru_cache;
+        }
 
         node->hash.next = NULL;
-		cache_unit->hash[hash_id] = node;
-		cache_unit->current_size++;
-		add_node_to_lru_list( cache_unit, node );
-	} else {
-		/* Check if the element exists */
-		struct LruCacheNode *head = cache_unit->hash[hash_id];
+        cache_unit->hash[hash_id] = node;
+        cache_unit->current_size++;
+        add_node_to_lru_list( cache_unit, node );
+        if (unlikely(traceLRU))
+            pr_info("NDPI DEBUG LRU1: key: %p unit: %llu hashid: %u\n", (void*)key, key%NUM_LRU_CACHE_UNITS, hash_id);
+    } else {
+        /* Check if the element exists */
+        struct LruCacheNode *head = cache_unit->hash[hash_id];
 
-		while ( head != NULL )
-		{
-			if ( head->node.key == key ) {
-				/* key found */
-				node = head;
-				node_already_existing	= 1;
-				break;
-			}
+        while ( head != NULL )
+        {
+            if ( head->node.key == key ) {
+                /* key found */
+                node = head;
+                node_already_existing	= 1;
+                break;
+            }
 
             head = head->hash.next;
-		}
+        }
 
-		if ( !node_already_existing ) {
-			if ( (node = allocCacheNode( key ) ) == NULL )
-				goto ret_add_to_lru_cache;
+        if ( !node_already_existing ) {
+            if ( (node = allocCacheNode( key ) ) == NULL )
+                goto ret_add_to_lru_cache;
 
-			node->hash.next = cache_unit->hash[hash_id];
-			cache_unit->hash[hash_id] = node;
-			cache_unit->current_size++;
-			add_node_to_lru_list( cache_unit, node );
-		}
-	}
+            node->hash.next = cache_unit->hash[hash_id];
+            cache_unit->hash[hash_id] = node;
+            cache_unit->current_size++;
+            add_node_to_lru_list( cache_unit, node );
+            if (unlikely(traceLRU))
+                pr_info("NDPI DEBUG LRU2: key: %p unit: %llu hashid: %u\n", (void*)key, key%NUM_LRU_CACHE_UNITS, hash_id);
+        }
+    }
 
 ret_add_to_lru_cache:
-	return node;
+    return node;
 }
 
 
