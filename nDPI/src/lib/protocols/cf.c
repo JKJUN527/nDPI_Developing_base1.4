@@ -48,7 +48,7 @@ static void ndpi_int_game_cf_add_connection(struct ndpi_detection_module_struct 
 __forceinline static
 #endif
 #define STR0CF "\x00\x70\x82\x42\xef\x2e\xbc\45"//.p.B...E
-#define STR1CF "\x46\x00\x39\x33\x37\x61\x61\x33\x35\x30\x61\x65\x30\x34\x61\x62\x38\x37\x36\x33"//F.937aa3 50ae04ab8763ea23 f1cc2fb99c.17601 900
+#define STR1CF "\x39\x33\x37\x61\x61\x33\x35\x30\x61\x65\x30\x34\x61\x62\x38\x37\x36\x33"//F.937aa3 50ae04ab8763ea23 f1cc2fb99c.17601 900
  void ndpi_search_game_cf_tcp(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {
 	struct ndpi_packet_struct *packet = &flow->packet;
@@ -78,7 +78,7 @@ __forceinline static
                 offset++;
                 continue;
             }else{
-                if(memcmp(&packet->payload[offset],STR1CF,NDPI_STATICSTRING_LEN(STR1CF))==0){
+                if(memcmp(&packet->payload[offset+2],STR1CF,NDPI_STATICSTRING_LEN(STR1CF))==0){
                     NDPI_LOG(NDPI_PROTOCOL_GAME_CF, ndpi_struct, NDPI_LOG_DEBUG,"found game_cf------2 \n");
                     ndpi_int_game_cf_add_connection(ndpi_struct, flow, NDPI_REAL_PROTOCOL);
                     return;	
