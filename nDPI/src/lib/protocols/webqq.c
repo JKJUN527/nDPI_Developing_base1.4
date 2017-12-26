@@ -45,28 +45,27 @@ __forceinline static
 #endif
 void ndpi_search_webqq_tcp(struct ndpi_detection_module_struct*ndpi_struct, struct ndpi_flow_struct *flow)
 {
-		struct ndpi_packet_struct *packet = &flow->packet;
-		//禁止ip（101.226.211.174）
-		if(packet->payload_packet_len >0 && ntohl(packet->iph->daddr)==1709364142){
-			NDPI_LOG(NDPI_PROTOCOL_WEBQQ, ndpi_struct, NDPI_LOG_DEBUG,"found webqq tcp jiami \n");
-			ndpi_int_webqq_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
+    struct ndpi_packet_struct *packet = &flow->packet;
+    //禁止ip（101.226.211.174）
+    /* NOTE exclude ipv6 */
+    if(packet->payload_packet_len > 0 && packet->iph && ntohl(packet->iph->daddr)==1709364142) {
+        NDPI_LOG(NDPI_PROTOCOL_WEBQQ, ndpi_struct, NDPI_LOG_DEBUG,"found webqq tcp jiami \n");
+        ndpi_int_webqq_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
+        return;
+    }
 
-		}
+    //	if(packet->payload_packet_len >32 
+    //		&&get_u_int16_t(packet->payload, 0)==htons(0x1703)){
+    //		if(get_u_int32_t(packet->payload, 8)==htons(0x00000000)
+    //		    ||get_u_int32_t(packet->payload, 8)==htons(0xe369135f)
+    //		    ||get_u_int32_t(packet->payload, 8)==htons(0x24f0217c)){
+    //		NDPI_LOG(NDPI_PROTOCOL_WEBQQ, ndpi_struct, NDPI_LOG_DEBUG,"found webqq tcp:%u\n",ntohl(packet->iph->daddr));
+    //		NDPI_LOG(NDPI_PROTOCOL_WEBQQ, ndpi_struct, NDPI_LOG_DEBUG,"found webqq tcp \n");
+    //		ndpi_int_webqq_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);	
+    //		}
 
-	//	if(packet->payload_packet_len >32 
-	//		&&get_u_int16_t(packet->payload, 0)==htons(0x1703)){
-	//		if(get_u_int32_t(packet->payload, 8)==htons(0x00000000)
-	//		    ||get_u_int32_t(packet->payload, 8)==htons(0xe369135f)
-	//		    ||get_u_int32_t(packet->payload, 8)==htons(0x24f0217c)){
-	//		NDPI_LOG(NDPI_PROTOCOL_WEBQQ, ndpi_struct, NDPI_LOG_DEBUG,"found webqq tcp:%u\n",ntohl(packet->iph->daddr));
-	//		NDPI_LOG(NDPI_PROTOCOL_WEBQQ, ndpi_struct, NDPI_LOG_DEBUG,"found webqq tcp \n");
-	//		ndpi_int_webqq_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);	
-	//		}
-
-		else{
-		NDPI_LOG(NDPI_PROTOCOL_WEBQQ, ndpi_struct, NDPI_LOG_DEBUG, "exclude webqq.\n");
-  		NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_WEBQQ);
-		}
+    NDPI_LOG(NDPI_PROTOCOL_WEBQQ, ndpi_struct, NDPI_LOG_DEBUG, "exclude webqq.\n");
+    NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_WEBQQ);
 }
 void ndpi_search_webqq_udp(struct ndpi_detection_module_struct*ndpi_struct, struct ndpi_flow_struct *flow)
 {
