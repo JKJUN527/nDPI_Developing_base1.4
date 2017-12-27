@@ -139,7 +139,8 @@ void ndpi_search_nizhan_udp(struct ndpi_detection_module_struct
 
 	}
        // NDPI_LOG(NDPI_PROTOCOL_NIZHAN, ndpi_struct, NDPI_LOG_DEBUG, "pacaet_len:%u.\n",packet->payload_packet_len);
-	if(packet->payload_packet_len==260)
+	/*
+    if(packet->payload_packet_len==260)
 	{
 		//flow->nizhan_stage++;
 		u_int32_t equal;
@@ -165,7 +166,7 @@ void ndpi_search_nizhan_udp(struct ndpi_detection_module_struct
 										"exclude nizhan\n");
 		NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_NIZHAN);
 	}									   	
-
+*/
 }
 void ndpi_search_nizhan(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {

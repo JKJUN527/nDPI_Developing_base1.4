@@ -49,7 +49,8 @@ __forceinline static
 #endif
 #define STR0CF "\x00\x70\x82\x42\xef\x2e\xbc\45"//.p.B...E
 #define STR1CF "\x39\x33\x37\x61\x61\x33\x35\x30\x61\x65\x30\x34\x61\x62\x38\x37\x36\x33"//F.937aa3 50ae04ab8763ea23 f1cc2fb99c.17601 900
- void ndpi_search_game_cf_tcp(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
+#define STR2CF "\x73\x74\x61\x72\x74\x5f\x65\x76\x65\x6e\x74\x31"//start_enven1
+void ndpi_search_game_cf_tcp(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {
 	struct ndpi_packet_struct *packet = &flow->packet;
 	NDPI_LOG(NDPI_PROTOCOL_GAME_CF, ndpi_struct, NDPI_LOG_DEBUG,"search game_cf\n");
@@ -92,14 +93,55 @@ exit:
   	NDPI_LOG(NDPI_PROTOCOL_GAME_CF, ndpi_struct, NDPI_LOG_DEBUG, "exclude game_cf.\n");
   	NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_GAME_CF);
 }
-
+void ndpi_search_game_cf_udp(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
+{
+	struct ndpi_packet_struct *packet = &flow->packet;
+	NDPI_LOG(NDPI_PROTOCOL_GAME_CF, ndpi_struct, NDPI_LOG_DEBUG,"search game_cf udp stage is: %u\n",flow->cf_stage);
+    u_int16_t payload_len = packet->payload_packet_len;
+    u_int16_t len = 0;
+	NDPI_LOG(NDPI_PROTOCOL_GAME_CF, ndpi_struct, NDPI_LOG_DEBUG,"udp packet_len is: %u\n",payload_len);
+    //cf_udp first packet len == 57
+    if(payload_len > 3*16){
+        len = ntohs(get_u_int16_t(packet->payload,2));
+	    NDPI_LOG(NDPI_PROTOCOL_GAME_CF, ndpi_struct, NDPI_LOG_DEBUG,"udp len is: %u\n",len);
+    }else{
+  	    NDPI_LOG(NDPI_PROTOCOL_GAME_CF, ndpi_struct, NDPI_LOG_DEBUG, "exclude game_cf 1.\n");
+        goto EXIT;
+    }
+    if(len == payload_len){
+        switch(flow->cf_stage){
+            case 0:
+                if(memcmp(&packet->payload[28],STR2CF,NDPI_STATICSTRING_LEN(STR2CF))==0)
+                {
+                    flow->cf_stage ++;
+                    }
+                return;
+            case 1:
+                if(get_u_int16_t(packet->payload,18)==htons(0x07d7)) goto FOUND;
+                goto EXIT;
+            default:
+  	            NDPI_LOG(NDPI_PROTOCOL_GAME_CF, ndpi_struct, NDPI_LOG_DEBUG, "exclude game_cf 2.\n");
+                goto EXIT;
+        }
+    }else
+        goto EXIT;
+FOUND:
+    NDPI_LOG(NDPI_PROTOCOL_GAME_CF, ndpi_struct, NDPI_LOG_DEBUG,"found game_cf--UDP \n");
+    ndpi_int_game_cf_add_connection(ndpi_struct, flow, NDPI_REAL_PROTOCOL);
+    return;	
+EXIT:
+  	NDPI_LOG(NDPI_PROTOCOL_GAME_CF, ndpi_struct, NDPI_LOG_DEBUG, "exclude game_cf.\n");
+  	NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_GAME_CF);
+}
 void ndpi_search_game_cf(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {
 	struct ndpi_packet_struct *packet = &flow->packet;
 
 	if (packet->tcp != NULL) {
-
 		ndpi_search_game_cf_tcp(ndpi_struct, flow);
+	}
+	if (packet->udp != NULL) {
+		ndpi_search_game_cf_udp(ndpi_struct, flow);
 	}
 
 }

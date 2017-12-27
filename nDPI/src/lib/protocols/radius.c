@@ -28,7 +28,7 @@ struct radius_header {
   u_int8_t packet_id;
   u_int16_t len;
 };
-
+int codevalue[] = {1,2,3,4,5,11,12,13,255};
 static void ndpi_check_radius(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {
   struct ndpi_packet_struct *packet = &flow->packet;  
@@ -49,13 +49,24 @@ static void ndpi_check_radius(struct ndpi_detection_module_struct *ndpi_struct, 
 
     if((payload_len > sizeof(struct radius_header))
        && (h->code <= 5)
-       && (len == payload_len)) {
+       && (len == payload_len)){
+    int i = 0;
+    for(i =0; i<sizeof(codevalue)/sizeof(codevalue[0]);i++){
+  //    NDPI_LOG(NDPI_PROTOCOL_RADIUS, ndpi_struct, NDPI_LOG_DEBUG, "code is:%u  and codevalue is %u.\n",h->code,codevalue[i]);
+            if(h->code == codevalue[i]){
+                goto FOUND;
+            }
+       }
+       goto EXIT;
+    }else{
+        goto EXIT;
+    }
+   
+FOUND:
       NDPI_LOG(NDPI_PROTOCOL_RADIUS, ndpi_struct, NDPI_LOG_DEBUG, "Found radius.\n");
       ndpi_int_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_RADIUS, NDPI_REAL_PROTOCOL);	
-      
       return;
-    }
-    
+EXIT:
     NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_RADIUS);
     return;
   }

@@ -62,7 +62,7 @@ void ndpi_search_jizhan(struct ndpi_detection_module_struct *ndpi_struct, struct
 		&&get_u_int32_t(packet->payload, 24)==htonl(0x08bd3e1b)){
 		
 		  NDPI_LOG(NDPI_PROTOCOL_GAME_JIZHAN, ndpi_struct, NDPI_LOG_DEBUG, "found jizhan.\n");
-          	  ndpi_int_jizhan_add_connection(ndpi_struct, flow);
+          ndpi_int_jizhan_add_connection(ndpi_struct, flow);
 	  	  return;
     }
     if (packet->payload_packet_len>=13 &&
