@@ -44,7 +44,7 @@ stop:
 # just for test
 test: insmod
 	iptables -I FORWARD  -j NDPI
-	iptables -A FORWARD -i eth1 -o eth0 -m ndpi --protos zhengfu  -j DROP
+	iptables -A FORWARD  -m ndpi --protos dnf -j DROP
 	watch -n 0.5 'iptables -S -v'
 status:
 	iptables -S -v
