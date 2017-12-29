@@ -600,7 +600,29 @@ when ssl:
 	NDPI_LOG(NDPI_PROTOCOL_QQ, ndpi_struct, NDPI_LOG_DEBUG, "skip qq stage(%d) line:%d.\n",flow->qq_stage, __LINE__);
     return;
   }
-
+  //jkjun deal Stick package 
+  if(packet->payload_packet_len >= 2*ntohs(get_u_int16_t(packet->payload,0))){
+        u_int16_t left_len = packet->payload_packet_len;
+        u_int8_t offset = 0;
+        u_int16_t currect_len = ntohs(get_u_int16_t(packet->payload,0));
+        while(packet->payload[offset+2]==0x02
+        &&packet->payload[currect_len -1 ]==0x03
+        ){
+            left_len = left_len - currect_len;
+            offset = offset+currect_len;
+            if(left_len == 0){
+                NDPI_LOG(NDPI_PROTOCOL_QQ, ndpi_struct, NDPI_LOG_DEBUG, "found qq over tcp.\n");
+                ndpi_int_qq_add_connection(ndpi_struct, flow, NDPI_REAL_PROTOCOL);
+                return;
+            }else if(left_len >=ntohs(get_u_int16_t(packet->payload,offset)) ){
+                currect_len = ntohs(get_u_int16_t(packet->payload,offset));
+                continue;
+            }else{
+                break;
+            }
+        }
+  
+  }
   if (ndpi_is_valid_qq_packet(packet)) {
     flow->qq_stage++;
 	NDPI_LOG(NDPI_PROTOCOL_QQ, ndpi_struct, NDPI_LOG_DEBUG, "add qq stage(%d) line:%d.\n",flow->qq_stage, __LINE__);
