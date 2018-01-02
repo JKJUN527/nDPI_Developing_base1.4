@@ -352,70 +352,6 @@ static void fetion_parse_packet_useragentline	(struct ndpi_detection_module_stru
 }
 #endif
 
-#ifdef NDPI_PROTOCOL_WECHAT_TX
-/**
- * 计算微信 authkey 的 hash 值，保证 authkey 长度为 68 字节
- * @return: 计算的 hash 值
- */
-static u_int32_t wechat_authkey_hash(u_int8_t *authkey)
-{
-        u_int32_t ret = 0;
-        u_int8_t *p = (u_int8_t*)&ret;
-        int i;
-        /* authkey 长度为 68 字节，按照 4 字节一块异或求 hash */
-        for (i = 0; i < 17; i++) {
-                p[0] ^= authkey[i];
-                p[1] ^= authkey[i+1];
-                p[2] ^= authkey[i+2];
-                p[3] ^= authkey[i+3];
-        }
-
-        return ret;
-}
-static void check_wechat_tx_payload(struct ndpi_detection_module_struct *ndpi, struct ndpi_flow_struct *flow)
-{
-        const static char *methods[] = {
-                "POST /uploadcheckmd5",
-                "POST /uploadv3",
-                "POST /download",
-                NULL,
-        };
-        struct ndpi_packet_struct *packet = &flow->packet;
-        char *payload = (char*)packet->payload;
-        char const **method;
-        int find = 0;
-        NDPI_LOG(NDPI_PROTOCOL_WECHAT_TX, ndpi, NDPI_LOG_DEBUG, "HTTP WECHAT TX: into check_wechat_tx_payload\n");
-        for (method = methods; *method != NULL && !find; method++) {
-                char const *str = *method;
-                int len = strlen(str);
-                if (packet->payload_packet_len >= len && strncmp(payload, str, len) == 0)
-                        find = 1;
-        }
-        /* TODO 也许如何标记非 WECHAT_TX 协议 */
-        if (!find) return;
-
-        /* Check authkey */
-        if (!flow->wechat_tx_authkeyhash) {
-                u_int8_t *authkey;
-                if (packet->payload_packet_len >= 145
-                                && (authkey = memfind(payload, packet->payload_packet_len, "authkey", 7))) {
-                        flow->wechat_tx_authkeyhash = wechat_authkey_hash(authkey+11);
-                        NDPI_LOG(NDPI_PROTOCOL_WECHAT_TX, ndpi, NDPI_LOG_DEBUG, "HTTP WECHAT TX: %s\n", (char*)authkey);
-                }
-        } else {
-                u_int8_t *authkey;
-                if (packet->payload_packet_len >= 145
-                                && (authkey = memfind(payload, packet->payload_packet_len, "authkey", 7))) {
-                        NDPI_LOG(NDPI_PROTOCOL_WECHAT_TX, ndpi, NDPI_LOG_DEBUG, "HTTP WECHAT TX: %s\n", (char*)authkey);
-                        if (flow->wechat_tx_authkeyhash == wechat_authkey_hash(authkey+11)) {
-                                ndpi_int_http_add_connection(ndpi, flow, NDPI_PROTOCOL_WECHAT_TX);
-                                NDPI_LOG(NDPI_PROTOCOL_WECHAT_TX, ndpi, NDPI_LOG_DEBUG, "HTTP WECHAT TX: found WeChat-TX\n");
-                        }
-                }
-        }
-}
-#endif /* NDPI_PROTOCOL_WECHAT_TX */
-
 #ifdef NDPI_PROTOCOL_DAHUAXIYOU2
 static void dahuaxiyou2_parse_packet_useragentline	(struct ndpi_detection_module_struct						
                 *ndpi_struct, struct ndpi_flow_struct *flow)
@@ -732,33 +668,25 @@ static void check_custom_headers(struct ndpi_detection_module_struct *ndpi_struc
 #ifdef NDPI_PROTOCOL_QQ_TX
                 {   /* just a block */
                 static char const *qqtx_strs[] = {
-                        "GET /ftn_handler",
-                        "POST /ftn_handler",
+                    "GET /ftn_handler",
+                    "POST /ftn_handler",
 
-                        NULL,
+                    NULL,
                 };
                 const char **qqtx_ptr;
                 NDPI_LOG(NDPI_PROTOCOL_QQ_TX, ndpi_struct, NDPI_LOG_DEBUG, "Into QQ transfer file.\n");
                 for (qqtx_ptr = qqtx_strs; *qqtx_ptr != NULL; qqtx_ptr++) {
-                        const char *str = *qqtx_ptr;
-                        int len = strlen(str);
-                        if (packet->line[a].len >= len && strncmp(packet->line[a].ptr, str, len) == 0) {
-                                ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_QQ_TX);
-                                NDPI_LOG(NDPI_PROTOCOL_QQ_TX, ndpi_struct, NDPI_LOG_DEBUG, "QQ_TX: Found via %s\n", str);
-                                return;
-                        }
+                    const char *str = *qqtx_ptr;
+                    int len = strlen(str);
+                    if (packet->line[a].len >= len && strncmp(packet->line[a].ptr, str, len) == 0) {
+                        ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_QQ_TX);
+                        NDPI_LOG(NDPI_PROTOCOL_QQ_TX, ndpi_struct, NDPI_LOG_DEBUG, "QQ_TX: Found via %s\n", str);
+                        return;
+                    }
                 }
                 }
 #endif /* NDPI_PROTOCOL_QQ_TX */
-#ifdef NDPI_PROTOCOL_WECHAT_TX
-                NDPI_LOG(NDPI_PROTOCOL_WECHAT_TX, ndpi_struct, NDPI_LOG_DEBUG, "Into WECHAT_TX.\n");
-                if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(ndpi_struct->detection_bitmask, NDPI_PROTOCOL_WECHAT_TX) != 0){
-                        NDPI_LOG(NDPI_PROTOCOL_WECHAT_TX, ndpi_struct, NDPI_LOG_DEBUG, "WeiChat-Tx: bitmask add ok.\n");
-                        check_wechat_tx_payload(ndpi_struct, flow);
-                } else {
-                        NDPI_LOG(NDPI_PROTOCOL_WECHAT_TX, ndpi_struct, NDPI_LOG_DEBUG, "WeiChat-Tx: bitmask add false.\n");
-                }
-#endif /* NDPI_PROTOCOL_WECHAT_TX */
+
 #ifdef NDPI_PROTOCOL_QQMUSIC
                 {   /* just a block */
                 int qqmusic_len = packet->line[a].len;
@@ -1007,15 +935,94 @@ kugou_music_http_exclude_tag:
 }
 #endif /* NDPI_PROTOCOL_KUGOUMUSIC */
 
+#ifdef NDPI_PROTOCOL_WECHAT_TX
+/**
+ * 计算微信 authkey 的 hash 值，保证 authkey 长度为 68 字节
+ * @return: 计算的 hash 值
+ */
+static u_int32_t wechat_authkey_hash(u_int8_t *authkey)
+{
+    u_int32_t ret = 0;
+    u_int8_t *p = (u_int8_t*)&ret;
+    int i;
+    /* authkey 长度为 68 字节，按照 4 字节一块异或求 hash */
+    for (i = 0; i < 17; i++) {
+        p[0] ^= authkey[i];
+        p[1] ^= authkey[i+1];
+        p[2] ^= authkey[i+2];
+        p[3] ^= authkey[i+3];
+    }
+
+    return ret;
+}
+static int wechat_tx_check_payload(struct ndpi_detection_module_struct *ndpi, struct ndpi_flow_struct *flow)
+{
+    const static char *methods[] = {
+        "POST /uploadcheckmd5",
+        "POST /uploadv3",
+        "POST /download",
+        NULL,
+    };
+    struct ndpi_packet_struct *packet = &flow->packet;
+    char *payload = (char*)packet->payload;
+    char const **method;
+    int find = 0;
+    NDPI_LOG(NDPI_PROTOCOL_WECHAT_TX, ndpi, NDPI_LOG_DEBUG, "HTTP WECHAT TX: into %s\n", __FUNCTION__);
+    for (method = methods; *method != NULL && !find; method++) {
+        char const *str = *method;
+        int len = strlen(str);
+        if (packet->payload_packet_len >= len && strncmp(payload, str, len) == 0) {
+            find = 1;
+            break;
+        }
+    }
+    if (!find) return 0;
+
+    /* Check authkey */
+    if (!flow->wechat_tx_authkeyhash) {
+        u_int8_t *authkey;
+        if (packet->http_payload.len >= 145
+                && (authkey = memfind(packet->http_payload.ptr, packet->http_payload.len, "authkey", 7))) {
+            flow->wechat_tx_authkeyhash = wechat_authkey_hash(authkey+11);
+            NDPI_LOG(NDPI_PROTOCOL_WECHAT_TX, ndpi, NDPI_LOG_DEBUG, "HTTP WECHAT TX: %s %08x\n",
+                    (char*)authkey, flow->wechat_tx_authkeyhash);
+            if (memfind(packet->http_payload.ptr, packet->http_payload.len, "weixinnum", 9)) {
+                ndpi_int_http_add_connection(ndpi, flow, NDPI_PROTOCOL_WECHAT_TX);
+                NDPI_LOG(NDPI_PROTOCOL_WECHAT_TX, ndpi, NDPI_LOG_DEBUG, "HTTP WECHAT TX: found WeChat-TX via 'weixinnum'\n");
+                return 1;
+            }
+        }
+    } else {
+        u_int8_t *authkey;
+        if (packet->http_payload.len >= 145
+                && (authkey = memfind(packet->http_payload.ptr, packet->http_payload.len, "authkey", 7))) {
+            NDPI_LOG(NDPI_PROTOCOL_WECHAT_TX, ndpi, NDPI_LOG_DEBUG, "HTTP WECHAT TX: %s\n", (char*)authkey);
+            if (flow->wechat_tx_authkeyhash == wechat_authkey_hash(authkey+11)) {
+                ndpi_int_http_add_connection(ndpi, flow, NDPI_PROTOCOL_WECHAT_TX);
+                NDPI_LOG(NDPI_PROTOCOL_WECHAT_TX, ndpi, NDPI_LOG_DEBUG, "HTTP WECHAT TX: found WeChat-TX via authkey: %08x\n",
+                        (void*)flow->wechat_tx_authkeyhash);
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+#endif /* NDPI_PROTOCOL_WECHAT_TX */
+
 static void check_normal_http(struct ndpi_detection_module_struct *ndpi, struct ndpi_flow_struct *flow)
 {
-        NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi, NDPI_LOG_DEBUG, "called check_normal_http.\n");
+    NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi, NDPI_LOG_DEBUG, "called check_normal_http.\n");
 #ifdef NDPI_PROTOCOL_KUGOUMUSIC
-        if (1 == kugou_music_http_check(ndpi, flow))
-                return;
+    if (1 == kugou_music_http_check(ndpi, flow))
+        return;
 #endif /* NDPI_PROTOCOL_KUGOUMUSIC */
+#ifdef NDPI_PROTOCOL_WECHAT_TX
+    if (1 == wechat_tx_check_payload(ndpi, flow)) {
+        return;
+    }
+#endif /* NDPI_PROTOCOL_WECHAT_TX */
 
-        /* add other protocol there */
+    /* add other protocol there */
 }
 
 static int check_content_type_and_change_protocol(struct ndpi_detection_module_struct
