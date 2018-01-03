@@ -1,6 +1,6 @@
 Name: iptables_ndpi		
 Version: 1.4.0	
-Release: 39
+Release: 40
 Vendor: capsheaf
 Summary: iptables ndpi mod based on 1.4
 Group: flowmeter
@@ -195,6 +195,9 @@ echo "Seperating xt_ndpi from iptables .."
 %doc
 
 %changelog
+* Tue Jan 2 2018 jiajun
+- release:40
+- 修复qq、l2tp、rip、取消游戏登录字样等
 * Wed Dec 20 2017 jiajun
 - release:39
 - 修复cf、twitter、facebook
