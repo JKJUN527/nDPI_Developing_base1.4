@@ -75,7 +75,7 @@ static const u_int16_t ndpi_valid_qq_versions[] = {
   0x0d05, 0x0d51, 0x0d55, 0x0d61, 0x0e1b, 0x0e35, 0x0f15, 0x0f4b, 0x0f5f,
   0x1105, 0x111b, 0x111d, 0x1131, 0x113f, 0x115b, 0x1203, 0x1205, 0x120b,
   0x1251, 0x1412, 0x1441, 0x1501, 0x1549, 0x163a, 0x1801, 0x180d, 0x1c27,
-  0x1e0d, 0x3639, 0x3649, 0x3703, 0x360d, 0x3661
+  0x1e0d, 0x3639, 0x3649, 0x3703, 0x372d, 0x360d, 0x3661
 };
 
 /**
@@ -120,7 +120,7 @@ static inline int ndpi_is_valid_qq_packet(const struct ndpi_packet_struct *packe
   for (ids = 0; ids < sizeof(ndpi_valid_qq_versions) / sizeof(ndpi_valid_qq_versions[0]); ids++) {
     if (version_id == ndpi_valid_qq_versions[ids]) {
       found = 1;
-      break;
+      return 1;
     }
   }
   /* PT: Skip QQ version check*/
@@ -150,7 +150,7 @@ static inline int ndpi_is_valid_qq_packet(const struct ndpi_packet_struct *packe
   case 0x0029:
 
   case 0x0828:	/* May connect server  */
-  case 0x0825:	/*  */
+  //case 0x0825:	/*  */
   case 0x0836:	/*  */
   case 0x01bb:	/* May find server or transport key  */
   case 0x01ec:	/*  */
@@ -318,23 +318,14 @@ static void ndpi_search_qq_udp(struct ndpi_detection_module_struct *ndpi_struct,
       }
       return;
     }
-    if (packet->payload_packet_len > 2 && (packet->payload[0] == 0x02 || packet->payload[0] == 0x04)) {
-      //u_int16_t pat = ntohs(get_u_int16_t(packet->payload, 1));
-      for (index = 0; index < no_of_patterns; index++) {
-	  	//skip version check
-	if (/*pat == p8000_patt_02[index] &&*/ packet->payload[packet->payload_packet_len - 1] == 0x03) {
-	  //flow->qq_stage++; 
-	  flow->qq_stage += 3; // PT: consider it is qq
-	  
-	  // maybe we can test here packet->payload[4] == packet->payload_packet_len
+/*
+    //if (packet->payload_packet_len > 2 && (packet->payload[0] == 0x02 || packet->payload[0] == 0x04)) {
+    / for (index = 0; index < no_of_patterns; index++) {
+	if ( packet->payload[packet->payload_packet_len - 1] == 0x03) {
+        flow->qq_stage += 3; // PT: consider it is qq
 	  if (flow->qq_stage == 3) {
 	    NDPI_LOG(NDPI_PROTOCOL_QQ, ndpi_struct, NDPI_LOG_DEBUG,
 		     "found qq udp pattern 02 ... 03 four times.\n");
-	    /*
-	      if (packet->payload[0] == 0x04) {
-	      ndpi_int_qq_add_connection(ndpi_struct, flow, NDPI_REAL_PROTOCOL);
-	      return;
-	      } */
 	    ndpi_int_qq_add_connection(ndpi_struct, flow, NDPI_REAL_PROTOCOL);
 	    return;
 	  }
@@ -344,7 +335,7 @@ static void ndpi_search_qq_udp(struct ndpi_detection_module_struct *ndpi_struct,
 	  return;
 	}
       }
-    }
+    }*/
     if (packet->payload_packet_len == 84 && (packet->payload[0] == 0 || packet->payload[0] == 0x03)) {
       u_int16_t pat = ntohs(get_u_int16_t(packet->payload, 1));
       for (index = 0; index < no_of_patterns; index++) {
@@ -546,13 +537,13 @@ when ssl:
 	  && get_u_int16_t(packet->payload, 2) == htons(0x0202)
 	  && get_u_int32_t(packet->payload, 4) == htonl(0x0000005c)//after this is qq number
 	  && packet->payload[packet->payload_packet_len - 1] == 0x03)
-	  ||(packet->payload_packet_len > 5
+	  /*||(packet->payload_packet_len > 5
 	  && ntohs(get_u_int16_t(packet->payload, 0)) == packet->payload_packet_len
 	  && packet->payload[2] == 0x02
 	  //&& packet->payload[4] == 0x03 //after this is qq number
 	  && packet->payload[packet->payload_packet_len - 1] == 0x03
 	  )
-
+*/
 
   	/*PT end*/
       || (packet->payload_packet_len > 6 && packet->payload[0] == 0x02

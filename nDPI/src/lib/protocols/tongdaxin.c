@@ -23,9 +23,9 @@ void ndpi_search_tongdaxin_tcp(struct ndpi_detection_module_struct *ndpi_struct,
     if(packet->payload_packet_len >(16*8)
             &&packet->payload[0]==0x0c
             &&packet->payload[2]==0x18
-            &&flow->tdx_stage ==0
+           // &&flow->tdx_stage ==0
       ){
-        flow->tdx_stage++;
+       // flow->tdx_stage++;
         if(get_u_int32_t(packet->payload, 16*8) == htonl( 0x5e1e66f8)
            ||get_u_int32_t(packet->payload, 16*8) == htonl( 0xb2a9ae51)// ...Q...L .U..t.3.
           ){

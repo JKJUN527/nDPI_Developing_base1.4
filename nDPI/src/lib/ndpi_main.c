@@ -859,7 +859,7 @@ ndpi_protocol_match host_match[] = {
   { "dota2.com.cn",     "Dota2", NDPI_PROTOCOL_GAME_DOTA2 },
   { "cm01-lax.cm.steampowered.com",     "Dota2", NDPI_PROTOCOL_GAME_DOTA2 },
   
-  { ".tgp.qq.com",     "WeGame", NDPI_PROTOCOL_GAME_WEGAME },
+  { "tgp.qq.com",     "WeGame", NDPI_PROTOCOL_GAME_WEGAME },
 
   { NULL, 0 }
 };
@@ -2929,7 +2929,7 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
     ndpi_struct->callback_buffer[a].func = ndpi_search_wegame;
 
     ndpi_struct->callback_buffer[a].ndpi_selection_bitmask =
-      NDPI_SELECTION_BITMASK_PROTOCOL_V4_V6_TCP_WITH_PAYLOAD;
+      NDPI_SELECTION_BITMASK_PROTOCOL_V4_V6_TCP_OR_UDP_WITH_PAYLOAD;
 
     NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_UNKNOWN);
 
