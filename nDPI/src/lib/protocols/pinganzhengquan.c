@@ -35,38 +35,8 @@ static void ndpi_int_pinganzhengquan_add_connection(struct ndpi_detection_module
 void ndpi_search_pinganzhengquan_tcp(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {
   struct ndpi_packet_struct *packet = &flow->packet;
-  /*
-	flow->pinganzhengquan_stage++;
-	if(flow->pinganzhengquan_stage >=4){
-		NDPI_LOG(NDPI_PROTOCOL_PINGANZHENGQUAN, ndpi_struct, NDPI_LOG_DEBUG, "exclude pinganzhengquan  pinganzhengquan_stage:%d\n",flow->pinganzhengquan_stage);
-  		NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_PINGANZHENGQUAN);
-	}
-  if(packet->payload_packet_len >= (10)
-  	//&&(get_u_int64_t(packet->payload, 0) == htonl( 0xfdfdfdfd30303030)
-  	//|| get_u_int64_t(packet->payload, 8) == htonl( 0x3034383609010700))
-  	&&((packet ->payload[0]==0x01
-  		&&(packet ->payload[2]==0x48||packet ->payload[2]==0x00)
-  		&&packet ->payload[4]==0x00
-  		&&packet ->payload[9]==0x00)
-  	    ||(packet->payload[0]==0xb1
-  	    	&&packet->payload[1]==0xcb
-  	    	&&packet->payload[2]==0x74
-			&&packet->payload[3]==0x00
-			&&(packet->payload[6]==0x48||packet->payload[6]==0x00))
-		||(packet->payload[0]==0x00
-  	    	&&packet->payload[1]==0x00
-  	    	&&packet->payload[2]==0x00
-			&&packet->payload[3]==0x00
-			&&packet->payload[4]==0x00
-			&&packet->payload[5]==0x00
-			&&(packet->payload[8]==0x32||packet->payload[8]==0x2a)
-			&&packet->payload[11]==0x24))
-  ){			
-  		NDPI_LOG(NDPI_PROTOCOL_PINGANZHENGQUAN, ndpi_struct, NDPI_LOG_DEBUG,"found pinganzhengquan------tcp[0[01]:%x tcp[2[48]:%x tcp[4[00]:%x] \n",packet->payload[0],packet->payload[2],packet->payload[4]);
-		ndpi_int_pinganzhengquan_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);		
-		return;	
-	}*/
-		if(packet->payload_packet_len >(16*7)
+		
+        if(packet->payload_packet_len >(16*7)
 			&&packet->payload[0]==0x0c
 			&&packet->payload[2]==0x18){
 			if(get_u_int32_t(packet->payload, 16*7) == htonl( 0x2f977585)){
@@ -90,12 +60,13 @@ void ndpi_search_pinganzhengquan_tcp(struct ndpi_detection_module_struct *ndpi_s
 						ndpi_int_pinganzhengquan_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);		
 						return;	
 				}
+                /*
 				if(packet ->payload[0]==0xb1
 			  		 &&packet ->payload[1]==0xcb
 			   		&&packet ->payload[2]==0x74){
 						NDPI_LOG(NDPI_PROTOCOL_HUARONG, ndpi_struct, NDPI_LOG_DEBUG,"found pingan after login------tcp");
 						ndpi_int_pinganzhengquan_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);			
-				}
+				}*/
 			}	
 	}else if(packet->payload_packet_len >16){
 			if(packet ->payload[0]==0x0c
