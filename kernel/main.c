@@ -481,8 +481,8 @@ static int ndpi_process_packet(const struct sk_buff *_skb,
 
     if (entry->ndpi_proto != NDPI_PROTOCOL_FTP_CONTROL   /* always check ftp_control */
             && (   (entry->ndpi_proto == NDPI_PROTOCOL_HTTP && entry->flow->packet_counter >= 5)  /* give up after some counts */
-                || (iph->protocol == IPPROTO_UDP && entry->num_packets_processed >= 15)
-                || (iph->protocol == IPPROTO_TCP && entry->num_packets_processed >= 15)
+                || (iph->protocol == IPPROTO_UDP && entry->num_packets_processed >= 20)
+                || (iph->protocol == IPPROTO_TCP && entry->num_packets_processed >= 20)
                 || (entry->ndpi_proto != NDPI_PROTOCOL_UNKNOWN && entry->ndpi_proto != NDPI_PROTOCOL_HTTP))) {
 		entry->protocol_detected = 1;   /* We have made a decision */
 		if (unlikely( debug ))

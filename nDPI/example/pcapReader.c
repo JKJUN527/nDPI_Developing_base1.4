@@ -619,8 +619,8 @@ static unsigned int packet_processing(const u_int64_t time,
 
   if (flow->detected_protocol != NDPI_PROTOCOL_FTP_CONTROL
        && (   (flow->detected_protocol == NDPI_PROTOCOL_HTTP && ndpi_flow->packet_counter >= 5)
-           || (proto == IPPROTO_UDP && flow->packets >= 15)
-           || (proto == IPPROTO_TCP && flow->packets >= 15)
+           || (proto == IPPROTO_UDP && flow->packets >= 20)
+           || (proto == IPPROTO_TCP && flow->packets >= 20)
            || (flow->detected_protocol != NDPI_PROTOCOL_UNKNOWN
                && flow->detected_protocol != NDPI_PROTOCOL_HTTP))) {
       flow->detection_completed = 1;
