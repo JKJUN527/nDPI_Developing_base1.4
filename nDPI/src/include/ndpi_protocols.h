@@ -411,11 +411,11 @@ void ndpi_search_jizhan(struct ndpi_detection_module_struct *ndpi_struct, struct
 void ndpi_search_baofeng(struct ndpi_detection_module_struct * ndpi_struct,struct ndpi_flow_struct * flow);
 void ndpi_search_tonghuashun(struct ndpi_detection_module_struct * ndpi_struct,struct ndpi_flow_struct * flow);
 void ndpi_search_dazhihui(struct ndpi_detection_module_struct * ndpi_struct,struct ndpi_flow_struct * flow);
-void ndpi_search_huarong(struct ndpi_detection_module_struct * ndpi_struct,struct ndpi_flow_struct * flow);
+//void ndpi_search_huarong(struct ndpi_detection_module_struct * ndpi_struct,struct ndpi_flow_struct * flow);
 void ndpi_search_qianlong(struct ndpi_detection_module_struct * ndpi_struct,struct ndpi_flow_struct * flow);
-void ndpi_search_pinganzhengquan(struct ndpi_detection_module_struct * ndpi_struct,struct ndpi_flow_struct * flow);
+//void ndpi_search_pinganzhengquan(struct ndpi_detection_module_struct * ndpi_struct,struct ndpi_flow_struct * flow);
 void ndpi_search_zhinanzhen(struct ndpi_detection_module_struct * ndpi_struct,struct ndpi_flow_struct * flow);
-void ndpi_search_zhaoshangzhengquan(struct ndpi_detection_module_struct * ndpi_struct,struct ndpi_flow_struct * flow);
+//void ndpi_search_zhaoshangzhengquan(struct ndpi_detection_module_struct * ndpi_struct,struct ndpi_flow_struct * flow);
 void ndpi_search_tongdaxin(struct ndpi_detection_module_struct * ndpi_struct,struct ndpi_flow_struct * flow);
 void ndpi_search_dingtalk(struct ndpi_detection_module_struct * ndpi_struct,struct ndpi_flow_struct * flow);
 void ndpi_search_webqq(struct ndpi_detection_module_struct * ndpi_struct,struct ndpi_flow_struct * flow);

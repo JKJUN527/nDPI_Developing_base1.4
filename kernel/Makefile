@@ -110,11 +110,8 @@ NDPI_LIB_OBJS= \
 	$(NDPI_LIB_PROTOCOLS)/jizhan.o \
 	$(NDPI_LIB_PROTOCOLS)/tonghuashun.o \
 	$(NDPI_LIB_PROTOCOLS)/dazhihui365.o \
-	$(NDPI_LIB_PROTOCOLS)/huarong.o \
 	$(NDPI_LIB_PROTOCOLS)/qianlong.o \
-	$(NDPI_LIB_PROTOCOLS)/pinganzhengquan.o \
 	$(NDPI_LIB_PROTOCOLS)/zhinanzhen.o \
-	$(NDPI_LIB_PROTOCOLS)/zhaoshangzhengquan.o \
 	$(NDPI_LIB_PROTOCOLS)/tongdaxin.o \
 	$(NDPI_LIB_PROTOCOLS)/dingtalk.o \
 	$(NDPI_LIB_PROTOCOLS)/webqq.o \
@@ -135,6 +132,9 @@ NDPI_LIB_OBJS= \
 	$(NDPI_LIB_PROTOCOLS)/wegame.o
 
 #	$(NDPI_LIB_PROTOCOLS)/skype.o \
+#	$(NDPI_LIB_PROTOCOLS)/zhaoshangzhengquan.o \
+#	$(NDPI_LIB_PROTOCOLS)/pinganzhengquan.o \
+#	$(NDPI_LIB_PROTOCOLS)/huarong.o \
 SRC=lru.c lru.h ndpi.c ndpi.h main.c
 OBJS=main.o ndpi.o lru.o
 

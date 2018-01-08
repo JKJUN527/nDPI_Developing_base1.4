@@ -202,7 +202,7 @@ static void thunder_check_http_payload(struct ndpi_detection_module_struct *ndpi
                         //&& media_ptr[142] == 0x00
                         //&& media_ptr[143] == 0x00
 
-                        //){
+                       //){
 
                         NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG,
                                         "thunder HTTP download detected, adding flow http.c.\n");
@@ -262,7 +262,7 @@ static void check_dazhihui_payload(struct ndpi_detection_module_struct *ndpi_str
 }
 
 #endif
-
+/*
 #ifdef NDPI_PROTOCOL_HUARONG
 static void check_huarong_payload(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {
@@ -277,7 +277,7 @@ static void check_huarong_payload(struct ndpi_detection_module_struct *ndpi_stru
 }
 
 #endif
-
+*/
 #ifdef NDPI_PROTOCOL_QIANLONG
 static void check_qianlong_payload(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {
@@ -292,6 +292,7 @@ static void check_qianlong_payload(struct ndpi_detection_module_struct *ndpi_str
 }
 
 #endif
+/*
 #ifdef NDPI_PROTOCOL_PINGANZHENGQUAN
 static void check_pinganzhengquan_payload(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {
@@ -306,6 +307,7 @@ static void check_pinganzhengquan_payload(struct ndpi_detection_module_struct *n
 }
 
 #endif
+*/
 #ifdef NDPI_PROTOCOL_NIZHAN
 static void check_nizhan_payload(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {
@@ -835,24 +837,28 @@ static void check_host_line(struct ndpi_detection_module_struct
                         check_dazhihui_payload(ndpi_struct, flow);
                 }
 #endif
+/*
 #ifdef NDPI_PROTOCOL_HUARONG
                 if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(ndpi_struct->detection_bitmask, NDPI_PROTOCOL_HUARONG) != 0){
                         NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "huarong: bitmask add ok\n");
                         check_huarong_payload(ndpi_struct, flow);
                 }
 #endif
+*/
 #ifdef NDPI_PROTOCOL_QIANLONG
                 if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(ndpi_struct->detection_bitmask, NDPI_PROTOCOL_QIANLONG) != 0){
                         NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "qianlong: bitmask add ok\n");	
                         check_qianlong_payload(ndpi_struct, flow);
                 }
 #endif
+/*
 #ifdef NDPI_PROTOCOL_PINGANZHENGQUAN
                 if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(ndpi_struct->detection_bitmask, NDPI_PROTOCOL_PINGANZHENGQUAN) != 0){
                         NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "pinganzhengquan: bitmask add ok\n");
                         check_pinganzhengquan_payload(ndpi_struct, flow);
                 }
 #endif
+*/
 #ifdef NDPI_PROTOCOL_NIZHAN
                 if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(ndpi_struct->detection_bitmask, NDPI_PROTOCOL_NIZHAN) != 0){
                         NDPI_LOG(NDPI_PROTOCOL_HTTP, ndpi_struct, NDPI_LOG_DEBUG, "nizhan: bitmask add ok\n");			

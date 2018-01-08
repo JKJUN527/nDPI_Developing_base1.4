@@ -29,7 +29,7 @@ if(packet->payload_packet_len >(16*8)
 			//if(get_u_int32_t(packet->payload, 16*8) == htonl( 0xe28ef175)){
 			//if(get_u_int32_t(packet->payload, 16*8) == htonl( 0x0ac1f86a)){
             flow->zszq_stage++;
-			if(get_u_int32_t(packet->payload, 16*8) == htonl(0xb0ea824d) //...M.... .T.gt.3.
+		/*	if(get_u_int32_t(packet->payload, 16*8) == htonl(0xb0ea824d) //...M.... .T.gt.3.
               ||get_u_int32_t(packet->payload, 16*8) == htonl(0x0ac1f86a)
               ||get_u_int32_t(packet->payload, 16*8) == htonl(0x4d2d6b85)//M-k...;..b(,t.3. 
               ||get_u_int32_t(packet->payload, 16*8) == htonl(0x6377c1f0)//cw...w.. .LZ.t.3. 
@@ -38,7 +38,7 @@ if(packet->payload_packet_len >(16*8)
 				ndpi_int_zhaoshangzhengquan_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);		
 				return;	
 			}
-		}
+		*/}
         /*else if(packet->payload_packet_len >(32)){
 			if((packet ->payload[0]==0x0c&&packet ->payload[2]==0x18&&packet ->payload[4]==0x00&&packet ->payload[5]==0x01)){
 				if(packet->payload[0]==0x0c&&packet->payload[1]==0x06
@@ -61,6 +61,16 @@ if(packet->payload_packet_len >(16*8)
 			}
 
 		}
+//特征0---33C@---
+    if(packet->payload_packet_len ==42
+        &&flow->zszq_stage >0
+        &&get_u_int32_t(packet->payload,3*8) == htonl(0x33434013)
+    ){
+		NDPI_LOG(NDPI_PROTOCOL_HUARONG, ndpi_struct, NDPI_LOG_DEBUG,"found zhaoshang after login------tcp");
+		ndpi_int_zhaoshangzhengquan_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
+        return;
+    }
+
 //特征1---某个16字节码，暂时不清楚意义，每个tdx码字不同
       if(packet->payload_packet_len >19
         &&packet->payload[0]==0xb1&&packet->payload[1]==0xcb&&packet->payload[2]==0x74
@@ -86,8 +96,8 @@ if(packet->payload_packet_len >(16*8)
         }
         return;
 exit:
-NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask,NDPI_PROTOCOL_ZHAOSHANGZHENGQUAN);
-return;
+    NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask,NDPI_PROTOCOL_ZHAOSHANGZHENGQUAN);
+    return;
 }
 void ndpi_search_zhaoshangzhengquan(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {

@@ -801,10 +801,10 @@ ndpi_protocol_match host_match[] = {
   { "downloadjs.ztgame.com.cn",  "ZhenTu"       , NDPI_PROTOCOL_GAME_ZHENTU },
   /*WL END*/
   /*JK START*/
-  { "tdx.com.cn",               "HUARONG"              , NDPI_PROTOCOL_HUARONG},
-  { "hrsec.com.cn",             "HUARONG"              , NDPI_PROTOCOL_HUARONG},
-  { "hq114.net",  		"HuaRong"              , NDPI_PROTOCOL_HUARONG },
-  { "stock.pingan.com",         "PingAnZhengQuan"      , NDPI_PROTOCOL_PINGANZHENGQUAN},
+  //{ "tdx.com.cn",               "HUARONG"              , NDPI_PROTOCOL_HUARONG},
+ // { "hrsec.com.cn",             "HUARONG"              , NDPI_PROTOCOL_HUARONG},
+  //{ "hq114.net",  		"HuaRong"              , NDPI_PROTOCOL_HUARONG },
+ // { "stock.pingan.com",         "PingAnZhengQuan"      , NDPI_PROTOCOL_PINGANZHENGQUAN},
   { "cweb.compass.cn",          "ZhiNanZhen"           , NDPI_PROTOCOL_ZHINANZHEN},
   { "pb.compass.cn",            "ZhiNanZhen"           , NDPI_PROTOCOL_ZHINANZHEN},
   { "gw.com.cn",                "dazhihui365"          , NDPI_PROTOCOL_DAZHIHUI365},
@@ -1209,18 +1209,18 @@ static void ndpi_init_protocol_defaults(struct ndpi_detection_module_struct *ndp
    ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_DAZHIHUI365, "dazhihui365",
           		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0) /* TCP */,
           		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
-   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_HUARONG, "HuaRong",
-	  		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0) /* TCP */,
-	  		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
+//   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_HUARONG, "HuaRong",
+//	  		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0) /* TCP */,
+//	  		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
    ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_QIANLONG, "QianLong",
 	  		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0) /* TCP */,
 	  		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
-   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_PINGANZHENGQUAN, "PingAnZhengQuan",
-	  		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0) /* TCP */,
-	  		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
-   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_ZHAOSHANGZHENGQUAN, "zhaoshangzhengquan",
-	  		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0) /* TCP */,
-	  		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
+//   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_PINGANZHENGQUAN, "PingAnZhengQuan",
+//	  		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0) /* TCP */,
+//	  		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
+//   ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_ZHAOSHANGZHENGQUAN, "zhaoshangzhengquan",
+//	  		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0) /* TCP */,
+//	  		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
    ndpi_set_proto_defaults(ndpi_mod, NDPI_PROTOCOL_TONGDAXIN, "tongdaxin",
 	  		  ndpi_build_default_ports(ports_a, 0, 0, 0, 0, 0) /* TCP */,
 	  		  ndpi_build_default_ports(ports_b, 0, 0, 0, 0, 0) /* UDP */);
@@ -2615,6 +2615,7 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
     a++;
   }
 #endif
+/*
 #ifdef NDPI_PROTOCOL_HUARONG
   if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_HUARONG) != 0) {
     ndpi_struct->callback_buffer[a].func = ndpi_search_huarong;
@@ -2630,6 +2631,7 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
     a++;
   }
 #endif
+*/
 #ifdef NDPI_PROTOCOL_QIANLONG
   if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_QIANLONG) != 0) {
     ndpi_struct->callback_buffer[a].func = ndpi_search_qianlong;
@@ -2645,6 +2647,7 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
     a++;
   }
 #endif
+/*
 #ifdef NDPI_PROTOCOL_PINGANZHENGQUAN
   if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_PINGANZHENGQUAN) != 0) {
     ndpi_struct->callback_buffer[a].func = ndpi_search_pinganzhengquan;
@@ -2660,6 +2663,7 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
     a++;
   }
 #endif
+*/
 #ifdef NDPI_PROTOCOL_ZHINANZHEN
   if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_ZHINANZHEN) != 0) {
     ndpi_struct->callback_buffer[a].func = ndpi_search_zhinanzhen;
@@ -2675,6 +2679,7 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
     a++;
   }
 #endif
+/*
 #ifdef NDPI_PROTOCOL_ZHAOSHANGZHENGQUAN
   if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_ZHAOSHANGZHENGQUAN) != 0) {
     ndpi_struct->callback_buffer[a].func = ndpi_search_zhaoshangzhengquan;
@@ -2690,6 +2695,7 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
     a++;
   }
 #endif
+*/
 #ifdef NDPI_PROTOCOL_TONGDAXIN
   if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_TONGDAXIN) != 0) {
     ndpi_struct->callback_buffer[a].func = ndpi_search_tongdaxin;

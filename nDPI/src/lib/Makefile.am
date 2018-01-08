@@ -106,11 +106,8 @@ libndpi_la_SOURCES = \
 			protocols/jizhan.c \
 			protocols/tonghuashun.c \
 			protocols/dazhihui365.c \
-			protocols/huarong.c \
 			protocols/qianlong.c \
-			protocols/pinganzhengquan.c \
 			protocols/zhinanzhen.c \
-			protocols/zhaoshangzhengquan.c \
 			protocols/tongdaxin.c\
 			protocols/dingtalk.c \
 			protocols/webqq.c \

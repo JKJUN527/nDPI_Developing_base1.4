@@ -129,9 +129,9 @@ extern "C" {
 #define NDPI_PROTOCOL_QIANLONG                          82
 #define NDPI_PROTOCOL_DAZHIHUI365                       83
 #define NDPI_PROTOCOL_ZHINANZHEN                        84
-#define NDPI_PROTOCOL_HUARONG                           85
-#define NDPI_PROTOCOL_PINGANZHENGQUAN                   86
-#define NDPI_PROTOCOL_ZHAOSHANGZHENGQUAN                87
+//#define NDPI_PROTOCOL_HUARONG                           85
+//#define NDPI_PROTOCOL_PINGANZHENGQUAN                   86
+//#define NDPI_PROTOCOL_ZHAOSHANGZHENGQUAN                87
 #define NDPI_PROTOCOL_TONGDAXIN                         88
 
 /**********************JK end***************************/
