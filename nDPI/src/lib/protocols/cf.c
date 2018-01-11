@@ -38,10 +38,9 @@
 
 static void ndpi_int_game_cf_add_connection(struct ndpi_detection_module_struct *ndpi_struct,struct ndpi_flow_struct *flow, ndpi_protocol_type_t protocol_type)
 {
-	ndpi_int_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_GAME_CF, NDPI_REAL_PROTOCOL);
+    ndpi_int_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_GAME_CF, NDPI_REAL_PROTOCOL);
 }
 
-	
 #if !defined(WIN32)
  static inline
 #else
@@ -89,7 +88,6 @@ void ndpi_search_game_cf_tcp(struct ndpi_detection_module_struct *ndpi_struct, s
             }
         }
 	}
-exit:
   	NDPI_LOG(NDPI_PROTOCOL_GAME_CF, ndpi_struct, NDPI_LOG_DEBUG, "exclude game_cf.\n");
   	NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_GAME_CF);
 }
@@ -117,7 +115,11 @@ void ndpi_search_game_cf_udp(struct ndpi_detection_module_struct *ndpi_struct, s
                     }
                 return;
             case 1:
-                if(get_u_int16_t(packet->payload,18)==htons(0x07d7)) goto FOUND;
+                if(get_u_int16_t(packet->payload,18)==htons(0x07d7)
+                    &&memcmp(&packet->payload[28],"\x31\x31\x35\x34\x34\x31\x34\x34\x36\x37\x35\x39\x32\x37\x39\x39\x38\x7c",18)==0
+                ){
+                    goto FOUND;
+                } 
                 goto EXIT;
             default:
   	            NDPI_LOG(NDPI_PROTOCOL_GAME_CF, ndpi_struct, NDPI_LOG_DEBUG, "exclude game_cf 2.\n");
@@ -143,7 +145,6 @@ void ndpi_search_game_cf(struct ndpi_detection_module_struct *ndpi_struct, struc
 	if (packet->udp != NULL) {
 		ndpi_search_game_cf_udp(ndpi_struct, flow);
 	}
-
 }
 
 #endif
