@@ -859,6 +859,8 @@ ndpi_protocol_match host_match[] = {
   { "dota2.com.cn",     "Dota2", NDPI_PROTOCOL_GAME_DOTA2 },
   { "cm01-lax.cm.steampowered.com",     "Dota2", NDPI_PROTOCOL_GAME_DOTA2 },
   
+  { "vod.tv.itc.cn",     "SoHu", NDPI_PROTOCOL_SOHU },
+  
   { "tgp.qq.com",     "WeGame", NDPI_PROTOCOL_GAME_WEGAME },
 
   { NULL, 0 }
