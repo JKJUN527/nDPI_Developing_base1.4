@@ -129,7 +129,8 @@ NDPI_LIB_OBJS= \
 	$(NDPI_LIB_PROTOCOLS)/minecraft.o \
 	$(NDPI_LIB_PROTOCOLS)/kugou_music.o \
 	$(NDPI_LIB_PROTOCOLS)/yy.o \
-	$(NDPI_LIB_PROTOCOLS)/wegame.o
+	$(NDPI_LIB_PROTOCOLS)/wegame.o \
+	$(NDPI_LIB_PROTOCOLS)/dahuaxiyou2.o
 
 #	$(NDPI_LIB_PROTOCOLS)/skype.o \
 #	$(NDPI_LIB_PROTOCOLS)/zhaoshangzhengquan.o \

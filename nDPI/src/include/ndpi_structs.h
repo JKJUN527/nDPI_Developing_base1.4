@@ -627,7 +627,9 @@ typedef struct ndpi_flow_struct {
     u_int32_t rtp_timestamp;    /* time stamp */
     u_int16_t rtp_seq;          /* sequence */
 #endif
-
+#ifdef NDPI_PROTOCOL_DAHUAXIYOU2
+    u_int8_t dahuaxiyou2_stage;
+#endif
   /* internal structures to save functions calls */
   struct ndpi_packet_struct packet;
   struct ndpi_flow_struct *flow;

@@ -787,6 +787,8 @@ ndpi_protocol_match host_match[] = {
   {"res.tx3.cbg.163.com"    , "TianXia3"        , NDPI_PROTOCOL_TIANXIA3},
   {"xy2.gdl.netease.com"    , "DaHuaXiYou2"     , NDPI_PROTOCOL_DAHUAXIYOU2 },
   {"xy.163.com"             , "DaHuaXiYou2"     , NDPI_PROTOCOL_DAHUAXIYOU2 },
+  {"xy2.163.com"             , "DaHuaXiYou2"     , NDPI_PROTOCOL_DAHUAXIYOU2 },
+  {".dh2.163.com"           , "DaHuaXiYou2"     , NDPI_PROTOCOL_DAHUAXIYOU2 },
   {"163.com/xy2fix.data"    , "DaHuaXiYou2"     , NDPI_PROTOCOL_DAHUAXIYOU2 },
   {"jz.99.com"              , "JiZhan"          , NDPI_PROTOCOL_GAME_JIZHAN},
   {".99.com"                , "JiZhan"          , NDPI_PROTOCOL_GAME_JIZHAN},
@@ -2617,23 +2619,6 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
     a++;
   }
 #endif
-/*
-#ifdef NDPI_PROTOCOL_HUARONG
-  if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_HUARONG) != 0) {
-    ndpi_struct->callback_buffer[a].func = ndpi_search_huarong;
-
-    ndpi_struct->callback_buffer[a].ndpi_selection_bitmask =
-      NDPI_SELECTION_BITMASK_PROTOCOL_V4_V6_TCP_OR_UDP_WITH_PAYLOAD;
-
-    NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_UNKNOWN);
-
-    NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_HUARONG);
-    NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].excluded_protocol_bitmask, NDPI_PROTOCOL_HUARONG);
-
-    a++;
-  }
-#endif
-*/
 #ifdef NDPI_PROTOCOL_QIANLONG
   if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_QIANLONG) != 0) {
     ndpi_struct->callback_buffer[a].func = ndpi_search_qianlong;
@@ -2649,23 +2634,6 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
     a++;
   }
 #endif
-/*
-#ifdef NDPI_PROTOCOL_PINGANZHENGQUAN
-  if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_PINGANZHENGQUAN) != 0) {
-    ndpi_struct->callback_buffer[a].func = ndpi_search_pinganzhengquan;
-
-    ndpi_struct->callback_buffer[a].ndpi_selection_bitmask =
-      NDPI_SELECTION_BITMASK_PROTOCOL_V4_V6_TCP_WITH_PAYLOAD;
-
-    NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_UNKNOWN);
-
-    NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_PINGANZHENGQUAN);
-    NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].excluded_protocol_bitmask, NDPI_PROTOCOL_PINGANZHENGQUAN);
-
-    a++;
-  }
-#endif
-*/
 #ifdef NDPI_PROTOCOL_ZHINANZHEN
   if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_ZHINANZHEN) != 0) {
     ndpi_struct->callback_buffer[a].func = ndpi_search_zhinanzhen;
@@ -2681,23 +2649,6 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
     a++;
   }
 #endif
-/*
-#ifdef NDPI_PROTOCOL_ZHAOSHANGZHENGQUAN
-  if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_ZHAOSHANGZHENGQUAN) != 0) {
-    ndpi_struct->callback_buffer[a].func = ndpi_search_zhaoshangzhengquan;
-
-    ndpi_struct->callback_buffer[a].ndpi_selection_bitmask =
-      NDPI_SELECTION_BITMASK_PROTOCOL_V4_V6_TCP_WITH_PAYLOAD;
-
-    NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_UNKNOWN);
-
-    NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_ZHAOSHANGZHENGQUAN);
-    NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].excluded_protocol_bitmask, NDPI_PROTOCOL_ZHAOSHANGZHENGQUAN);
-
-    a++;
-  }
-#endif
-*/
 #ifdef NDPI_PROTOCOL_TONGDAXIN
   if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_TONGDAXIN) != 0) {
     ndpi_struct->callback_buffer[a].func = ndpi_search_tongdaxin;
@@ -2944,6 +2895,17 @@ void ndpi_set_protocol_detection_bitmask2(struct ndpi_detection_module_struct *n
     NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_GAME_WEGAME);
     NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].excluded_protocol_bitmask, NDPI_PROTOCOL_GAME_WEGAME);
 
+    a++;
+  }
+#endif
+#ifdef NDPI_PROTOCOL_DAHUAXIYOU2
+  if (NDPI_COMPARE_PROTOCOL_TO_BITMASK(*detection_bitmask, NDPI_PROTOCOL_DAHUAXIYOU2) != 0) {
+    ndpi_struct->callback_buffer[a].func = ndpi_search_dahuaxiyou2;
+    ndpi_struct->callback_buffer[a].ndpi_selection_bitmask =
+      NDPI_SELECTION_BITMASK_PROTOCOL_V4_V6_TCP_WITH_PAYLOAD;
+    NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_UNKNOWN);
+    NDPI_ADD_PROTOCOL_TO_BITMASK(ndpi_struct->callback_buffer[a].detection_bitmask, NDPI_PROTOCOL_DAHUAXIYOU2);
+    NDPI_SAVE_AS_BITMASK(ndpi_struct->callback_buffer[a].excluded_protocol_bitmask, NDPI_PROTOCOL_DAHUAXIYOU2);
     a++;
   }
 #endif

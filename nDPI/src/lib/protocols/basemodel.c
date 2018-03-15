@@ -42,8 +42,6 @@ static void ndpi_int_yy_add_connection(struct ndpi_detection_module_struct *ndpi
 #else
 __forceinline static
 #endif
-//#define STR0FUNSHION "\x6f\xa1\x9d\x59\x97\x4a\x97"
-//#define STR1FUNSHION "\x32\x91\x9d\x59\x30\x1e\x30\x07\x30\x0e\x31\x1f\x18\xf5\x30\x1e"	 
 void ndpi_search_yy_tcp(struct ndpi_detection_module_struct
 												  *ndpi_struct, struct ndpi_flow_struct *flow)
 {
@@ -52,14 +50,14 @@ void ndpi_search_yy_tcp(struct ndpi_detection_module_struct
 	&& packet->payload[6*8+1] == 0x18
 	&& packet->payload[6*8+2] == 0x0a)){
 	
-		NDPI_LOG(NDPI_PROTOCOL_FUNSHION, ndpi_struct, NDPI_LOG_DEBUG,
-									"found funshion------1 \n");
-		ndpi_int_funshion_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
+		NDPI_LOG(NDPI_PROTOCOL_YY, ndpi_struct, NDPI_LOG_DEBUG,
+									"found yy------1 \n");
+		ndpi_int_yy_add_connection(ndpi_struct, flow, NDPI_CORRELATED_PROTOCOL);
 		return;
 	}
 
-	NDPI_LOG(NDPI_PROTOCOL_FUNSHION, ndpi_struct, NDPI_LOG_DEBUG, "exclude funshion.\n");
-  	NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_FUNSHION);
+	NDPI_LOG(NDPI_PROTOCOL_YY, ndpi_struct, NDPI_LOG_DEBUG, "exclude yy.\n");
+  	NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_YY);
 }
 void ndpi_search_yy(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow)
 {

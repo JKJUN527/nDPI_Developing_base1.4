@@ -125,5 +125,6 @@ libndpi_la_SOURCES = \
 			protocols/minecraft.c \
 			protocols/kugou_music.c \
 			protocols/yy.c \
-			protocols/wegame.c
+			protocols/wegame.c \
+			protocols/dahuaxiyou2.c
 # NTOP protocols are at the end
