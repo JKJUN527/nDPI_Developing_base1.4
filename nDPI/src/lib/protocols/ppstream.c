@@ -37,7 +37,8 @@ void ndpi_search_ppstream(struct ndpi_detection_module_struct
 {
 	struct ndpi_packet_struct *packet = &flow->packet;
 	
-
+    u_int16_t len = packet->payload_packet_len;
+    u_int16_t counter = flow->packet_counter;
 	// struct ndpi_id_struct *src=ndpi_struct->src;
 	// struct ndpi_id_struct *dst=ndpi_struct->dst;
 
@@ -51,6 +52,26 @@ void ndpi_search_ppstream(struct ndpi_detection_module_struct
 			ndpi_int_ppstream_add_connection(ndpi_struct, flow);
 			return;
 		}
+        //0x7300000001000000 bf00b5ac
+        NDPI_LOG(NDPI_PROTOCOL_PPSTREAM, ndpi_struct, NDPI_LOG_DEBUG, "ppstream len:%x,payload[0]:%x.\n",len,packet->payload[0]);
+        if(len == packet->payload[0]
+        && packet->payload[4] == 0x01
+        && len > 8+ 6
+        ){
+            u_int16_t i = len;
+            for(i;i>0;i--){
+                if(packet->payload[i] == 0x00 && packet->payload[i-1] == 0x1a){
+                    if(memcmp(&packet->payload[i+1],"\x2f\x76\x69\x64\x65\x6f\x73",7)==0){
+			            NDPI_LOG(NDPI_PROTOCOL_PPSTREAM, ndpi_struct, NDPI_LOG_DEBUG, "found ppstream over tcp.\n");
+			            ndpi_int_ppstream_add_connection(ndpi_struct, flow);
+		        	    return;
+                    }else{
+                       goto exit; 
+                    }
+                }
+                continue;
+            }
+        }
 	}
 
 	if (packet->udp != NULL) {
@@ -67,7 +88,27 @@ void ndpi_search_ppstream(struct ndpi_detection_module_struct
 			}
 			return;
 		}
-		}
+        //udp---特征【len】8e 80 ca db db cc 98 85
+        //新闻短视频流
+        NDPI_LOG(NDPI_PROTOCOL_PPSTREAM, ndpi_struct, NDPI_LOG_DEBUG, "ppstream len:%x,payload[0]:%x.\n",len,packet->payload[0]);
+        if(len >=16 
+        && packet->payload[1] == 0x80
+        && packet->payload[3] == packet->payload[4]
+        && (packet->payload[12] == packet->payload[13]+1
+            || packet->payload[12] == packet->payload[13]-1
+            || packet->payload[12] == packet->payload[13])
+        && packet->payload[13] == packet->payload[14]
+        ){
+            if(len == packet->payload[0] || packet->payload[0] == 0x14){
+				NDPI_LOG(NDPI_PROTOCOL_PPSTREAM, ndpi_struct, NDPI_LOG_DEBUG,
+						"found ppstream over udp.\n");
+				ndpi_int_ppstream_add_connection(ndpi_struct, flow);
+				return;
+            }
+        }
+        //udp --特征 14 80 50 13 13 42 19 13 。。。。
+        //该特征为udp发送第二个数据包
+	}
 #if 0
 		/* wanglei 2016-10-18 11:40 */
 		if (packet->payload_packet_len > 2 && packet->payload[0] == 0x43) {
@@ -106,7 +147,7 @@ void ndpi_search_ppstream(struct ndpi_detection_module_struct
 
 
 #endif
-
+exit:
 	NDPI_LOG(NDPI_PROTOCOL_PPSTREAM, ndpi_struct, NDPI_LOG_DEBUG, "exclude ppstream.\n");
 	NDPI_ADD_PROTOCOL_TO_BITMASK(flow->excluded_protocol_bitmask, NDPI_PROTOCOL_PPSTREAM);
 }
