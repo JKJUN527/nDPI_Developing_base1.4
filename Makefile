@@ -45,7 +45,7 @@ stop:
 # just for test
 test: insmod
 	iptables -I FORWARD  -j NDPI
-	iptables -A FORWARD  -m ndpi --protos ppstream -j DROP
+	iptables -A FORWARD  -m ndpi --protos bittorrent,thunder -j DROP
 	#iptables -A FORWARD  -m ndpi --protos dahuaxiyou2 -j DROP
 	watch -n 0.5 'iptables -S -v'
 status:
