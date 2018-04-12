@@ -1,6 +1,6 @@
 Name: iptables_ndpi		
 Version: 1.4.0	
-Release: 43
+Release: 42
 Vendor: capsheaf
 Summary: iptables ndpi mod based on 1.4
 Group: flowmeter
@@ -100,8 +100,8 @@ echo "version=`date '+%Y-%m-%d'`" > $RPM_BUILD_ROOT/var/efw/unify_update/app_lib
 cp app_ctrl/* "$RPM_BUILD_ROOT" -rf
 
 sort  -k 3 -t ',' -f -b $RPM_BUILD_ROOT/var/efw/objects/application/app_system -o $RPM_BUILD_ROOT/var/efw/objects/application/app_system
-sort  -k 3 -t ',' -f -b $RPM_BUILD_ROOT/var/efw/objects/application/app_rule -o $RPM_BUILD_ROOT/var/efw/objects/application/app_rule
-#cat $RPM_BUILD_ROOT/var/efw/objects/application/app_system | awk '{split($0,arr,",");print arr[1],",",arr[3],",",arr[4],",",arr[0],arr[1],",","1";}' | tr -d ' ' > $RPM_BUILD_ROOT/var/efw/objects/application/app_rule
+#sort  -k 3 -t ',' -f -b $RPM_BUILD_ROOT/var/efw/objects/application/app_rule -o $RPM_BUILD_ROOT/var/efw/objects/application/app_rule
+cat $RPM_BUILD_ROOT/var/efw/objects/application/app_system | awk '{split($0,arr,",");print arr[1],",",arr[3],",",arr[4],",",arr[0],arr[1],",","1";}' | tr -d ' ' > $RPM_BUILD_ROOT/var/efw/objects/application/app_rule
 #rm $RPM_BUILD_ROOT/usr/local/bin/*pyc -vf
 
 %clean
@@ -196,9 +196,6 @@ echo "Seperating xt_ndpi from iptables .."
 %doc
 
 %changelog
-* Tue Apr 10 2018 jiajun
-- release:43
-- 手动维护app_rule  app_system，app_rule 末尾新增字段应用别名
 * Tue Apr 2 2018 jiajun
 - release:42
 - 新增迅雷普通版及极速版本、解决微信电脑端失败问题、解决大话西游失败问题
