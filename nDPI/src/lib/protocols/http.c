@@ -158,7 +158,8 @@ static void thunder_check_http_payload(struct ndpi_detection_module_struct *ndpi
                                 && ndpi_mem_cmp(packet->line[1].ptr, "Cache-Control: no-cache", 23) == 0
                                 && packet->line[2].len == 22
                                 && ndpi_mem_cmp(packet->line[2].ptr, "Connection: keep-alive", 22) == 0
-                                && packet->line[3].len > 6
+                                ){
+                                if(packet->line[3].len > 6
                                 && ndpi_mem_cmp(packet->line[3].ptr, "Host: ", 6) == 0
                                 && packet->line[4].len > 13
                                 && ndpi_mem_cmp(packet->line[4].ptr, "Range: bytes=", 13) == 0 
@@ -166,10 +167,26 @@ static void thunder_check_http_payload(struct ndpi_detection_module_struct *ndpi
                                         ||(packet->line[5].len > 13 && ndpi_mem_cmp(packet->line[5].ptr, "Range: bytes=", 13) == 0)
                                         ||(packet->line[5].len > 9 && ndpi_mem_cmp(packet->line[5].ptr, "Referer: ", 9) == 0)	
                                    )){
-                               // &&packet->line[6].len > 13 && ndpi_mem_cmp(packet->line[6].ptr, "Range: bytes=", 13) == 0    ){
-                        NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG,
+                                // &&packet->line[6].len > 13 && ndpi_mem_cmp(packet->line[6].ptr, "Range: bytes=", 13) == 0    ){
+                                    NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG,
                                         "thunder HTTP download detected,(new one).\n");
-                        ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_THUNDER);
+                                    ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_THUNDER);
+                                }
+                                else if(packet->line[3].len > 6
+                                && ndpi_mem_cmp(packet->line[3].ptr,"Cookie:",7) == 0
+                                && packet->line[4].len > 6
+                                && ndpi_mem_cmp(packet->line[4].ptr, "Host: ", 6) == 0
+                                && packet->line[5].len > 13
+                                && ndpi_mem_cmp(packet->line[5].ptr, "Range: bytes=", 13) == 0 
+                                && ( (packet->line[6].len > 11 && ndpi_mem_cmp(packet->line[6].ptr, "User-Agent:", 11) == 0)
+                                        ||(packet->line[6].len > 13 && ndpi_mem_cmp(packet->line[6].ptr, "Range: bytes=", 13) == 0)
+                                        ||(packet->line[6].len > 9 && ndpi_mem_cmp(packet->line[6].ptr, "Referer: ", 9) == 0)	
+                                   )){
+                                // &&packet->line[6].len > 13 && ndpi_mem_cmp(packet->line[6].ptr, "Range: bytes=", 13) == 0    ){
+                                    NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG,
+                                        "thunder HTTP download detected,(new one).\n");
+                                    ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_THUNDER);
+                                }
                 }
 
                 //迅雷极速版
@@ -177,30 +194,47 @@ static void thunder_check_http_payload(struct ndpi_detection_module_struct *ndpi
                                 && ndpi_mem_cmp(packet->line[2].ptr, "Cache-Control: no-cache", 23) == 0
                                 && packet->line[3].len == 22
                                 && ndpi_mem_cmp(packet->line[3].ptr, "Connection: Keep-Alive", 22) == 0
-                                && packet->line[4].len > 6
-                                && ndpi_mem_cmp(packet->line[4].ptr, "Host: ", 6) == 0
-                                && packet->line[5].len == 16
-                                && ndpi_mem_cmp(packet->line[5].ptr, "Pragma: no-cache", 16) == 0 
-                                && ( (packet->line[6].len > 11 && ndpi_mem_cmp(packet->line[6].ptr, "User-Agent:", 11) == 0)
-                                        ||(packet->line[6].len > 13 && ndpi_mem_cmp(packet->line[6].ptr, "Range: bytes=", 13) == 0)
-                                        ||(packet->line[6].len > 9 && ndpi_mem_cmp(packet->line[6].ptr, "Referer: ", 9) == 0)	
-                                   )){
-                               // &&packet->line[6].len > 13 && ndpi_mem_cmp(packet->line[6].ptr, "Range: bytes=", 13) == 0    ){
+                   ){
+                    if(packet->line[4].len > 6
+                            && ndpi_mem_cmp(packet->line[4].ptr, "Host: ", 6) == 0
+                            && packet->line[5].len == 16
+                            && ndpi_mem_cmp(packet->line[5].ptr, "Pragma: no-cache", 16) == 0 
+                            && ( (packet->line[6].len > 11 && ndpi_mem_cmp(packet->line[6].ptr, "User-Agent:", 11) == 0)
+                                ||(packet->line[6].len > 13 && ndpi_mem_cmp(packet->line[6].ptr, "Range: bytes=", 13) == 0)
+                                ||(packet->line[6].len > 9 && ndpi_mem_cmp(packet->line[6].ptr, "Referer: ", 9) == 0)	
+                               )){
+                        // &&packet->line[6].len > 13 && ndpi_mem_cmp(packet->line[6].ptr, "Range: bytes=", 13) == 0    ){
                         NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG,
-                                        "thunder HTTP download detected,(jisu version).\n");
+                                "thunder HTTP download detected,(jisu version).\n");
                         ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_THUNDER);
-                }
+                    }
+                    if(packet->line[4].len >7
+                            && ndpi_mem_cmp(packet->line[4].ptr,"Cookie:", 7) == 0
+                            && packet->line[5].len > 6
+                            && ndpi_mem_cmp(packet->line[5].ptr, "Host: ", 6) == 0
+                            && packet->line[6].len == 16
+                            && ndpi_mem_cmp(packet->line[6].ptr, "Pragma: no-cache", 16) == 0 
+                            && ( (packet->line[7].len > 11 && ndpi_mem_cmp(packet->line[7].ptr, "User-Agent:", 11) == 0)
+                                ||(packet->line[7].len > 13 && ndpi_mem_cmp(packet->line[7].ptr, "Range: bytes=", 13) == 0)
+                                ||(packet->line[7].len > 9 && ndpi_mem_cmp(packet->line[7].ptr, "Referer: ", 9) == 0)	
+                               )){
+                        // &&packet->line[6].len > 13 && ndpi_mem_cmp(packet->line[6].ptr, "Range: bytes=", 13) == 0    ){
+                        NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG,
+                                "thunder HTTP download detected,(jisu version).\n");
+                        ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_THUNDER);
+                    }
+                    }
 
-        }
+                    }
 
-        //before UDP download feature
+                    //before UDP download feature
 
-        if (packet->payload_packet_len > 17 
-                        && ndpi_mem_cmp(packet->payload, "POST / HTTP/1.1\r\n", 17) == 0 &&packet->parsed_lines > 5
-           ){
-                ndpi_parse_packet_line_info(ndpi_struct, flow);
-                NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG, "thunder: HTTP packet detected. lines:%u \n",packet->parsed_lines);
-                if (packet->line[1].len > 6
+                    if (packet->payload_packet_len > 17 
+                            && ndpi_mem_cmp(packet->payload, "POST / HTTP/1.1\r\n", 17) == 0 &&packet->parsed_lines > 5
+                       ){
+                        ndpi_parse_packet_line_info(ndpi_struct, flow);
+                        NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG, "thunder: HTTP packet detected. lines:%u \n",packet->parsed_lines);
+                        if (packet->line[1].len > 6
                                 && ndpi_mem_cmp(packet->line[1].ptr, "Host: ", 6) == 0
                                 && packet->line[2].len == 38
                                 && ndpi_mem_cmp(packet->line[2].ptr, "Content-type: application/octet-stream", 38) == 0
@@ -208,32 +242,32 @@ static void thunder_check_http_payload(struct ndpi_detection_module_struct *ndpi
                                 && ndpi_mem_cmp(packet->line[3].ptr, "Content-Length: ", 16) == 0
                                 //&& packet->line[4].len == 22
                                 && (ndpi_mem_cmp(packet->line[4].ptr, "Connection: Keep-Alive", 22) == 0 ||ndpi_mem_cmp(packet->line[4].ptr, "Connection: Close", 17) == 0)
-                   ){
-                        //NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG, "thunder: may thunder http header in http.c .\n");
+                           ){
+                            //NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG, "thunder: may thunder http header in http.c .\n");
 
-                        //check media len and content-len
-                        //const char * media_ptr;
-                        //media_ptr = packet->line[6].ptr;
-                        // 0 88:58:03:26
-                        //if(packet->payload_packet_len > 80
-                        //&& ndpi_mem_cmp(media_ptr, "\x88\x58\x03\x26", 4) == 0
-                        //&& media_ptr[7] == 0x00
-                        //&& media_ptr[9] == 0x00
-                        //&& media_ptr[10] == 0x00
-                        //&& media_ptr[11] == 0x00
-                        //&& media_ptr[142] == 0x00
-                        //&& media_ptr[143] == 0x00
+                            //check media len and content-len
+                            //const char * media_ptr;
+                            //media_ptr = packet->line[6].ptr;
+                            // 0 88:58:03:26
+                            //if(packet->payload_packet_len > 80
+                            //&& ndpi_mem_cmp(media_ptr, "\x88\x58\x03\x26", 4) == 0
+                            //&& media_ptr[7] == 0x00
+                            //&& media_ptr[9] == 0x00
+                            //&& media_ptr[10] == 0x00
+                            //&& media_ptr[11] == 0x00
+                            //&& media_ptr[142] == 0x00
+                            //&& media_ptr[143] == 0x00
 
-                       //){
+                            //){
 
-                        NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG,
-                                        "thunder HTTP download detected, adding flow http.c.\n");
-                        ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_THUNDER);
+                            NDPI_LOG(NDPI_PROTOCOL_THUNDER, ndpi_struct, NDPI_LOG_DEBUG,
+                                    "thunder HTTP download detected, adding flow http.c.\n");
+                            ndpi_int_http_add_connection(ndpi_struct, flow, NDPI_PROTOCOL_THUNDER);
 
-                        //}
+                            //}
+                        }
+                    }
                 }
-        }
-}
 
 #endif
 
