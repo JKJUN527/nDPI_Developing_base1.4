@@ -16,7 +16,7 @@
 26,IMAPS,采用SSL加密的IMAP协议,26,1,IMAPS
 6,IPP,互联网打印协议(IPP；InternetPrintingProtocol)是一个在互联网上打印的标准网络协议，它容许用户可以透过互联网作遥距打印及管理打印工作等工作。用户可以透过相关界面来控制打印品所使用的纸张种类、分辨率等各种参数。,6,1,IPP
 35,IPsec,“Internet协议安全性(IPSec)”是一种开放标准的框架结构，通过使用加密的安全服务以确保在Internet协议(IP)网络上进行保密而安全的通讯,35,1,IPsec
-77,L2TP,,77,1,L2tp
+77,L2TP[L2F],第二层隧道服务、第二层转发,77,1,L2tp
 46,LDAP,LightweightDirectoryAccessProtocol，一般都简称为LDAP,46,1,LDAP
 53,LLMNR,为使用IPv4、IPv6或者同时使用这两种地址的设备提供了点对点名称解析服务,53,1,LLMNR
 44,MGCP,媒体网关控制协议,44,1,MGCP
@@ -42,7 +42,7 @@
 15,SMB,用于Wap连接和客户端与服务器之间的信息沟通,15,1,SMB
 3,SMTP,SMTP服务器就是遵循SMTP协议的发送邮件服务器,3,1,SMTP
 22,SMTPS,SSL加密的SMTP协议,22,1,SMTPS
-14,SNMP,简单网络管理协议（SNMP），由一组网络管理的标准组成，包含一个应用层协议（applicationlayerprotocol）、数据库模型（databaseschema）和一组资源对象。,14,1,SNMP
+14,SNMP(SNMPTRAP),简单网络管理协议（SNMP），由一组网络管理的标准组成，包含一个应用层协议（applicationlayerprotocol）、数据库模型（databaseschema）和一组资源对象。,14,1,SNMP
 12,SSDP,简单服务发现协议（SSDP，SimpleServiceDiscoveryProtocol）是一种应用层协议，是构成通用即插即用(UPnP)技术的核心协议之一。,12,1,SSDP
 43,SSH,SecureShell，是目前较可靠，专为远程登录会话和其他网络服务提供安全性的协议,43,1,SSH
 31,SSL(无证书),未带证书SSL连接,31,1,SSL_No_Cert
