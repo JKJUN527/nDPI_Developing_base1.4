@@ -436,6 +436,7 @@ void ndpi_search_kugou_music(struct ndpi_detection_module_struct *ndpi_struct, s
 void ndpi_search_yy(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow);
 void ndpi_search_wegame(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow);
 void ndpi_search_dahuaxiyou2(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow);
+void ndpi_search_menghuanxiyou(struct ndpi_detection_module_struct *ndpi_struct, struct ndpi_flow_struct *flow);
 
 
 #endif /* __NDPI_PROTOCOLS_INCLUDE_FILE__ */
