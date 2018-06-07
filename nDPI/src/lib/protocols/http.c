@@ -1095,6 +1095,9 @@ static int check_content_type_and_change_protocol(struct ndpi_detection_module_s
 
         if(flow->detected_protocol_stack[0] == NDPI_PROTOCOL_UNKNOWN
                         ||flow->detected_protocol_stack[0] == NDPI_PROTOCOL_HTTP){
+                /* check normal all http part */
+                check_normal_http(ndpi_struct, flow);
+                
                 /*check content line */
                 check_content_line(ndpi_struct, flow);
         }
@@ -1113,9 +1116,6 @@ static int check_content_type_and_change_protocol(struct ndpi_detection_module_s
                         ||flow->detected_protocol_stack[0] == NDPI_PROTOCOL_HTTP){
                 /* check for accept line */
                 check_accept_line(ndpi_struct, flow);
-
-                /* check normal all http part */
-                check_normal_http(ndpi_struct, flow);
         }
         if(flow->detected_protocol_stack[0] == NDPI_PROTOCOL_UNKNOWN
                         ||flow->detected_protocol_stack[0] == NDPI_PROTOCOL_HTTP){
